@@ -9,14 +9,16 @@ import SpriteKit
 
 final class GameScene: SKScene {
 
-    private var player: SKSpriteNode!
+    private var player: Player!
     private var ground: SKSpriteNode!
+    private var inputController: InputController!
 
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.5, green: 0.7, blue: 0.95, alpha: 1.0)
 
         setupGround()
         setupPlayer()
+        setupInputController()
     }
 
     private func setupGround() {
@@ -33,17 +35,50 @@ final class GameScene: SKScene {
     }
 
     private func setupPlayer() {
-        let playerSize = CGSize(width: 50, height: 50)
-        player = SKSpriteNode(color: .red, size: playerSize)
-        // Спавним игрока высоко над землёй, чтобы увидеть падение.
+        player = Player()
         player.position = CGPoint(x: size.width / 2, y: size.height - 100)
-
-        // Динамическое тело: на него действует гравитация и столкновения.
-        player.physicsBody = SKPhysicsBody(rectangleOf: playerSize)
-        player.physicsBody?.isDynamic = true
-        // Запрещаем вращение при столкновениях — иначе квадрат начнёт крутиться.
-        player.physicsBody?.allowsRotation = false
-
         addChild(player)
+    }
+
+    private func setupInputController() {
+        inputController = InputController(sceneSize: size)
+        inputController.delegate = self
+        addChild(inputController)
+    }
+
+    // MARK: - Игровой цикл
+
+    override func update(_ currentTime: TimeInterval) {
+        player.update()
+    }
+
+    // Простая проверка приземления: касается ли низ игрока верха земли.
+    // На следующем шаге заменим на нормальную систему контактов.
+    override func didSimulatePhysics() {
+        let playerBottom = player.position.y - player.size.height / 2
+        let groundTop = ground.position.y + ground.size.height / 2
+        let tolerance: CGFloat = 2
+        player.isOnGround = abs(playerBottom - groundTop) < tolerance
+    }
+}
+
+// MARK: - InputControllerDelegate
+
+extension GameScene: InputControllerDelegate {
+
+    func inputControllerDidPressLeft(_ controller: InputController) {
+        player.startMovingLeft()
+    }
+
+    func inputControllerDidPressRight(_ controller: InputController) {
+        player.startMovingRight()
+    }
+
+    func inputControllerDidReleaseDirection(_ controller: InputController) {
+        player.stopMoving()
+    }
+
+    func inputControllerDidPressJump(_ controller: InputController) {
+        player.jump()
     }
 }
