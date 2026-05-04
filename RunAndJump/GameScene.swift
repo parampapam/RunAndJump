@@ -16,6 +16,8 @@ final class GameScene: SKScene {
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.5, green: 0.7, blue: 0.95, alpha: 1.0)
 
+        physicsWorld.gravity = CGVector(dx: 0, dy: -20)
+
         setupGround()
         setupPlayer()
         setupInputController()

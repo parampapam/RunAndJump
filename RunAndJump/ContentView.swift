@@ -3,7 +3,7 @@ import SpriteKit
 
 struct ContentView: View {
     var scene: SKScene {
-        let scene = GameScene(size: CGSize(width: 750, height: 1334))
+        let scene = GameScene(size: CGSize(width: 1334, height: 750))
         scene.scaleMode = .aspectFill
         return scene
     }

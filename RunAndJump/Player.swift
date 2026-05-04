@@ -13,7 +13,7 @@ final class Player: SKSpriteNode {
     private let movementSpeed: CGFloat = 250
 
     // Сила импульса прыжка.
-    private let jumpImpulse: CGFloat = 350
+    private let jumpImpulse: CGFloat = 120
 
     // Текущее направление движения по горизонтали: -1, 0 или 1.
     private var horizontalDirection: CGFloat = 0
