@@ -17,6 +17,7 @@ final class GameScene: SKScene {
         backgroundColor = SKColor(red: 0.5, green: 0.7, blue: 0.95, alpha: 1.0)
 
         physicsWorld.gravity = CGVector(dx: 0, dy: -20)
+        physicsWorld.contactDelegate = self
 
         setupGround()
         setupPlayer()
@@ -29,9 +30,12 @@ final class GameScene: SKScene {
         // Позиционируем по центру нижнего края сцены.
         ground.position = CGPoint(x: size.width / 2, y: groundSize.height / 2)
 
-        // Статическое физическое тело: не двигается само, но об него можно опереться.
-        ground.physicsBody = SKPhysicsBody(rectangleOf: groundSize)
-        ground.physicsBody?.isDynamic = false
+        let body = SKPhysicsBody(rectangleOf: groundSize)
+        body.isDynamic = false
+        body.categoryBitMask = PhysicsCategory.ground
+        // Земля сама ни с кем не "ищет" контактов — её роль пассивная.
+        body.contactTestBitMask = PhysicsCategory.none
+        ground.physicsBody = body
 
         addChild(ground)
     }
@@ -53,15 +57,6 @@ final class GameScene: SKScene {
     override func update(_ currentTime: TimeInterval) {
         player.update()
     }
-
-    // Простая проверка приземления: касается ли низ игрока верха земли.
-    // На следующем шаге заменим на нормальную систему контактов.
-    override func didSimulatePhysics() {
-        let playerBottom = player.position.y - player.size.height / 2
-        let groundTop = ground.position.y + ground.size.height / 2
-        let tolerance: CGFloat = 2
-        player.isOnGround = abs(playerBottom - groundTop) < tolerance
-    }
 }
 
 // MARK: - InputControllerDelegate
@@ -82,5 +77,27 @@ extension GameScene: InputControllerDelegate {
 
     func inputControllerDidPressJump(_ controller: InputController) {
         player.jump()
+    }
+}
+
+
+// MARK: - SKPhysicsContactDelegate
+
+extension GameScene: SKPhysicsContactDelegate {
+
+    func didBegin(_ contact: SKPhysicsContact) {
+        let categories = contact.bodyA.categoryBitMask | contact.bodyB.categoryBitMask
+
+        if categories == (PhysicsCategory.player | PhysicsCategory.ground) {
+            player.isOnGround = true
+        }
+    }
+
+    func didEnd(_ contact: SKPhysicsContact) {
+        let categories = contact.bodyA.categoryBitMask | contact.bodyB.categoryBitMask
+
+        if categories == (PhysicsCategory.player | PhysicsCategory.ground) {
+            player.isOnGround = false
+        }
     }
 }

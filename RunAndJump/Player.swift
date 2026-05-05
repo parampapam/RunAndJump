@@ -33,6 +33,16 @@ final class Player: SKSpriteNode {
         body.friction = 0.2
         // Никакой упругости — приземляться, а не отскакивать.
         body.restitution = 0
+
+        body.categoryBitMask = PhysicsCategory.player
+        // Сталкиваемся с землёй (отскакиваем от неё).
+        body.collisionBitMask = PhysicsCategory.ground
+        // Уведомления получаем о земле, врагах, наградах, портале.
+        body.contactTestBitMask = PhysicsCategory.ground
+            | PhysicsCategory.enemy
+            | PhysicsCategory.pickup
+            | PhysicsCategory.portal
+
         physicsBody = body
     }
 
