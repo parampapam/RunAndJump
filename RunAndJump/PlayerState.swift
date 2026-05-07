@@ -12,10 +12,6 @@ struct PlayerState: Equatable {
     var bonusPoints: Int
 
     static let initial = PlayerState(health: 5, bonusPoints: 0)
-
-    nonisolated static func == (lhs: PlayerState, rhs: PlayerState) -> Bool {
-        lhs.health == rhs.health && lhs.bonusPoints == rhs.bonusPoints
-    }
 }
 
 enum GameEvent: Equatable {
