@@ -10,8 +10,11 @@ import SpriteKit
 final class GameScene: SKScene {
 
     private var player: Player!
+    private var playerState: PlayerState = .initial
+
     private var ground: SKSpriteNode!
     private var inputController: InputController!
+    private var hud: HUDNode!
 
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.5, green: 0.7, blue: 0.95, alpha: 1.0)
@@ -22,6 +25,7 @@ final class GameScene: SKScene {
         setupGround()
         setupPlayer()
         setupInputController()
+        setupHUD()
     }
 
     private func setupGround() {
@@ -52,10 +56,25 @@ final class GameScene: SKScene {
         addChild(inputController)
     }
 
+    private func setupHUD() {
+        hud = HUDNode(sceneSize: size)
+        hud.update(with: playerState)
+        addChild(hud)
+    }
+
     // MARK: - Игровой цикл
 
     override func update(_ currentTime: TimeInterval) {
         player.update()
+    }
+
+    private func handle(_ event: GameEvent) {
+        playerState = GameRules.apply(event, to: playerState)
+        hud.update(with: playerState)
+
+        if GameRules.isDead(playerState) {
+            // Перезапуск сцены — добавим на следующем шаге.
+        }
     }
 }
 
