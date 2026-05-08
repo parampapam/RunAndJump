@@ -18,9 +18,6 @@ final class Player: SKSpriteNode {
     // Текущее направление движения по горизонтали: -1, 0 или 1.
     private var horizontalDirection: CGFloat = 0
 
-    // Признак, что персонаж касается земли. Обновляется снаружи (из GameScene).
-    var isOnGround: Bool = false
-
     init() {
         let size = CGSize(width: 50, height: 50)
         let texture: SKTexture? = nil
@@ -65,9 +62,7 @@ final class Player: SKSpriteNode {
     }
 
     func jump() {
-        guard isOnGround else { return }
         physicsBody?.applyImpulse(CGVector(dx: 0, dy: jumpImpulse))
-        isOnGround = false
     }
 
     // MARK: - Игровой цикл

@@ -12,9 +12,13 @@ final class GameScene: SKScene {
     private var player: Player!
     private var playerState: PlayerState = .initial
 
+    private var jumpController = JumpController()
+
     private var ground: SKSpriteNode!
     private var inputController: InputController!
     private var hud: HUDNode!
+
+    private var lastUpdateTime: TimeInterval = 0
 
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.5, green: 0.7, blue: 0.95, alpha: 1.0)
@@ -65,7 +69,12 @@ final class GameScene: SKScene {
     // MARK: - Игровой цикл
 
     override func update(_ currentTime: TimeInterval) {
+        lastUpdateTime = currentTime
         player.update()
+
+        if jumpController.consumeJumpIfPossible(at: currentTime) {
+            player.jump()
+        }
     }
 
     private func handle(_ event: GameEvent) {
@@ -95,7 +104,7 @@ extension GameScene: InputControllerDelegate {
     }
 
     func inputControllerDidPressJump(_ controller: InputController) {
-        player.jump()
+        jumpController.didPressJump(at: lastUpdateTime)
     }
 }
 
@@ -108,7 +117,7 @@ extension GameScene: SKPhysicsContactDelegate {
         let categories = contact.bodyA.categoryBitMask | contact.bodyB.categoryBitMask
 
         if categories == (PhysicsCategory.player | PhysicsCategory.ground) {
-            player.isOnGround = true
+            jumpController.didTouchGround(at: lastUpdateTime)
         }
     }
 
@@ -116,7 +125,7 @@ extension GameScene: SKPhysicsContactDelegate {
         let categories = contact.bodyA.categoryBitMask | contact.bodyB.categoryBitMask
 
         if categories == (PhysicsCategory.player | PhysicsCategory.ground) {
-            player.isOnGround = false
+            jumpController.didLeaveGround(at: lastUpdateTime)
         }
     }
 }
