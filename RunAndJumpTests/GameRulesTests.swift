@@ -52,4 +52,28 @@ struct GameRulesTests {
         let new = GameRules.apply(event, to: state)
         #expect(new.health == expectedHealth)
     }
+
+    @Test func outcomePlayingAfterRegularEvent() {
+        let state = PlayerState(health: 4, bonusPoints: 0)
+        let outcome = GameRules.outcome(after: .enemyHit, in: state)
+        #expect(outcome == .playing)
+    }
+
+    @Test func outcomeDiedWhenHealthZero() {
+        let state = PlayerState(health: 0, bonusPoints: 0)
+        let outcome = GameRules.outcome(after: .enemyHit, in: state)
+        #expect(outcome == .died)
+    }
+
+    @Test func outcomeCompletedAtPortal() {
+        let state = PlayerState(health: 3, bonusPoints: 10)
+        let outcome = GameRules.outcome(after: .reachedPortal, in: state)
+        #expect(outcome == .completed)
+    }
+
+    @Test func portalCompletesEvenWithLowHealth() {
+        let state = PlayerState(health: 1, bonusPoints: 0)
+        let outcome = GameRules.outcome(after: .reachedPortal, in: state)
+        #expect(outcome == .completed)
+    }
 }

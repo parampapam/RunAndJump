@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Состояние игрока
 struct PlayerState: Equatable {
     var health: Int
     var bonusPoints: Int
@@ -14,6 +15,14 @@ struct PlayerState: Equatable {
     static let initial = PlayerState(health: 5, bonusPoints: 0)
 }
 
+/// Состояние уровня
+enum LevelOutcome: Equatable {
+    case playing
+    case died
+    case completed
+}
+
+/// Игровое событие
 enum GameEvent: Equatable {
     case enemyHit
     case healthPickup
@@ -40,6 +49,17 @@ enum GameRules {
         }
         return new
     }
+
+    /// Функция по событию и состоянию (после применения события) возвращает новое состояние уровня
+    static func outcome(after event: GameEvent, in state: PlayerState) -> LevelOutcome {
+            if event == .reachedPortal {
+                return .completed
+            }
+            if state.health <= 0 {
+                return .died
+            }
+            return .playing
+        }
 
     /// Считает игрока погибшим.
     static func isDead(_ state: PlayerState) -> Bool {
