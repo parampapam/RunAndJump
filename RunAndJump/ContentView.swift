@@ -2,8 +2,10 @@ import SwiftUI
 import SpriteKit
 
 struct ContentView: View {
+    @MainActor
     var scene: SKScene {
-        let scene = GameScene(size: CGSize(width: 1334, height: 750))
+        let firstLevel = Levels.all[0]
+        let scene = GameScene(configuration: firstLevel, progress: .initial)
         scene.scaleMode = .aspectFill
         return scene
     }

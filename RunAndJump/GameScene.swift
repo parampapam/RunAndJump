@@ -9,16 +9,36 @@ import SpriteKit
 
 final class GameScene: SKScene {
 
-    private var player: Player!
-    private var playerState: PlayerState = .initial
+    // MARK: - Конфигурация и состояние
 
+    private let configuration: LevelConfiguration
+    private let progress: GameProgress
+
+    private var playerState: PlayerState
     private var jumpController = JumpController()
+    private var lastUpdateTime: TimeInterval = 0
 
+    // MARK: - Узлы
+
+    private var player: Player!
     private var ground: SKSpriteNode!
     private var inputController: InputController!
     private var hud: HUDNode!
 
-    private var lastUpdateTime: TimeInterval = 0
+    // MARK: - Init
+
+    init(configuration: LevelConfiguration, progress: GameProgress) {
+        self.configuration = configuration
+        self.progress = progress
+        self.playerState = GameProgressRules.initialPlayerState(for: progress)
+        super.init(size: configuration.sceneSize)
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    // MARK: - Жизненный цикл
 
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.5, green: 0.7, blue: 0.95, alpha: 1.0)
@@ -35,8 +55,10 @@ final class GameScene: SKScene {
         setupLevelObjects()
     }
 
+    // MARK: - Setup
+
     private func setupGround() {
-        let groundSize = CGSize(width: size.width, height: 80)
+        let groundSize = CGSize(width: size.width, height: configuration.groundHeight)
         ground = SKSpriteNode(color: .brown, size: groundSize)
         // Позиционируем по центру нижнего края сцены.
         ground.position = CGPoint(x: size.width / 2, y: groundSize.height / 2)
@@ -53,7 +75,7 @@ final class GameScene: SKScene {
 
     private func setupPlayer() {
         player = Player()
-        player.position = CGPoint(x: size.width / 2, y: size.height - 100)
+        player.position = configuration.playerStart
         addChild(player)
     }
 
@@ -70,37 +92,13 @@ final class GameScene: SKScene {
     }
 
     private func setupLevelObjects() {
-        let groundTop = ground.size.height // Y верхней грани земли
-
-        // Стационарный враг возле начала пути.
-        let stationary = Enemy()
-        stationary.position = CGPoint(x: 400, y: groundTop + 20)
-        addChild(stationary)
-
-        // Патрулирующий враг в средней части.
-        let patrolMovement = PatrollingMovement(leftX: 700, rightX: 900, speed: 100)
-        let patrolling = Enemy(movement: patrolMovement)
-        patrolling.position = CGPoint(x: 800, y: groundTop + 20)
-        addChild(patrolling)
-
-        // Награда здоровья.
-        let healthPickup = Pickup(kind: .health)
-        healthPickup.position = CGPoint(x: 300, y: groundTop + 100)
-        addChild(healthPickup)
-
-        // Бонусные награды.
-        let bonus1 = Pickup(kind: .bonus(points: 5))
-        bonus1.position = CGPoint(x: 600, y: groundTop + 100)
-        addChild(bonus1)
-
-        let bonus2 = Pickup(kind: .bonus(points: 10))
-        bonus2.position = CGPoint(x: 1000, y: groundTop + 100)
-        addChild(bonus2)
-
-        // Портал в конце.
-        let portal = Portal()
-        portal.position = CGPoint(x: size.width - 80, y: groundTop + 40)
-        addChild(portal)
+        for enemyDescriptor in configuration.enemies {
+            addChild(LevelBuilder.makeEnemy(from: enemyDescriptor))
+        }
+        for pickupDescriptor in configuration.pickups {
+            addChild(LevelBuilder.makePickup(from: pickupDescriptor))
+        }
+        addChild(LevelBuilder.makePortal(at: configuration.portal))
     }
 
     // MARK: - Игровой цикл
@@ -121,6 +119,8 @@ final class GameScene: SKScene {
         }
     }
 
+    // MARK: - Обработка событий
+
     private func handle(_ event: GameEvent) {
         playerState = GameRules.apply(event, to: playerState)
         hud.update(with: playerState)
@@ -137,22 +137,35 @@ final class GameScene: SKScene {
     }
 
     private func restartLevel() {
-        let newScene = GameScene(size: size)
+        let newScene = GameScene(configuration: configuration, progress: progress)
         newScene.scaleMode = scaleMode
         view?.presentScene(newScene, transition: .fade(withDuration: 0.5))
     }
 
     private func completeLevel() {
-        // Пока просто перезапускаем, но печатаем для понимания.
-        // На шаге 6 здесь будет переход к следующему уровню.
-        print("Level completed! Bonus points: \(playerState.bonusPoints)")
-        let newScene = GameScene(size: size)
-        newScene.scaleMode = scaleMode
-        view?.presentScene(newScene, transition: .fade(withDuration: 0.5))
+        let newProgress = GameProgressRules.levelCompleted(
+            progress: progress,
+            finalState: playerState
+        )
+
+        if GameProgressRules.isGameCompleted(progress: newProgress, totalLevels: Levels.all.count) {
+            presentVictory(progress: newProgress)
+        } else {
+            let nextLevel = Levels.all[newProgress.currentLevelIndex]
+            let newScene = GameScene(configuration: nextLevel, progress: newProgress)
+            newScene.scaleMode = scaleMode
+            view?.presentScene(newScene, transition: .fade(withDuration: 0.5))
+        }
+    }
+
+    private func presentVictory(progress: GameProgress) {
+        let victoryScene = VictoryScene(size: size, totalBonusPoints: progress.carriedBonusPoints)
+        victoryScene.scaleMode = scaleMode
+        view?.presentScene(victoryScene, transition: .fade(withDuration: 0.5))
     }
 }
 
-// MARK: - InputControllerDelegate
+// MARK: - Делегаты
 
 extension GameScene: InputControllerDelegate {
 
@@ -173,8 +186,6 @@ extension GameScene: InputControllerDelegate {
     }
 }
 
-
-// MARK: - SKPhysicsContactDelegate
 
 extension GameScene: SKPhysicsContactDelegate {
 
