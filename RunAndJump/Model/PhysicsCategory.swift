@@ -14,4 +14,5 @@ enum PhysicsCategory {
     static let enemy: UInt32     = 1 << 2  // 0100
     static let pickup: UInt32    = 1 << 3  // 1000
     static let portal: UInt32    = 1 << 4  // 10000
+    static let platform: UInt32  = 1 << 5  // 100000
 }

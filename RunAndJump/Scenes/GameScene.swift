@@ -92,6 +92,9 @@ final class GameScene: SKScene {
     }
 
     private func setupLevelObjects() {
+        for platformDescriptor in configuration.platforms {
+            addChild(LevelBuilder.makePlatform(from: platformDescriptor))
+        }
         for enemyDescriptor in configuration.enemies {
             addChild(LevelBuilder.makeEnemy(from: enemyDescriptor))
         }
@@ -192,8 +195,9 @@ extension GameScene: SKPhysicsContactDelegate {
     func didBegin(_ contact: SKPhysicsContact) {
         let bodies = (contact.bodyA, contact.bodyB)
 
-        // Контакт игрока с землёй — обновляем jumpController.
-        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground) {
+        // Контакт игрока с землёй или платформой — обновляем jumpController.
+        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground)
+            || matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
             jumpController.didTouchGround(at: lastUpdateTime)
             return
         }
@@ -226,7 +230,8 @@ extension GameScene: SKPhysicsContactDelegate {
     func didEnd(_ contact: SKPhysicsContact) {
         let bodies = (contact.bodyA, contact.bodyB)
 
-        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground) {
+        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground)
+            || matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
             jumpController.didLeaveGround(at: lastUpdateTime)
         }
     }

@@ -13,6 +13,7 @@ struct LevelConfiguration: Equatable {
     let sceneSize: CGSize
     let playerStart: CGPoint
     let groundHeight: CGFloat
+    let platforms: [PlatformDescriptor]
     let enemies: [EnemyDescriptor]
     let pickups: [PickupDescriptor]
     let portal: CGPoint
@@ -27,6 +28,12 @@ struct EnemyDescriptor: Equatable {
 
     let position: CGPoint
     let behavior: Behavior
+}
+
+/// Декларативное описание платформы.
+struct PlatformDescriptor: Equatable {
+    let position: CGPoint
+    let size: CGSize
 }
 
 /// Декларативное описание награды.
