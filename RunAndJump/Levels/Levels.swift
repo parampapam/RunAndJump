@@ -24,6 +24,16 @@ enum Levels {
         sceneSize: sceneSize,
         playerStart: CGPoint(x: 100, y: groundTop + 100),
         groundHeight: groundHeight,
+        platforms: [
+            PlatformDescriptor(
+                position: CGPoint(x: 350, y: groundTop + 130),
+                size: CGSize(width: 200, height: 20)
+            ),
+            PlatformDescriptor(
+                position: CGPoint(x: 800, y: groundTop + 230),
+                size: CGSize(width: 200, height: 20)
+            ),
+        ],
         enemies: [
             EnemyDescriptor(
                 position: CGPoint(x: 400, y: groundTop + 20),
@@ -52,6 +62,20 @@ enum Levels {
         sceneSize: sceneSize,
         playerStart: CGPoint(x: 100, y: groundTop + 100),
         groundHeight: groundHeight,
+        platforms: [
+            PlatformDescriptor(
+                position: CGPoint(x: 300, y: groundTop + 130),
+                size: CGSize(width: 160, height: 20)
+            ),
+            PlatformDescriptor(
+                position: CGPoint(x: 650, y: groundTop + 230),
+                size: CGSize(width: 160, height: 20)
+            ),
+            PlatformDescriptor(
+                position: CGPoint(x: 1050, y: groundTop + 130),
+                size: CGSize(width: 160, height: 20)
+            ),
+        ],
         enemies: [
             EnemyDescriptor(
                 position: CGPoint(x: 350, y: groundTop + 20),
@@ -84,6 +108,24 @@ enum Levels {
         sceneSize: sceneSize,
         playerStart: CGPoint(x: 100, y: groundTop + 100),
         groundHeight: groundHeight,
+        platforms: [
+            PlatformDescriptor(
+                position: CGPoint(x: 250, y: groundTop + 130),
+                size: CGSize(width: 150, height: 20)
+            ),
+            PlatformDescriptor(
+                position: CGPoint(x: 550, y: groundTop + 230),
+                size: CGSize(width: 150, height: 20)
+            ),
+            PlatformDescriptor(
+                position: CGPoint(x: 850, y: groundTop + 300),
+                size: CGSize(width: 150, height: 20)
+            ),
+            PlatformDescriptor(
+                position: CGPoint(x: 1150, y: groundTop + 230),
+                size: CGSize(width: 150, height: 20)
+            ),
+        ],
         enemies: [
             EnemyDescriptor(
                 position: CGPoint(x: 300, y: groundTop + 20),

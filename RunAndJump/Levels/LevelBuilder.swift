@@ -44,4 +44,10 @@ enum LevelBuilder {
         portal.position = position
         return portal
     }
+
+    static func makePlatform(from descriptor: PlatformDescriptor) -> Platform {
+        let platform = Platform(size: descriptor.size)
+        platform.position = descriptor.position
+        return platform
+    }
 }
