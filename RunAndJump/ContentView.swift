@@ -6,7 +6,7 @@ struct ContentView: View {
     var scene: SKScene {
         let firstLevel = Levels.all[0]
         let scene = GameScene(configuration: firstLevel, progress: .initial)
-        scene.scaleMode = .aspectFill
+        scene.scaleMode = .resizeFill
         return scene
     }
 

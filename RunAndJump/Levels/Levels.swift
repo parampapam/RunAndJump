@@ -10,7 +10,7 @@ import CoreGraphics
 enum Levels {
 
     static let sceneSize = CGSize(width: 1334, height: 750)
-    static let groundHeight: CGFloat = 80
+    static let groundHeight: CGFloat = 32
 
     /// Y-координата поверхности земли — точка, на которую "ставим" объекты.
     private static let groundTop: CGFloat = groundHeight

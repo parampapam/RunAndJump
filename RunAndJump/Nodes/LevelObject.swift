@@ -12,8 +12,7 @@ import SpriteKit
 class LevelObject: SKSpriteNode {
 
     init(size: CGSize, color: SKColor) {
-        let texture: SKTexture? = nil
-        super.init(texture: texture, color: color, size: size)
+        super.init(texture: nil, color: color, size: size)
 
         /// Все объекты статичные, включая патрулирующего врага. На него не действует гравитация
         /// и физика. Управление его движением через метод update, иначе враги будут падать с

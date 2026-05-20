@@ -13,13 +13,13 @@ final class Player: SKSpriteNode {
     private let movementSpeed: CGFloat = 250
 
     // Сила импульса прыжка.
-    private let jumpImpulse: CGFloat = 120
+    private let jumpImpulse: CGFloat = 50
 
     // Текущее направление движения по горизонтали: -1, 0 или 1.
     private var horizontalDirection: CGFloat = 0
 
     init() {
-        let size = CGSize(width: 50, height: 50)
+        let size = CGSize(width: 32, height: 32)
         let texture: SKTexture? = nil
         super.init(texture: texture, color: .red, size: size)
 

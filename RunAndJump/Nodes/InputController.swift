@@ -27,21 +27,21 @@ final class InputController: SKNode {
     private var activeJumpTouch: UITouch?
 
     init(sceneSize: CGSize) {
-        let buttonSize = CGSize(width: 90, height: 90)
+        let buttonSize = CGSize(width: 64, height: 64)
 
         leftButton = SKSpriteNode(color: .darkGray, size: buttonSize)
         leftButton.alpha = 0.3
-        leftButton.position = CGPoint(x: 90, y: 150)
+        leftButton.position = CGPoint(x: buttonSize.width * 1.5, y: buttonSize.height * 1.5)
         leftButton.name = "leftButton"
 
         rightButton = SKSpriteNode(color: .darkGray, size: buttonSize)
         rightButton.alpha = 0.3
-        rightButton.position = CGPoint(x: 200, y: 150)
+        rightButton.position = CGPoint(x: buttonSize.width * 3, y: buttonSize.height * 1.5)
         rightButton.name = "rightButton"
 
         jumpButton = SKSpriteNode(color: .darkGray, size: buttonSize)
         jumpButton.alpha = 0.3
-        jumpButton.position = CGPoint(x: sceneSize.width - 90, y: 150)
+        jumpButton.position = CGPoint(x: sceneSize.width - buttonSize.width * 1.5, y: buttonSize.height * 1.5)
         jumpButton.name = "jumpButton"
 
         super.init()
