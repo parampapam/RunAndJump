@@ -12,6 +12,7 @@ struct LevelConfiguration: Equatable {
     let name: String
     let sceneSize: CGSize
     let levelWidth: CGFloat
+    let levelHeight: CGFloat
     let playerStart: CGPoint
     let groundHeight: CGFloat
     let platforms: [PlatformDescriptor]

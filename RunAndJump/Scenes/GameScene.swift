@@ -136,10 +136,10 @@ final class GameScene: SKScene {
 
     private func updateCamera() {
         let halfW = size.width / 2
-        let minX = halfW
-        let maxX = configuration.levelWidth - halfW
-        let targetX = max(minX, min(maxX, player.position.x))
-        cameraNode.position = CGPoint(x: targetX, y: size.height / 2)
+        let halfH = size.height / 2
+        let targetX = max(halfW, min(configuration.levelWidth - halfW, player.position.x))
+        let targetY = max(halfH, min(configuration.levelHeight - halfH, player.position.y))
+        cameraNode.position = CGPoint(x: targetX, y: targetY)
     }
 
     // MARK: - Обработка событий

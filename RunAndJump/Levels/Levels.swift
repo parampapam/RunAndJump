@@ -11,6 +11,7 @@ enum Levels {
 
     static let sceneSize = CGSize(width: 1334, height: 750)
     static let levelWidth: CGFloat = 2668
+    static let levelHeight: CGFloat = 750
     static let groundHeight: CGFloat = 32
 
     /// Y-координата поверхности земли — точка, на которую "ставим" объекты.
@@ -24,6 +25,7 @@ enum Levels {
         name: "Level 1",
         sceneSize: sceneSize,
         levelWidth: levelWidth,
+        levelHeight: levelHeight,
         playerStart: CGPoint(x: 100, y: groundTop + 100),
         groundHeight: groundHeight,
         platforms: [
@@ -83,6 +85,7 @@ enum Levels {
         name: "Level 2",
         sceneSize: sceneSize,
         levelWidth: levelWidth,
+        levelHeight: levelHeight,
         playerStart: CGPoint(x: 100, y: groundTop + 100),
         groundHeight: groundHeight,
         platforms: [
@@ -150,6 +153,7 @@ enum Levels {
         name: "Level 3",
         sceneSize: sceneSize,
         levelWidth: levelWidth,
+        levelHeight: levelHeight,
         playerStart: CGPoint(x: 100, y: groundTop + 100),
         groundHeight: groundHeight,
         platforms: [
