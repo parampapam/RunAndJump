@@ -35,7 +35,8 @@ final class HUDNode: SKSpriteNode {
         super.init(texture: nil, color: UIColor(red: 138, green: 138, blue: 138, alpha: 1), size: barSize)
 
         anchorPoint = .init(x: 0, y: 0.5)
-        position = CGPoint(x: sceneSize.width / 2 - barSize.width / 2 , y: sceneSize.height - barSize.height)
+        // Координаты относительно центра камеры: левый край бара, центр Y у верхней границы.
+        position = CGPoint(x: -(barSize.width / 2), y: sceneSize.height / 2 - barSize.height)
         zPosition = 1000
         addChild(bonusLabel)
         addChild(menuButton)
