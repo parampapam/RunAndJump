@@ -24,6 +24,7 @@ final class GameScene: SKScene {
     private var ground: SKSpriteNode!
     private var inputController: InputController!
     private var hud: HUDNode!
+    private var cameraNode: SKCameraNode!
 
     // MARK: - Init
 
@@ -48,6 +49,7 @@ final class GameScene: SKScene {
 
         view.isMultipleTouchEnabled = true
 
+        setupCamera()
         setupGround()
         setupPlayer()
         setupInputController()
@@ -57,11 +59,17 @@ final class GameScene: SKScene {
 
     // MARK: - Setup
 
+    private func setupCamera() {
+        cameraNode = SKCameraNode()
+        addChild(cameraNode)
+        camera = cameraNode
+        cameraNode.position = CGPoint(x: size.width / 2, y: size.height / 2)
+    }
+
     private func setupGround() {
-        let groundSize = CGSize(width: size.width, height: configuration.groundHeight)
+        let groundSize = CGSize(width: configuration.levelWidth, height: configuration.groundHeight)
         ground = SKSpriteNode(color: .brown, size: groundSize)
-        // Позиционируем по центру нижнего края сцены.
-        ground.position = CGPoint(x: size.width / 2, y: groundSize.height / 2)
+        ground.position = CGPoint(x: configuration.levelWidth / 2, y: groundSize.height / 2)
 
         let body = SKPhysicsBody(rectangleOf: groundSize)
         body.isDynamic = false
@@ -82,13 +90,15 @@ final class GameScene: SKScene {
     private func setupInputController() {
         inputController = InputController(sceneSize: size)
         inputController.delegate = self
-        addChild(inputController)
+        // Кнопки расположены относительно левого нижнего угла — смещаем узел туда.
+        inputController.position = CGPoint(x: -size.width / 2, y: -size.height / 2)
+        cameraNode.addChild(inputController)
     }
 
     private func setupHUD() {
         hud = HUDNode(sceneSize: size)
         hud.update(with: playerState)
-        addChild(hud)
+        cameraNode.addChild(hud)
     }
 
     private func setupLevelObjects() {
@@ -120,6 +130,16 @@ final class GameScene: SKScene {
         if jumpController.consumeJumpIfPossible(at: currentTime) {
             player.jump()
         }
+
+        updateCamera()
+    }
+
+    private func updateCamera() {
+        let halfW = size.width / 2
+        let minX = halfW
+        let maxX = configuration.levelWidth - halfW
+        let targetX = max(minX, min(maxX, player.position.x))
+        cameraNode.position = CGPoint(x: targetX, y: size.height / 2)
     }
 
     // MARK: - Обработка событий

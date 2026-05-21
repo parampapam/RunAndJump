@@ -11,6 +11,7 @@ import CoreGraphics
 struct LevelConfiguration: Equatable {
     let name: String
     let sceneSize: CGSize
+    let levelWidth: CGFloat
     let playerStart: CGPoint
     let groundHeight: CGFloat
     let platforms: [PlatformDescriptor]
