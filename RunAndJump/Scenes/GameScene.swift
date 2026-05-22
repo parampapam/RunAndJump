@@ -51,6 +51,7 @@ final class GameScene: SKScene {
 
         setupCamera()
         setupGround()
+        setupBoundaries()
         setupPlayer()
         setupInputController()
         setupHUD()
@@ -79,6 +80,22 @@ final class GameScene: SKScene {
         ground.physicsBody = body
 
         addChild(ground)
+    }
+
+    private func setupBoundaries() {
+        let wallThickness: CGFloat = 4
+        let wallHeight = configuration.levelHeight
+
+        for xPos in [wallThickness / 2, configuration.levelWidth - wallThickness / 2] {
+            let wall = SKSpriteNode(color: .clear, size: CGSize(width: wallThickness, height: wallHeight))
+            wall.position = CGPoint(x: xPos, y: wallHeight / 2)
+            let body = SKPhysicsBody(rectangleOf: wall.size)
+            body.isDynamic = false
+            body.categoryBitMask = PhysicsCategory.wall
+            body.contactTestBitMask = PhysicsCategory.none
+            wall.physicsBody = body
+            addChild(wall)
+        }
     }
 
     private func setupPlayer() {

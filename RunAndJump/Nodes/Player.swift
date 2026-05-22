@@ -33,7 +33,7 @@ final class Player: SKSpriteNode {
 
         body.categoryBitMask = PhysicsCategory.player
         // Сталкиваемся с землёй и платформами (отскакиваем от них).
-        body.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.platform
+        body.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.platform | PhysicsCategory.wall
         // Уведомления получаем о земле, платформах, врагах, наградах, портале.
         body.contactTestBitMask = PhysicsCategory.ground
             | PhysicsCategory.platform
