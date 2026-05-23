@@ -16,9 +16,16 @@ struct LevelConfiguration: Equatable {
     let playerStart: CGPoint
     let groundHeight: CGFloat
     let platforms: [PlatformDescriptor]
+    let ladders: [LadderDescriptor]
     let enemies: [EnemyDescriptor]
     let pickups: [PickupDescriptor]
     let portal: CGPoint
+}
+
+/// Декларативное описание лестницы.
+struct LadderDescriptor: Equatable {
+    let position: CGPoint   // центр лестницы
+    let size: CGSize        // ширина и высота
 }
 
 /// Декларативное описание врага.

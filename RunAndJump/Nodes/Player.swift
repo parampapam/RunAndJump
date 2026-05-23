@@ -9,14 +9,14 @@ import SpriteKit
 
 final class Player: SKSpriteNode {
 
-    // Скорость горизонтального движения в точках в секунду.
     private let movementSpeed: CGFloat = 250
-
-    // Сила импульса прыжка.
     private let jumpImpulse: CGFloat = 50
+    private let climbSpeed: CGFloat = 150
 
-    // Текущее направление движения по горизонтали: -1, 0 или 1.
     private var horizontalDirection: CGFloat = 0
+    private var verticalClimbDirection: CGFloat = 0
+
+    private(set) var isOnLadder: Bool = false
 
     init() {
         let size = CGSize(width: 32, height: 32)
@@ -40,6 +40,7 @@ final class Player: SKSpriteNode {
             | PhysicsCategory.enemy
             | PhysicsCategory.pickup
             | PhysicsCategory.portal
+            | PhysicsCategory.ladder
 
         physicsBody = body
     }
@@ -48,7 +49,7 @@ final class Player: SKSpriteNode {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Команды (вызываются из GameScene)
+    // MARK: - Команды движения
 
     func startMovingLeft() {
         horizontalDirection = -1
@@ -66,15 +67,50 @@ final class Player: SKSpriteNode {
         physicsBody?.applyImpulse(CGVector(dx: 0, dy: jumpImpulse))
     }
 
+    // MARK: - Команды лестницы
+
+    func enterLadder(centerX: CGFloat) {
+        guard !isOnLadder else { return }
+        isOnLadder = true
+        // Встаём строго по центру лестницы, чтобы не свисать с края.
+        position.x = centerX
+        physicsBody?.affectedByGravity = false
+        physicsBody?.velocity = .zero
+        // Разрешаем проходить сквозь платформы при подъёме.
+        physicsBody?.collisionBitMask &= ~PhysicsCategory.platform
+    }
+
+    func exitLadder() {
+        guard isOnLadder else { return }
+        isOnLadder = false
+        verticalClimbDirection = 0
+        physicsBody?.affectedByGravity = true
+        physicsBody?.collisionBitMask |= PhysicsCategory.platform
+    }
+
+    func startClimbingUp() {
+        verticalClimbDirection = 1
+    }
+
+    func startClimbingDown() {
+        verticalClimbDirection = -1
+    }
+
+    func stopClimbing() {
+        verticalClimbDirection = 0
+    }
+
     // MARK: - Игровой цикл
 
-    /// Вызывается из GameScene.update каждый кадр.
     func update() {
         guard let body = physicsBody else { return }
-        // Перезаписываем горизонтальную скорость, оставляя вертикальную (гравитация, прыжок).
-        body.velocity = CGVector(
-            dx: horizontalDirection * movementSpeed,
-            dy: body.velocity.dy
-        )
+        if isOnLadder {
+            body.velocity = CGVector(dx: 0, dy: verticalClimbDirection * climbSpeed)
+        } else {
+            body.velocity = CGVector(
+                dx: horizontalDirection * movementSpeed,
+                dy: body.velocity.dy
+            )
+        }
     }
 }
