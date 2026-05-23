@@ -46,6 +46,13 @@ enum Levels {
                 size: CGSize(width: 200, height: 20)
             ),
         ],
+        // Лестница от земли до первой платформы (верх платформы: groundTop+140=172, +16 запас → y до 188).
+        ladders: [
+            LadderDescriptor(
+                position: CGPoint(x: 320, y: groundTop + 78),
+                size: CGSize(width: 40, height: 156)
+            ),
+        ],
         enemies: [
             EnemyDescriptor(
                 position: CGPoint(x: 400, y: groundTop + 20),
@@ -108,6 +115,13 @@ enum Levels {
             PlatformDescriptor(
                 position: CGPoint(x: 2000, y: groundTop + 280),
                 size: CGSize(width: 160, height: 20)
+            ),
+        ],
+        // Лестница к платформе на x=650 (верх: groundTop+240=272, +16 запас → y до 288).
+        ladders: [
+            LadderDescriptor(
+                position: CGPoint(x: 625, y: groundTop + 128),
+                size: CGSize(width: 40, height: 256)
             ),
         ],
         enemies: [
@@ -184,6 +198,13 @@ enum Levels {
             PlatformDescriptor(
                 position: CGPoint(x: 2200, y: groundTop + 340),
                 size: CGSize(width: 150, height: 20)
+            ),
+        ],
+        // Лестница от земли до высокой платформы на x=850 (верх: groundTop+310=342, +16 запас → y до 358).
+        ladders: [
+            LadderDescriptor(
+                position: CGPoint(x: 825, y: groundTop + 163),
+                size: CGSize(width: 40, height: 326)
             ),
         ],
         enemies: [

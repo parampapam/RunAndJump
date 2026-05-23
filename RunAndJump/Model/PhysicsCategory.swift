@@ -16,4 +16,5 @@ enum PhysicsCategory {
     static let portal: UInt32    = 1 << 4  // 10000
     static let platform: UInt32  = 1 << 5  // 100000
     static let wall: UInt32      = 1 << 6  // 1000000
+    static let ladder: UInt32    = 1 << 7  // 10000000
 }
