@@ -16,6 +16,7 @@ struct LevelConfiguration: Equatable {
     let playerStart: CGPoint
     let groundHeight: CGFloat
     let platforms: [PlatformDescriptor]
+    let movingPlatforms: [MovingPlatformDescriptor]
     let ladders: [LadderDescriptor]
     let enemies: [EnemyDescriptor]
     let pickups: [PickupDescriptor]
@@ -43,6 +44,15 @@ struct EnemyDescriptor: Equatable {
 struct PlatformDescriptor: Equatable {
     let position: CGPoint
     let size: CGSize
+}
+
+/// Декларативное описание подвижной платформы.
+struct MovingPlatformDescriptor: Equatable {
+    let size: CGSize
+    let startPosition: CGPoint
+    let endPosition: CGPoint
+    let speed: CGFloat      // pts/s
+    let pauseDuration: Double   // задержка в крайних точках, секунды
 }
 
 /// Декларативное описание награды.
