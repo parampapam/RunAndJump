@@ -46,6 +46,16 @@ enum Levels {
                 size: CGSize(width: 200, height: 20)
             ),
         ],
+        movingPlatforms: [
+            // Горизонтальная платформа в середине уровня — мост над пустотой.
+            MovingPlatformDescriptor(
+                size: CGSize(width: 160, height: 20),
+                startPosition: CGPoint(x: 1100, y: groundTop + 200),
+                endPosition: CGPoint(x: 1350, y: groundTop + 200),
+                speed: 90,
+                pauseDuration: 0.6
+            ),
+        ],
         // Лестница от земли до первой платформы (верх платформы: groundTop+140=172, +16 запас → y до 188).
         ladders: [
             LadderDescriptor(
@@ -115,6 +125,16 @@ enum Levels {
             PlatformDescriptor(
                 position: CGPoint(x: 2000, y: groundTop + 280),
                 size: CGSize(width: 160, height: 20)
+            ),
+        ],
+        movingPlatforms: [
+            // Вертикальная платформа — лифт к высокой платформе.
+            MovingPlatformDescriptor(
+                size: CGSize(width: 160, height: 20),
+                startPosition: CGPoint(x: 1750, y: groundTop + 60),
+                endPosition: CGPoint(x: 1750, y: groundTop + 260),
+                speed: 100,
+                pauseDuration: 1.0
             ),
         ],
         // Лестница к платформе на x=650 (верх: groundTop+240=272, +16 запас → y до 288).
@@ -198,6 +218,24 @@ enum Levels {
             PlatformDescriptor(
                 position: CGPoint(x: 2200, y: groundTop + 340),
                 size: CGSize(width: 150, height: 20)
+            ),
+        ],
+        movingPlatforms: [
+            // Горизонтальная подвижная платформа в начале уровня.
+            MovingPlatformDescriptor(
+                size: CGSize(width: 140, height: 20),
+                startPosition: CGPoint(x: 380, y: groundTop + 200),
+                endPosition: CGPoint(x: 600, y: groundTop + 200),
+                speed: 120,
+                pauseDuration: 0.5
+            ),
+            // Вертикальная подвижная платформа во второй половине.
+            MovingPlatformDescriptor(
+                size: CGSize(width: 140, height: 20),
+                startPosition: CGPoint(x: 1700, y: groundTop + 60),
+                endPosition: CGPoint(x: 1700, y: groundTop + 300),
+                speed: 110,
+                pauseDuration: 0.8
             ),
         ],
         // Лестница от земли до высокой платформы на x=850 (верх: groundTop+310=342, +16 запас → y до 358).

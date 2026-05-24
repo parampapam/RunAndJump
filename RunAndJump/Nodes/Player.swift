@@ -17,6 +17,9 @@ final class Player: SKSpriteNode {
     private var verticalClimbDirection: CGFloat = 0
 
     private(set) var isOnLadder: Bool = false
+    var hasHorizontalInput: Bool { horizontalDirection != 0 }
+    /// Горизонтальная скорость от ввода игрока (pts/s), без учёта платформы.
+    var horizontalVelocity: CGFloat { horizontalDirection * movementSpeed }
 
     init() {
         let size = CGSize(width: 32, height: 32)
