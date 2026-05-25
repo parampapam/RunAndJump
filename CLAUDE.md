@@ -6,22 +6,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **RunAndJump** — 2D iOS platformer built with Swift and SpriteKit. Landscape orientation, multiple levels, enemies, pickups, portal exit.
 
-## Commands
+- Minimum iOS: **iOS 18**
+- Swift: **Swift 6**
+- Default simulator: **iPhone 17**
+- Default scheme: **RunAndJump**
 
-```bash
-# Build
+## Build & Test — ALWAYS use XcodeBuildMCP
+
+**Never** invoke raw `xcodebuild` through Bash. XcodeBuildMCP is connected
+(dynamic tools mode) and returns structured JSON with categorised errors.
+
+Discover the right tool for the task via the server's discovery mechanism,
+then use it. Project parameters:
+
+- Scheme: `RunAndJump`
+- Simulator: `iPhone 17`
+- Project type: `.xcodeproj` (not workspace)
+- Test framework: Swift Testing
+
+Typical workflows:
+- **Build**: ask XcodeBuildMCP for a build tool for an iOS Simulator
+  xcodeproj by simulator name
+- **All tests**: same, but a test tool
+- **Single suite**: same test tool with `-only-testing:RunAndJumpTests/<SuiteName>`
+- **List schemes / simulators**: discovery / list tools from the server
+
+Fallback for CI only (never in a Claude Code session):
+
+\`\`\`bash
 xcodebuild build -scheme RunAndJump -destination "platform=iOS Simulator,name=iPhone 17"
-
-# Run all tests
-xcodebuild test -scheme RunAndJump -destination "platform=iOS Simulator,name=iPhone 17"
-
-# Run a single test file (Swift Testing)
-xcodebuild test -scheme RunAndJump -destination "platform=iOS Simulator,name=iPhone 17" -only-testing:RunAndJumpTests/GameRulesTests
-```
+xcodebuild test  -scheme RunAndJump -destination "platform=iOS Simulator,name=iPhone 17"
+\`\`\`
 
 ## Architecture
 
-The codebase is split into two clearly separated layers:
+The codebase is split into two clearly separated layers. **This separation is load-bearing — never blur it.**
 
 ### Model layer (`RunAndJump/Model/`, `Levels/`) — pure Swift, no SpriteKit
 
@@ -46,9 +65,31 @@ All game logic lives here as value types (structs/enums) with pure functions. Th
 - **`InputController`** — touch-based left/right/jump buttons; tracks per-touch events to detect button release.
 - **`LevelBuilder`** — factory that creates SpriteKit nodes from descriptor structs in `LevelConfiguration`.
 
-### Testing
+## Testing
 
-Uses **Swift Testing** (`@Test` macros, not XCTest). Tests are in `RunAndJumpTests/` and cover only the model layer:
+Uses **Swift Testing** (`@Test` macros, `#expect`, `#require` — not XCTest). Tests are in `RunAndJumpTests/` and cover **only the model layer**:
+
 - `GameRulesTests` — state transitions and outcomes
 - `JumpControllerTests` — coyote time, jump buffering, double-jump prevention
 - `GameProgressTests` — level advancement and bonus carryover
+
+When adding new game logic, the test for it goes in the model layer too. If something feels untestable, it probably has a SpriteKit dependency that needs to be extracted into a pure type first.
+
+## Conventions & Constraints
+
+**Layer hygiene**
+- Never add `import SpriteKit` (or any SK type) to files under `Model/` or `Levels/`. If you need a position, use `CGPoint` from CoreGraphics, not an `SKNode`.
+- New gameplay logic → pure functions / value types in `Model/`, covered by a Swift Testing test.
+
+**Extension points**
+- New enemy behaviour → implement `EnemyMovement`, don't subclass `Enemy`.
+- New level → add a `LevelConfiguration` to the `Levels` enum, don't create a new SKScene subclass.
+- New pickup type → extend the existing `Pickup` mechanism rather than introducing a parallel node.
+
+**Project file**
+- Do not edit `.pbxproj` by hand — add new files through Xcode. If a new file must be referenced, stop and tell me; don't try to patch the project file.
+
+**Style**
+- Swift Testing for all new tests (`@Test`, `#expect`), never XCTest.
+- Value types (struct/enum) by default in the model layer; classes only where SpriteKit requires reference semantics.
+- Keep the game loop in `update()` ordered: input → player movement → enemy movement → contact resolution → HUD.
