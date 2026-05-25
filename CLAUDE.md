@@ -75,6 +75,13 @@ Uses **Swift Testing** (`@Test` macros, `#expect`, `#require` — not XCTest). T
 
 When adding new game logic, the test for it goes in the model layer too. If something feels untestable, it probably has a SpriteKit dependency that needs to be extracted into a pure type first.
 
+## Working Style
+
+- Proactively suggest architecture improvements: point out when code could be more testable, when responsibilities are mixed, when a value type would fit better than a class, when a dependency should be injected.
+- Prefer clarity over cleverness. Explain *why* a design choice helps, not just *what* to change.
+- When reviewing code, flag tight coupling, hidden state, and untestable side effects even if I didn't ask.
+- When writing new code, default to pure functions and value types where the language allows; isolate I/O and framework dependencies at the edges.
+
 ## Conventions & Constraints
 
 **Layer hygiene**
