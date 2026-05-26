@@ -10,7 +10,12 @@ import SpriteKit
 protocol InputControllerDelegate: AnyObject {
     func inputControllerDidPressLeft(_ controller: InputController)
     func inputControllerDidPressRight(_ controller: InputController)
-    func inputControllerDidReleaseDirection(_ controller: InputController)
+    func inputControllerDidReleaseHorizontal(_ controller: InputController)
+
+    func inputControllerDidPressUp(_ controller: InputController)
+    func inputControllerDidPressDown(_ controller: InputController)
+    func inputControllerDidReleaseVertical(_ controller: InputController)
+
     func inputControllerDidPressJump(_ controller: InputController)
 }
 
@@ -20,10 +25,15 @@ final class InputController: SKNode {
 
     private let leftButton: SKSpriteNode
     private let rightButton: SKSpriteNode
+    private let upButton: SKSpriteNode
+    private let downButton: SKSpriteNode
     private let jumpButton: SKSpriteNode
 
-    // Отслеживаем активные касания, чтобы понимать, когда отпустили кнопку.
-    private var activeDirectionTouch: UITouch?
+    // Независимые слоты по осям: горизонтальная, вертикальная, прыжок.
+    // Это позволяет игроку зажимать кнопки разных осей одновременно
+    // (например, «вверх по лестнице» + «вправо»).
+    private var activeHorizontalTouch: UITouch?
+    private var activeVerticalTouch: UITouch?
     private var activeJumpTouch: UITouch?
 
     init(sceneSize: CGSize) {
@@ -39,6 +49,16 @@ final class InputController: SKNode {
         rightButton.position = CGPoint(x: buttonSize.width * 3, y: buttonSize.height * 1.5)
         rightButton.name = "rightButton"
 
+        upButton = SKSpriteNode(color: .darkGray, size: buttonSize)
+        upButton.alpha = 0.3
+        upButton.position = CGPoint(x: buttonSize.width * 2.25, y: buttonSize.height * 2.25)
+        upButton.name = "upButton"
+
+        downButton = SKSpriteNode(color: .darkGray, size: buttonSize)
+        downButton.alpha = 0.3
+        downButton.position = CGPoint(x: buttonSize.width * 2.25, y: buttonSize.height * 0.75)
+        downButton.name = "downButton"
+
         jumpButton = SKSpriteNode(color: .darkGray, size: buttonSize)
         jumpButton.alpha = 0.3
         jumpButton.position = CGPoint(x: sceneSize.width - buttonSize.width * 1.5, y: buttonSize.height * 1.5)
@@ -51,6 +71,8 @@ final class InputController: SKNode {
 
         addChild(leftButton)
         addChild(rightButton)
+        addChild(upButton)
+        addChild(downButton)
         addChild(jumpButton)
 
         isUserInteractionEnabled = true
@@ -86,11 +108,17 @@ final class InputController: SKNode {
 
         switch tappedNode.name {
         case "leftButton":
-            activeDirectionTouch = touch
+            activeHorizontalTouch = touch
             delegate?.inputControllerDidPressLeft(self)
         case "rightButton":
-            activeDirectionTouch = touch
+            activeHorizontalTouch = touch
             delegate?.inputControllerDidPressRight(self)
+        case "upButton":
+            activeVerticalTouch = touch
+            delegate?.inputControllerDidPressUp(self)
+        case "downButton":
+            activeVerticalTouch = touch
+            delegate?.inputControllerDidPressDown(self)
         case "jumpButton":
             activeJumpTouch = touch
             delegate?.inputControllerDidPressJump(self)
@@ -100,9 +128,13 @@ final class InputController: SKNode {
     }
 
     private func handleTouchEnded(_ touch: UITouch) {
-        if touch == activeDirectionTouch {
-            activeDirectionTouch = nil
-            delegate?.inputControllerDidReleaseDirection(self)
+        if touch == activeHorizontalTouch {
+            activeHorizontalTouch = nil
+            delegate?.inputControllerDidReleaseHorizontal(self)
+        }
+        if touch == activeVerticalTouch {
+            activeVerticalTouch = nil
+            delegate?.inputControllerDidReleaseVertical(self)
         }
         if touch == activeJumpTouch {
             activeJumpTouch = nil

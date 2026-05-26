@@ -34,6 +34,6 @@ enum GameProgressRules {
     /// Создаёт начальное состояние игрока для нового уровня:
     /// здоровье сбрасывается, бонусы переносятся.
     static func initialPlayerState(for progress: GameProgress) -> PlayerState {
-        PlayerState(health: 5, bonusPoints: progress.carriedBonusPoints)
+        PlayerState(health: 5, bonusPoints: progress.carriedBonusPoints, locomotionMode: .normal)
     }
 }

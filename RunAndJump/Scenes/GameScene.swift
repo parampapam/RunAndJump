@@ -16,6 +16,7 @@ final class GameScene: SKScene {
 
     private var playerState: PlayerState
     private var jumpController = JumpController()
+    private var ladderController = LadderController()
     private var lastUpdateTime: TimeInterval = 0
 
     // MARK: - Узлы
@@ -25,6 +26,7 @@ final class GameScene: SKScene {
     private var inputController: InputController!
     private var hud: HUDNode!
     private var cameraNode: SKCameraNode!
+    private weak var currentLadder: LadderNode?
 
     // MARK: - Init
 
@@ -129,6 +131,12 @@ final class GameScene: SKScene {
             addChild(LevelBuilder.makePickup(from: pickupDescriptor))
         }
         addChild(LevelBuilder.makePortal(at: configuration.portal))
+
+        // TEMP: тестовая лестница для проверки механики.
+        // В Шаге 6 перенесём в LevelConfiguration.
+        let ladder = LadderNode(size: CGSize(width: 32, height: 200))
+        ladder.position = CGPoint(x: 320, y: 140)
+        addChild(ladder)
     }
 
     // MARK: - Игровой цикл
@@ -137,18 +145,45 @@ final class GameScene: SKScene {
         lastUpdateTime = currentTime
         player.update()
 
-        // Обновляем все игровые объекты с поведением.
         for child in children {
             if let levelObject = child as? LevelObject {
                 levelObject.update(at: currentTime)
             }
         }
 
+        applyLadderAction(ladderController.update())
+
         if jumpController.consumeJumpIfPossible(at: currentTime) {
             player.jump()
         }
 
         updateCamera()
+    }
+
+    private func applyLadderAction(_ action: LadderAction) {
+        switch action {
+        case .startClimbing:
+            playerState.locomotionMode = .climbing
+            player.physicsBody?.affectedByGravity = false
+            player.physicsBody?.velocity = .zero
+            player.enableClimbingMode()
+            // Прилипаем к центру лестницы по X.
+            if let ladder = currentLadder {
+                player.position.x = ladder.position.x
+            }
+
+        case .climb(let verticalVelocity):
+            let currentVx = player.physicsBody?.velocity.dx ?? 0
+            player.physicsBody?.velocity = CGVector(dx: currentVx, dy: verticalVelocity)
+
+        case .releaseLadder:
+            playerState.locomotionMode = .normal
+            player.physicsBody?.affectedByGravity = true
+            player.disableClimbingMode()     // ← добавили
+
+        case .idle:
+            break
+        }
     }
 
     private func updateCamera() {
@@ -217,12 +252,31 @@ extension GameScene: InputControllerDelegate {
         player.startMovingRight()
     }
 
-    func inputControllerDidReleaseDirection(_ controller: InputController) {
+    func inputControllerDidReleaseHorizontal(_ controller: InputController) {
         player.stopMoving()
     }
 
     func inputControllerDidPressJump(_ controller: InputController) {
+        if playerState.locomotionMode == .climbing {
+            ladderController.didJumpOffLadder()
+            jumpController.didReleaseLadder(at: lastUpdateTime)
+            playerState.locomotionMode = .normal
+            player.physicsBody?.affectedByGravity = true
+            player.disableClimbingMode()     // ← добавили
+        }
         jumpController.didPressJump(at: lastUpdateTime)
+    }
+
+    func inputControllerDidPressUp(_ controller: InputController) {
+        ladderController.didPressUp()
+    }
+
+    func inputControllerDidPressDown(_ controller: InputController) {
+        ladderController.didPressDown()
+    }
+
+    func inputControllerDidReleaseVertical(_ controller: InputController) {
+        ladderController.didReleaseVertical()
     }
 }
 
@@ -236,6 +290,16 @@ extension GameScene: SKPhysicsContactDelegate {
         if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground)
             || matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
             jumpController.didTouchGround(at: lastUpdateTime)
+            return
+        }
+
+        // Контакт игрока с лестницей — обновляем ladderController.
+        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ladder) {
+            if let ladderBody = bodyOfCategory(PhysicsCategory.ladder, in: bodies),
+               let ladder = ladderBody.node as? LadderNode {
+                currentLadder = ladder
+            }
+            ladderController.didTouchLadder()
             return
         }
 
@@ -270,6 +334,11 @@ extension GameScene: SKPhysicsContactDelegate {
         if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground)
             || matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
             jumpController.didLeaveGround(at: lastUpdateTime)
+        }
+
+        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ladder) {
+            currentLadder = nil
+            ladderController.didLeaveLadder()
         }
     }
 
