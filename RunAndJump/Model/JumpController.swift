@@ -77,4 +77,11 @@ struct JumpController {
 
         return false
     }
+
+    /// Игрок отпустил лестницу. С этого момента прыжок разрешён
+    /// в течение `coyoteDuration` секунд — так же, как после ухода с земли.
+    mutating func didReleaseLadder(at time: TimeInterval) {
+        isGrounded = false
+        lastGroundedTime = time
+    }
 }

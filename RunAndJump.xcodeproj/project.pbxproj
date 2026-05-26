@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		158A804F2FC47D6600FF98C5 /* CLAUDE.md in Resources */ = {isa = PBXBuildFile; fileRef = 158A804E2FC47D6600FF98C5 /* CLAUDE.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		15082FE32FA2586A00E0C9BB /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		15082FC92FA2586800E0C9BB /* RunAndJump.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RunAndJump.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		15082FE22FA2586A00E0C9BB /* RunAndJumpTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunAndJumpTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		15082FEC2FA2586A00E0C9BB /* RunAndJumpUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunAndJumpUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		158A804E2FC47D6600FF98C5 /* CLAUDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CLAUDE.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -92,6 +97,7 @@
 				15082FE52FA2586A00E0C9BB /* RunAndJumpTests */,
 				15082FEF2FA2586A00E0C9BB /* RunAndJumpUITests */,
 				15082FCA2FA2586800E0C9BB /* Products */,
+				158A804E2FC47D6600FF98C5 /* CLAUDE.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -225,6 +231,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				158A804F2FC47D6600FF98C5 /* CLAUDE.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

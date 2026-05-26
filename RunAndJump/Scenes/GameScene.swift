@@ -16,6 +16,7 @@ final class GameScene: SKScene {
 
     private var playerState: PlayerState
     private var jumpController = JumpController()
+    private var ladderController = LadderController()
     private var lastUpdateTime: TimeInterval = 0
 
     // MARK: - Узлы
@@ -25,15 +26,14 @@ final class GameScene: SKScene {
     private var inputController: InputController!
     private var hud: HUDNode!
     private var cameraNode: SKCameraNode!
-
-    // Счётчик активных контактов с лестницей (несколько одновременных возможны на краях).
-    private var ladderContactCount = 0
-
     private var movingPlatforms: [MovingPlatform] = []
-    // Сплошные рамки неподвижных платформ — преграды при переносе игрока подвижной платформой.
-    private var staticPlatformFrames: [CGRect] = []
     // Подвижная платформа, на которой сейчас стоит игрок; nil = не на подвижной платформе.
     private var playerStandingPlatform: MovingPlatform?
+    // Лестница, в зоне которой сейчас игрок — нужна, чтобы встать по её центру.
+    private weak var currentLadder: Ladder?
+
+    // Сплошные рамки неподвижных платформ — преграды при переносе игрока подвижной платформой.
+    private var staticPlatformFrames: [CGRect] = []
     // Смещение игрока относительно центра платформы — фиксирует его в системе отсчёта платформы.
     private var platformRideOffset: CGPoint = .zero
     // Длительность последнего кадра — нужна, чтобы ввод сдвигал игрока по платформе.
@@ -42,8 +42,7 @@ final class GameScene: SKScene {
     // Время последнего прыжка — после него короткий запрет на привязку к платформе.
     private var lastJumpTime: TimeInterval = -1000
     private let attachCooldownAfterJump: TimeInterval = 0.25
-    // Лестница, в зоне которой сейчас игрок — нужна, чтобы встать по её центру.
-    private weak var currentLadder: Ladder?
+
 
     // MARK: - Init
 
@@ -186,6 +185,8 @@ final class GameScene: SKScene {
             }
         }
 
+        applyLadderAction(ladderController.update())
+
         if jumpController.consumeJumpIfPossible(at: currentTime) {
             player.jump()
             // Прыжок отрывает игрока от платформы — снимаем привязку и запускаем кулдаун,
@@ -269,6 +270,32 @@ final class GameScene: SKScene {
         return resultX
     }
 
+    private func applyLadderAction(_ action: LadderAction) {
+        switch action {
+        case .startClimbing:
+            playerState.locomotionMode = .climbing
+            player.physicsBody?.affectedByGravity = false
+            player.physicsBody?.velocity = .zero
+            player.enableClimbingMode()
+            // Прилипаем к центру лестницы по X.
+            if let ladder = currentLadder {
+                player.position.x = ladder.position.x
+            }
+
+        case .climb(let verticalVelocity):
+            let currentVx = player.physicsBody?.velocity.dx ?? 0
+            player.physicsBody?.velocity = CGVector(dx: currentVx, dy: verticalVelocity)
+
+        case .releaseLadder:
+            playerState.locomotionMode = .normal
+            player.physicsBody?.affectedByGravity = true
+            player.disableClimbingMode()     // ← добавили
+
+        case .idle:
+            break
+        }
+    }
+
     private func updateCamera() {
         let halfW = size.width / 2
         let halfH = size.height / 2
@@ -335,36 +362,31 @@ extension GameScene: InputControllerDelegate {
         player.startMovingRight()
     }
 
-    func inputControllerDidReleaseDirection(_ controller: InputController) {
-        player.stopMoving()
-    }
-
-    func inputControllerDidPressJump(_ controller: InputController) {
-        if player.isOnLadder {
-            // Прыжок снимает режим лазания и сразу даёт импульс.
-            // Счётчик зоны не трогаем: игрок физически остаётся у лестницы
-            // и может тут же снова начать подъём по кнопке вверх.
-            player.exitLadder()
-            player.jump()
-        } else {
-            jumpController.didPressJump(at: lastUpdateTime)
-        }
-    }
-
     func inputControllerDidPressUp(_ controller: InputController) {
-        guard ladderContactCount > 0, let ladder = currentLadder else { return }
-        player.enterLadder(centerX: ladder.position.x)
-        player.startClimbingUp()
+        ladderController.didPressUp()
     }
 
     func inputControllerDidPressDown(_ controller: InputController) {
-        guard ladderContactCount > 0, let ladder = currentLadder else { return }
-        player.enterLadder(centerX: ladder.position.x)
-        player.startClimbingDown()
+        ladderController.didPressDown()
+    }
+
+    func inputControllerDidReleaseHorizontal(_ controller: InputController) {
+        player.stopMoving()
     }
 
     func inputControllerDidReleaseVertical(_ controller: InputController) {
-        player.stopClimbing()
+        ladderController.didReleaseVertical()
+    }
+
+    func inputControllerDidPressJump(_ controller: InputController) {
+        if playerState.locomotionMode == .climbing {
+            ladderController.didJumpOffLadder()
+            jumpController.didReleaseLadder(at: lastUpdateTime)
+            playerState.locomotionMode = .normal
+            player.physicsBody?.affectedByGravity = true
+            player.disableClimbingMode()     // ← добавили
+        }
+        jumpController.didPressJump(at: lastUpdateTime)
     }
 }
 
@@ -374,21 +396,9 @@ extension GameScene: SKPhysicsContactDelegate {
     func didBegin(_ contact: SKPhysicsContact) {
         let bodies = (contact.bodyA, contact.bodyB)
 
-        // Контакт игрока с землёй — обновляем jumpController.
-        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground) {
-            jumpController.didTouchGround(at: lastUpdateTime)
-            // Земля — это низ лестницы. Достигли её → выходим из режима лазания.
-            if player.isOnLadder {
-                player.exitLadder()
-            }
-            return
-        }
-
-        // Контакт игрока с платформой — обновляем jumpController.
-        // Из режима лестницы здесь НЕ выходим: платформа всегда верх лестницы,
-        // её проходят насквозь (вверх — вылезая, вниз — спускаясь). Иначе при
-        // спуске сквозь платформу контакт сбрасывал бы режим и блокировал игрока.
-        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
+        // Контакт игрока с землёй или платформой — обновляем jumpController.
+        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground)
+            || matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
             jumpController.didTouchGround(at: lastUpdateTime)
             if let platformBody = bodyOfCategory(PhysicsCategory.platform, in: bodies),
                let movingPlatform = platformBody.node as? MovingPlatform {
@@ -403,6 +413,7 @@ extension GameScene: SKPhysicsContactDelegate {
                let ladder = ladderBody.node as? Ladder {
                 currentLadder = ladder
             }
+            ladderController.didTouchLadder()
             return
         }
 
@@ -429,15 +440,6 @@ extension GameScene: SKPhysicsContactDelegate {
             handle(.reachedPortal)
             return
         }
-
-        // Контакт игрока с лестницей — только запоминаем зону, не входим автоматически.
-        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ladder) {
-            ladderContactCount += 1
-            if let ladderBody = bodyOfCategory(PhysicsCategory.ladder, in: bodies) {
-                currentLadder = ladderBody.node as? Ladder
-            }
-            return
-        }
     }
 
     func didEnd(_ contact: SKPhysicsContact) {
@@ -451,15 +453,11 @@ extension GameScene: SKPhysicsContactDelegate {
                platformBody.node is MovingPlatform {
                 playerStandingPlatform = nil
             }
-            return
         }
 
         if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ladder) {
-            ladderContactCount = max(0, ladderContactCount - 1)
-            if ladderContactCount == 0 {
-                player.exitLadder()
-                currentLadder = nil
-            }
+            currentLadder = nil
+            ladderController.didLeaveLadder()
         }
     }
 
