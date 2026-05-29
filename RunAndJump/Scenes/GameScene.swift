@@ -28,8 +28,6 @@ final class GameScene: SKScene {
 
     // Счётчик активных контактов с лестницей (несколько одновременных возможны на краях).
     private var ladderContactCount = 0
-    // Лестница, в зоне которой сейчас игрок — нужна, чтобы встать по её центру.
-    private var currentLadder: Ladder?
 
     private var movingPlatforms: [MovingPlatform] = []
     // Сплошные рамки неподвижных платформ — преграды при переносе игрока подвижной платформой.
@@ -44,6 +42,8 @@ final class GameScene: SKScene {
     // Время последнего прыжка — после него короткий запрет на привязку к платформе.
     private var lastJumpTime: TimeInterval = -1000
     private let attachCooldownAfterJump: TimeInterval = 0.25
+    // Лестница, в зоне которой сейчас игрок — нужна, чтобы встать по её центру.
+    private weak var currentLadder: Ladder?
 
     // MARK: - Init
 
@@ -393,6 +393,15 @@ extension GameScene: SKPhysicsContactDelegate {
             if let platformBody = bodyOfCategory(PhysicsCategory.platform, in: bodies),
                let movingPlatform = platformBody.node as? MovingPlatform {
                 tryAttach(to: movingPlatform)
+            }
+            return
+        }
+
+        // Контакт игрока с лестницей — обновляем ladderController.
+        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ladder) {
+            if let ladderBody = bodyOfCategory(PhysicsCategory.ladder, in: bodies),
+               let ladder = ladderBody.node as? Ladder {
+                currentLadder = ladder
             }
             return
         }

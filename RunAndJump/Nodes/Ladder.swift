@@ -2,18 +2,17 @@
 //  Ladder.swift
 //  RunAndJump
 //
-//  Created by Roman Pospelov on 23.05.2026.
+//  Created by Roman Pospelov on 29.05.2026.
 //
 
 import SpriteKit
 
 final class Ladder: SKNode {
 
-    init(descriptor: LadderDescriptor) {
+    init(size: CGSize) {
         super.init()
-
-        setupPhysics(size: descriptor.size)
-        setupVisual(size: descriptor.size)
+        setupPhysics(size: size)
+        setupVisual(size: size)
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -21,14 +20,18 @@ final class Ladder: SKNode {
     }
 
     private func setupPhysics(size: CGSize) {
-        let bodySize = CGSize(width: size.width * 0.5, height: size.height)
-        let body = SKPhysicsBody(rectangleOf: bodySize)
+        let body = SKPhysicsBody(rectangleOf: size)
+        // Лестница не двигается и не подвержена силам.
         body.isDynamic = false
         body.affectedByGravity = false
-        // Сенсор: без столкновений, только контактные события с игроком.
-        body.collisionBitMask = PhysicsCategory.none
+
         body.categoryBitMask = PhysicsCategory.ladder
-        body.contactTestBitMask = PhysicsCategory.player
+        // Ни с чем не сталкиваемся — игрок проходит сквозь.
+        body.collisionBitMask = PhysicsCategory.none
+        // Уведомление о пересечении с игроком получаем со стороны игрока;
+        // здесь можно оставить 0 или продублировать — physics engine
+        // зарегистрирует контакт, если хотя бы одна сторона его запросила.
+        body.contactTestBitMask = PhysicsCategory.none
         physicsBody = body
     }
 
