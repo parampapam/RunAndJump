@@ -26,7 +26,7 @@ final class GameScene: SKScene {
     private var inputController: InputController!
     private var hud: HUDNode!
     private var cameraNode: SKCameraNode!
-    private weak var currentLadder: LadderNode?
+    private weak var currentLadder: Ladder?
 
     // MARK: - Init
 
@@ -134,7 +134,7 @@ final class GameScene: SKScene {
 
         // TEMP: тестовая лестница для проверки механики.
         // В Шаге 6 перенесём в LevelConfiguration.
-        let ladder = LadderNode(size: CGSize(width: 32, height: 200))
+        let ladder = Ladder(size: CGSize(width: 32, height: 200))
         ladder.position = CGPoint(x: 320, y: 140)
         addChild(ladder)
     }
@@ -296,7 +296,7 @@ extension GameScene: SKPhysicsContactDelegate {
         // Контакт игрока с лестницей — обновляем ladderController.
         if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ladder) {
             if let ladderBody = bodyOfCategory(PhysicsCategory.ladder, in: bodies),
-               let ladder = ladderBody.node as? LadderNode {
+               let ladder = ladderBody.node as? Ladder {
                 currentLadder = ladder
             }
             ladderController.didTouchLadder()

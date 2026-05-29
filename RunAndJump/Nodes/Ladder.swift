@@ -1,5 +1,5 @@
 //
-//  LadderNode.swift
+//  Ladder.swift
 //  RunAndJump
 //
 //  Created by Roman Pospelov on [сегодня].
@@ -7,7 +7,7 @@
 
 import SpriteKit
 
-final class LadderNode: SKSpriteNode {
+final class Ladder: SKSpriteNode {
 
     init(size: CGSize) {
         let texture: SKTexture? = nil
