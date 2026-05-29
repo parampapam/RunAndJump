@@ -18,7 +18,7 @@ struct GameProgressTests {
 
     @Test func levelCompletionCarriesBonusAndAdvances() {
         let progress = GameProgress(currentLevelIndex: 0, carriedBonusPoints: 0)
-        let finalState = PlayerState(health: 3, bonusPoints: 15, locomotionMode: .normal)
+        let finalState = PlayerState(health: 3, bonusPoints: 15)
 
         let newProgress = GameProgressRules.levelCompleted(
             progress: progress,
@@ -31,7 +31,7 @@ struct GameProgressTests {
 
     @Test func subsequentLevelCarriesAccumulatedBonus() {
         let progress = GameProgress(currentLevelIndex: 1, carriedBonusPoints: 15)
-        let finalState = PlayerState(health: 2, bonusPoints: 40, locomotionMode: .normal)
+        let finalState = PlayerState(health: 2, bonusPoints: 40)
 
         let newProgress = GameProgressRules.levelCompleted(
             progress: progress,
