@@ -17,6 +17,7 @@ final class GameScene: SKScene {
     private var playerState: PlayerState
     private var jumpController = JumpController()
     private var ladderController = LadderController()
+    private var platformRideController = PlatformRideController()
     private var lastUpdateTime: TimeInterval = 0
 
     // MARK: - Узлы
@@ -32,16 +33,9 @@ final class GameScene: SKScene {
     // Лестница, в зоне которой сейчас игрок — нужна, чтобы встать по её центру.
     private weak var currentLadder: Ladder?
 
-    // Сплошные рамки неподвижных платформ — преграды при переносе игрока подвижной платформой.
-    private var staticPlatformFrames: [CGRect] = []
-    // Смещение игрока относительно центра платформы — фиксирует его в системе отсчёта платформы.
-    private var platformRideOffset: CGPoint = .zero
     // Длительность последнего кадра — нужна, чтобы ввод сдвигал игрока по платформе.
     private var previousUpdateTime: TimeInterval = 0
     private var frameDuration: TimeInterval = 0
-    // Время последнего прыжка — после него короткий запрет на привязку к платформе.
-    private var lastJumpTime: TimeInterval = -1000
-    private let attachCooldownAfterJump: TimeInterval = 0.25
 
 
     // MARK: - Init
@@ -140,7 +134,7 @@ final class GameScene: SKScene {
         for platformDescriptor in configuration.platforms {
             addChild(LevelBuilder.makePlatform(from: platformDescriptor))
             // Запоминаем сплошные рамки — об них упирается игрок при езде на подвижной платформе.
-            staticPlatformFrames.append(CGRect(
+            platformRideController.obstacles.append(CGRect(
                 x: platformDescriptor.position.x - platformDescriptor.size.width / 2,
                 y: platformDescriptor.position.y - platformDescriptor.size.height / 2,
                 width: platformDescriptor.size.width,
@@ -192,82 +186,30 @@ final class GameScene: SKScene {
             // Прыжок отрывает игрока от платформы — снимаем привязку и запускаем кулдаун,
             // чтобы поднимающаяся платформа не зацепила взлетающего игрока сразу же.
             playerStandingPlatform = nil
-            lastJumpTime = currentTime
+            platformRideController.didJump(at: currentTime)
         }
 
         updateCamera()
     }
 
-    // Привязку игрока к платформе делаем ПОСЛЕ физики, иначе солвер откатывает
+    // Перенос игрока вместе с платформой делаем ПОСЛЕ физики, иначе солвер откатывает
     // ручное смещение позиции и игрок отстаёт от платформы (сползает с неё).
     override func didSimulatePhysics() {
         guard let platform = playerStandingPlatform, let body = player.physicsBody else { return }
 
-        // Ввод игрока смещает его в системе отсчёта платформы — движение аддитивно к ходу платформы.
-        if player.hasHorizontalInput {
-            platformRideOffset.x += player.horizontalVelocity * CGFloat(frameDuration)
-        }
-
-        var target = CGPoint(
-            x: platform.position.x + platformRideOffset.x,
-            y: platform.position.y + platformRideOffset.y
+        let action = platformRideController.resolveRide(
+            platformPosition: platform.position,
+            playerPosition: player.position,
+            playerSize: player.size,
+            horizontalInputVelocity: player.hasHorizontalInput ? player.horizontalVelocity : 0,
+            dt: frameDuration
         )
-        // Неподвижная платформа на пути не даёт пронести игрока сквозь себя — упираемся в её бок.
-        target.x = blockedCarryX(target: target, currentX: player.position.x)
-        // Возвращаем смещение к фактическому X: иначе ввод копится «за преградой», и когда
-        // target.x уедет за край статичной платформы, ограничение спадёт и игрока выстрелит вперёд.
-        platformRideOffset.x = target.x - platform.position.x
-        player.position = target
 
-        // Пока стоим на платформе — гасим накопление гравитации, чтобы прыжок был чистым.
-        body.velocity.dy = 0
-    }
-
-    /// Привязывает игрока к подвижной платформе, только если он действительно приземлился
-    /// на неё СВЕРХУ (низ игрока у верхнего ребра). При ударе снизу низ игрока намного ниже
-    /// ребра — привязки нет, физика отрабатывает отскок. Сразу после прыжка привязка
-    /// запрещена кулдауном, чтобы поднимающаяся платформа не зацепила взлетающего игрока.
-    private func tryAttach(to movingPlatform: MovingPlatform) {
-        guard lastUpdateTime - lastJumpTime > attachCooldownAfterJump else { return }
-
-        let platformTop = movingPlatform.position.y + movingPlatform.size.height / 2
-        let playerBottom = player.position.y - player.size.height / 2
-        let landingTolerance: CGFloat = 10
-        guard playerBottom >= platformTop - landingTolerance else { return }
-
-        playerStandingPlatform = movingPlatform
-        // X — где игрок встал вдоль платформы; Y — высота покоя над её верхним ребром.
-        platformRideOffset = CGPoint(
-            x: player.position.x - movingPlatform.position.x,
-            y: movingPlatform.size.height / 2 + player.size.height / 2
-        )
-    }
-
-    /// Ограничивает горизонтальный перенос игрока подвижной платформой, если на пути
-    /// оказался бок неподвижной платформы. Возвращает допустимый X.
-    private func blockedCarryX(target: CGPoint, currentX: CGFloat) -> CGFloat {
-        let movingRight = target.x > currentX
-        let movingLeft = target.x < currentX
-        guard movingRight || movingLeft else { return target.x }
-
-        let halfW = player.size.width / 2
-        let halfH = player.size.height / 2
-        let epsilon: CGFloat = 1
-        let top = target.y + halfH
-        let bottom = target.y - halfH
-
-        var resultX = target.x
-        for frame in staticPlatformFrames {
-            // Только боковое перекрытие: если игрок стоит на верхнем ребре — не преграда.
-            guard bottom < frame.maxY - epsilon, top > frame.minY + epsilon else { continue }
-            guard resultX + halfW > frame.minX, resultX - halfW < frame.maxX else { continue }
-            if movingRight {
-                resultX = min(resultX, frame.minX - halfW)
-            } else {
-                resultX = max(resultX, frame.maxX + halfW)
-            }
+        if case .ride(let target) = action {
+            player.position = target
+            // Пока едем на платформе — гасим накопление гравитации, чтобы прыжок был чистым.
+            body.velocity.dy = 0
         }
-        return resultX
     }
 
     private func applyLadderAction(_ action: LadderAction) {
@@ -402,7 +344,16 @@ extension GameScene: SKPhysicsContactDelegate {
             jumpController.didTouchGround(at: lastUpdateTime)
             if let platformBody = bodyOfCategory(PhysicsCategory.platform, in: bodies),
                let movingPlatform = platformBody.node as? MovingPlatform {
-                tryAttach(to: movingPlatform)
+                let attached = platformRideController.tryAttach(
+                    platformPosition: movingPlatform.position,
+                    platformSize: movingPlatform.size,
+                    playerPosition: player.position,
+                    playerSize: player.size,
+                    at: lastUpdateTime
+                )
+                if attached {
+                    playerStandingPlatform = movingPlatform
+                }
             }
             return
         }
@@ -452,6 +403,7 @@ extension GameScene: SKPhysicsContactDelegate {
                let platformBody = bodyOfCategory(PhysicsCategory.platform, in: bodies),
                platformBody.node is MovingPlatform {
                 playerStandingPlatform = nil
+                platformRideController.didLeavePlatform()
             }
         }
 
