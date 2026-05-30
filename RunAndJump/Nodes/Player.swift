@@ -11,15 +11,27 @@ final class Player: SKSpriteNode {
 
     private let movementSpeed: CGFloat = 250
     private let jumpImpulse: CGFloat = 50
-    private let climbSpeed: CGFloat = 150
 
     private var horizontalDirection: CGFloat = 0
-    private var verticalClimbDirection: CGFloat = 0
 
-    private(set) var isOnLadder: Bool = false
     var hasHorizontalInput: Bool { horizontalDirection != 0 }
+
     /// Горизонтальная скорость от ввода игрока (pts/s), без учёта платформы.
     var horizontalVelocity: CGFloat { horizontalDirection * movementSpeed }
+
+    // MARK: - Управление коллизиями
+
+    private let defaultCollisionMask: UInt32 =
+        PhysicsCategory.ground | PhysicsCategory.platform | PhysicsCategory.wall
+
+    func enableClimbingMode() {
+        // Лезем — проходим сквозь платформы, но всё ещё стоим на земле и стенах
+        physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.wall
+    }
+
+    func disableClimbingMode() {
+        physicsBody?.collisionBitMask = defaultCollisionMask
+    }
 
     init() {
         let size = CGSize(width: 32, height: 32)
@@ -36,7 +48,7 @@ final class Player: SKSpriteNode {
 
         body.categoryBitMask = PhysicsCategory.player
         // Сталкиваемся с землёй и платформами (отскакиваем от них).
-        body.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.platform | PhysicsCategory.wall
+        body.collisionBitMask = defaultCollisionMask
         // Уведомления получаем о земле, платформах, врагах, наградах, портале.
         body.contactTestBitMask = PhysicsCategory.ground
             | PhysicsCategory.platform
@@ -70,50 +82,14 @@ final class Player: SKSpriteNode {
         physicsBody?.applyImpulse(CGVector(dx: 0, dy: jumpImpulse))
     }
 
-    // MARK: - Команды лестницы
-
-    func enterLadder(centerX: CGFloat) {
-        guard !isOnLadder else { return }
-        isOnLadder = true
-        // Встаём строго по центру лестницы, чтобы не свисать с края.
-        position.x = centerX
-        physicsBody?.affectedByGravity = false
-        physicsBody?.velocity = .zero
-        // Разрешаем проходить сквозь платформы при подъёме.
-        physicsBody?.collisionBitMask &= ~PhysicsCategory.platform
-    }
-
-    func exitLadder() {
-        guard isOnLadder else { return }
-        isOnLadder = false
-        verticalClimbDirection = 0
-        physicsBody?.affectedByGravity = true
-        physicsBody?.collisionBitMask |= PhysicsCategory.platform
-    }
-
-    func startClimbingUp() {
-        verticalClimbDirection = 1
-    }
-
-    func startClimbingDown() {
-        verticalClimbDirection = -1
-    }
-
-    func stopClimbing() {
-        verticalClimbDirection = 0
-    }
-
     // MARK: - Игровой цикл
 
     func update() {
         guard let body = physicsBody else { return }
-        if isOnLadder {
-            body.velocity = CGVector(dx: 0, dy: verticalClimbDirection * climbSpeed)
-        } else {
-            body.velocity = CGVector(
-                dx: horizontalDirection * movementSpeed,
-                dy: body.velocity.dy
-            )
-        }
+        // Перезаписываем горизонтальную скорость, оставляя вертикальную (гравитация, прыжок).
+        body.velocity = CGVector(
+            dx: horizontalDirection * movementSpeed,
+            dy: body.velocity.dy
+        )
     }
 }

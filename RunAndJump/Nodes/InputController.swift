@@ -10,11 +10,13 @@ import SpriteKit
 protocol InputControllerDelegate: AnyObject {
     func inputControllerDidPressLeft(_ controller: InputController)
     func inputControllerDidPressRight(_ controller: InputController)
-    func inputControllerDidReleaseDirection(_ controller: InputController)
-    func inputControllerDidPressJump(_ controller: InputController)
+    func inputControllerDidReleaseHorizontal(_ controller: InputController)
+
     func inputControllerDidPressUp(_ controller: InputController)
     func inputControllerDidPressDown(_ controller: InputController)
     func inputControllerDidReleaseVertical(_ controller: InputController)
+
+    func inputControllerDidPressJump(_ controller: InputController)
 }
 
 final class InputController: SKNode {
@@ -27,7 +29,10 @@ final class InputController: SKNode {
     private let downButton: SKSpriteNode
     private let jumpButton: SKSpriteNode
 
-    private var activeDirectionTouch: UITouch?
+    // Независимые слоты по осям: горизонтальная, вертикальная, прыжок.
+    // Это позволяет игроку зажимать кнопки разных осей одновременно
+    // (например, «вверх по лестнице» + «вправо»).
+    private var activeHorizontalTouch: UITouch?
     private var activeVerticalTouch: UITouch?
     private var activeJumpTouch: UITouch?
 
@@ -118,10 +123,10 @@ final class InputController: SKNode {
 
         switch name {
         case "leftButton":
-            activeDirectionTouch = touch
+            activeHorizontalTouch = touch
             delegate?.inputControllerDidPressLeft(self)
         case "rightButton":
-            activeDirectionTouch = touch
+            activeHorizontalTouch = touch
             delegate?.inputControllerDidPressRight(self)
         case "jumpButton":
             activeJumpTouch = touch
@@ -138,9 +143,13 @@ final class InputController: SKNode {
     }
 
     private func handleTouchEnded(_ touch: UITouch) {
-        if touch == activeDirectionTouch {
-            activeDirectionTouch = nil
-            delegate?.inputControllerDidReleaseDirection(self)
+        if touch == activeHorizontalTouch {
+            activeHorizontalTouch = nil
+            delegate?.inputControllerDidReleaseHorizontal(self)
+        }
+        if touch == activeVerticalTouch {
+            activeVerticalTouch = nil
+            delegate?.inputControllerDidReleaseVertical(self)
         }
         if touch == activeVerticalTouch {
             activeVerticalTouch = nil

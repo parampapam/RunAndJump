@@ -56,7 +56,7 @@ enum LevelBuilder {
     }
 
     static func makeLadder(from descriptor: LadderDescriptor) -> Ladder {
-        let ladder = Ladder(descriptor: descriptor)
+        let ladder = Ladder(size: descriptor.size)
         ladder.position = descriptor.position
         return ladder
     }
