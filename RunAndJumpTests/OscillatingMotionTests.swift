@@ -1,5 +1,5 @@
 //
-//  MovingPlatformMotionTests.swift
+//  OscillatingMotionTests.swift
 //  RunAndJumpTests
 //
 
@@ -8,12 +8,12 @@ import Testing
 import Foundation
 import CoreGraphics
 
-@Suite("MovingPlatformMotion")
-struct MovingPlatformMotionTests {
+@Suite("OscillatingMotion")
+struct OscillatingMotionTests {
 
     // Горизонтальная платформа: 0 → 100 по X, 50 pts/s, пауза 1 с. Путь = 100, полный ход = 2 с.
-    private func horizontal(pause: TimeInterval = 1.0) -> MovingPlatformMotion {
-        MovingPlatformMotion(
+    private func horizontal(pause: TimeInterval = 1.0) -> OscillatingMotion {
+        OscillatingMotion(
             startPosition: .zero,
             endPosition: CGPoint(x: 100, y: 0),
             speed: 50,
@@ -64,7 +64,7 @@ struct MovingPlatformMotionTests {
     @Test("Диагональ интерполируется по обеим осям")
     func diagonalInterpolatesBothAxes() {
         // Путь 0→(60,80): длина = 100. За 1 с при speed 50 — прогресс 0.5.
-        var motion = MovingPlatformMotion(
+        var motion = OscillatingMotion(
             startPosition: .zero,
             endPosition: CGPoint(x: 60, y: 80),
             speed: 50,
@@ -75,13 +75,49 @@ struct MovingPlatformMotionTests {
 
     @Test("Нулевой путь (start == end) не двигает и не падает")
     func zeroDistanceStaysPut() {
-        var motion = MovingPlatformMotion(
+        var motion = OscillatingMotion(
             startPosition: CGPoint(x: 10, y: 10),
             endPosition: CGPoint(x: 10, y: 10),
             speed: 50,
             pauseDuration: 0
         )
         #expect(motion.advance(by: 1.0) == CGPoint(x: 10, y: 10))
+    }
+
+    @Test("Старт с заданного прогресса — для врага из середины отрезка")
+    func startsAtInitialProgress() {
+        var motion = OscillatingMotion(
+            startPosition: .zero,
+            endPosition: CGPoint(x: 100, y: 0),
+            speed: 50,
+            pauseDuration: 0,
+            initialProgress: 0.5
+        )
+        // Начинает с середины…
+        #expect(motion.position == CGPoint(x: 50, y: 0))
+        // …и едет к концу (направление по умолчанию — к endPosition).
+        #expect(motion.advance(by: 1.0) == CGPoint(x: 100, y: 0))
+    }
+
+    @Test("initialProgress клампится в [0, 1]")
+    func initialProgressIsClamped() {
+        let below = OscillatingMotion(
+            startPosition: .zero,
+            endPosition: CGPoint(x: 100, y: 0),
+            speed: 50,
+            pauseDuration: 0,
+            initialProgress: -3
+        )
+        #expect(below.position == .zero)
+
+        let above = OscillatingMotion(
+            startPosition: .zero,
+            endPosition: CGPoint(x: 100, y: 0),
+            speed: 50,
+            pauseDuration: 0,
+            initialProgress: 5
+        )
+        #expect(above.position == CGPoint(x: 100, y: 0))
     }
 
     @Test("Нулевая пауза — разворот без простоя")
