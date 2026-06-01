@@ -25,6 +25,7 @@ final class GameScene: SKScene {
     private var player: Player!
     private var ground: SKSpriteNode!
     private var inputController: InputController!
+    private let gamepadInput = GamepadInput()
     private var hud: HUDNode!
     private var cameraNode: SKCameraNode!
     private var movingPlatforms: [MovingPlatform] = []
@@ -66,8 +67,13 @@ final class GameScene: SKScene {
         setupBoundaries()
         setupPlayer()
         setupInputController()
+        setupGamepadInput()
         setupHUD()
         setupLevelObjects()
+    }
+
+    override func willMove(from view: SKView) {
+        gamepadInput.stopObserving()
     }
 
     // MARK: - Setup
@@ -122,6 +128,15 @@ final class GameScene: SKScene {
         // Кнопки расположены относительно левого нижнего угла — смещаем узел туда.
         inputController.position = CGPoint(x: -size.width / 2, y: -size.height / 2)
         cameraNode.addChild(inputController)
+    }
+
+    private func setupGamepadInput() {
+        gamepadInput.delegate = self
+        // Пока геймпад подключён — экранные кнопки лишние, прячем их.
+        gamepadInput.onConnectionChange = { [weak self] connected in
+            self?.inputController.setControlsHidden(connected)
+        }
+        gamepadInput.startObserving()
     }
 
     private func setupHUD() {
@@ -294,33 +309,33 @@ final class GameScene: SKScene {
 
 // MARK: - Делегаты
 
-extension GameScene: InputControllerDelegate {
+extension GameScene: GameInputDelegate {
 
-    func inputControllerDidPressLeft(_ controller: InputController) {
+    func inputDidPressLeft() {
         player.startMovingLeft()
     }
 
-    func inputControllerDidPressRight(_ controller: InputController) {
+    func inputDidPressRight() {
         player.startMovingRight()
     }
 
-    func inputControllerDidPressUp(_ controller: InputController) {
+    func inputDidPressUp() {
         ladderController.didPressUp()
     }
 
-    func inputControllerDidPressDown(_ controller: InputController) {
+    func inputDidPressDown() {
         ladderController.didPressDown()
     }
 
-    func inputControllerDidReleaseHorizontal(_ controller: InputController) {
+    func inputDidReleaseHorizontal() {
         player.stopMoving()
     }
 
-    func inputControllerDidReleaseVertical(_ controller: InputController) {
+    func inputDidReleaseVertical() {
         ladderController.didReleaseVertical()
     }
 
-    func inputControllerDidPressJump(_ controller: InputController) {
+    func inputDidPressJump() {
         if playerState.locomotionMode == .climbing {
             ladderController.didJumpOffLadder()
             jumpController.didReleaseLadder(at: lastUpdateTime)
