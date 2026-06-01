@@ -7,21 +7,9 @@
 
 import SpriteKit
 
-protocol InputControllerDelegate: AnyObject {
-    func inputControllerDidPressLeft(_ controller: InputController)
-    func inputControllerDidPressRight(_ controller: InputController)
-    func inputControllerDidReleaseHorizontal(_ controller: InputController)
-
-    func inputControllerDidPressUp(_ controller: InputController)
-    func inputControllerDidPressDown(_ controller: InputController)
-    func inputControllerDidReleaseVertical(_ controller: InputController)
-
-    func inputControllerDidPressJump(_ controller: InputController)
-}
-
 final class InputController: SKNode {
 
-    weak var delegate: InputControllerDelegate?
+    weak var delegate: GameInputDelegate?
 
     private let leftButton: SKSpriteNode
     private let rightButton: SKSpriteNode
@@ -124,19 +112,19 @@ final class InputController: SKNode {
         switch name {
         case "leftButton":
             activeHorizontalTouch = touch
-            delegate?.inputControllerDidPressLeft(self)
+            delegate?.inputDidPressLeft()
         case "rightButton":
             activeHorizontalTouch = touch
-            delegate?.inputControllerDidPressRight(self)
+            delegate?.inputDidPressRight()
         case "jumpButton":
             activeJumpTouch = touch
-            delegate?.inputControllerDidPressJump(self)
+            delegate?.inputDidPressJump()
         case "upButton":
             activeVerticalTouch = touch
-            delegate?.inputControllerDidPressUp(self)
+            delegate?.inputDidPressUp()
         case "downButton":
             activeVerticalTouch = touch
-            delegate?.inputControllerDidPressDown(self)
+            delegate?.inputDidPressDown()
         default:
             break
         }
@@ -145,18 +133,23 @@ final class InputController: SKNode {
     private func handleTouchEnded(_ touch: UITouch) {
         if touch == activeHorizontalTouch {
             activeHorizontalTouch = nil
-            delegate?.inputControllerDidReleaseHorizontal(self)
+            delegate?.inputDidReleaseHorizontal()
         }
         if touch == activeVerticalTouch {
             activeVerticalTouch = nil
-            delegate?.inputControllerDidReleaseVertical(self)
-        }
-        if touch == activeVerticalTouch {
-            activeVerticalTouch = nil
-            delegate?.inputControllerDidReleaseVertical(self)
+            delegate?.inputDidReleaseVertical()
         }
         if touch == activeJumpTouch {
             activeJumpTouch = nil
         }
+    }
+
+    // MARK: - Видимость
+
+    /// Прячет/показывает экранные кнопки. Сцена скрывает их, когда подключён
+    /// физический геймпад, и возвращает обратно при его отключении.
+    func setControlsHidden(_ hidden: Bool) {
+        isHidden = hidden
+        isUserInteractionEnabled = !hidden
     }
 }
