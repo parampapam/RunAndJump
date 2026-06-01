@@ -9,12 +9,12 @@ import SpriteKit
 
 final class MovingPlatform: SKSpriteNode {
 
-    private var motion: MovingPlatformMotion
-    private var lastUpdateTime: TimeInterval?
+    private var motion: OscillatingMotion
+    private var clock = FrameClock()
 
     init(descriptor: MovingPlatformDescriptor) {
         let size = descriptor.size
-        motion = MovingPlatformMotion(
+        motion = OscillatingMotion(
             startPosition: descriptor.startPosition,
             endPosition: descriptor.endPosition,
             speed: descriptor.speed,
@@ -40,9 +40,7 @@ final class MovingPlatform: SKSpriteNode {
     }
 
     func update(at time: TimeInterval) {
-        defer { lastUpdateTime = time }
-        // Первый кадр только фиксирует время — dt появляется со следующего.
-        guard let last = lastUpdateTime else { return }
-        position = motion.advance(by: time - last)
+        guard let dt = clock.tick(at: time) else { return }
+        position = motion.advance(by: dt)
     }
 }

@@ -8,13 +8,21 @@
 import SpriteKit
 
 /// Враг ходит между двумя X-координатами с заданной скоростью.
+///
+/// Тонкий адаптер над чистым `MovingPlatformMotion`: логика хода «туда-обратно
+/// между двумя точками» переиспользуется и платформой, и врагом. Здесь остаётся
+/// лишь перевод абсолютного времени кадра в `dt` и применение позиции к узлу —
+/// ровно то же, что делает узел `MovingPlatform`.
 final class PatrollingMovement: EnemyMovement {
 
     let leftX: CGFloat
     let rightX: CGFloat
     let speed: CGFloat
 
-    private var direction: CGFloat = 1 // 1 = вправо, -1 = влево
+    /// Создаётся лениво на первом кадре: Y и стартовый X берём из позиции узла,
+    /// которую выставил `LevelBuilder`.
+    private var motion: OscillatingMotion?
+    private var clock = FrameClock()
 
     init(leftX: CGFloat, rightX: CGFloat, speed: CGFloat) {
         self.leftX = leftX
@@ -22,25 +30,26 @@ final class PatrollingMovement: EnemyMovement {
         self.speed = speed
     }
 
-    private var lastUpdateTime: TimeInterval?
-
     func update(node: SKNode, at time: TimeInterval) {
-        defer { lastUpdateTime = time }
-
-        guard let last = lastUpdateTime else { return }
-        let delta = time - last
-
-        var newX = node.position.x + direction * speed * CGFloat(delta)
-
-        // Достигли границы — разворачиваемся.
-        if newX > rightX {
-            newX = rightX
-            direction = -1
-        } else if newX < leftX {
-            newX = leftX
-            direction = 1
+        if motion == nil {
+            motion = makeMotion(startX: node.position.x, y: node.position.y)
         }
 
-        node.position.x = newX
+        guard let dt = clock.tick(at: time) else { return }
+        node.position = motion!.advance(by: dt)
+    }
+
+    /// Горизонтальный патруль leftX↔rightX без пауз. Стартовый прогресс берём из
+    /// текущего X врага, чтобы он начинал с места установки, а не прыгал на leftX.
+    private func makeMotion(startX: CGFloat, y: CGFloat) -> OscillatingMotion {
+        let span = rightX - leftX
+        let progress = span > 0 ? (startX - leftX) / span : 0
+        return OscillatingMotion(
+            startPosition: CGPoint(x: leftX, y: y),
+            endPosition: CGPoint(x: rightX, y: y),
+            speed: speed,
+            pauseDuration: 0,
+            initialProgress: progress
+        )
     }
 }

@@ -1,5 +1,5 @@
 //
-//  MovingPlatformMotion.swift
+//  OscillatingMotion.swift
 //  RunAndJump
 //
 //  Created by Roman Pospelov on [сегодня].
@@ -8,10 +8,13 @@
 import Foundation
 import CoreGraphics
 
-/// Движение подвижной платформы между двумя точками с паузами в концах.
-/// Чистая геометрия и тайминг — никакого SpriteKit. Узел `MovingPlatform`
-/// переводит абсолютное время кадра в `dt` и применяет полученную позицию.
-struct MovingPlatformMotion: Equatable {
+/// Движение между двумя точками туда-обратно с паузами в концах.
+/// Чистая геометрия и тайминг — никакого SpriteKit. Единая реализация хода
+/// «туда-обратно»: её использует и узел `MovingPlatform`, и патрулирующий враг
+/// (`PatrollingMovement`) как частный случай — горизонтальный путь без пауз.
+/// Вызывающая сторона переводит абсолютное время кадра в `dt` и применяет
+/// полученную позицию.
+struct OscillatingMotion: Equatable {
 
     // MARK: Конфигурация
 
@@ -34,7 +37,16 @@ struct MovingPlatformMotion: Equatable {
     /// Сколько ещё секунд стоять в крайней точке.
     private var pauseTimeRemaining: TimeInterval = 0
 
-    init(startPosition: CGPoint, endPosition: CGPoint, speed: CGFloat, pauseDuration: TimeInterval) {
+    /// - Parameter initialProgress: где начать на отрезке (0 = start, 1 = end),
+    ///   клампится в [0, 1]. По умолчанию 0. Полезно для патрулирующего врага,
+    ///   которого ставят в середине отрезка, а не на его краю.
+    init(
+        startPosition: CGPoint,
+        endPosition: CGPoint,
+        speed: CGFloat,
+        pauseDuration: TimeInterval,
+        initialProgress: CGFloat = 0
+    ) {
         self.startPosition = startPosition
         self.endPosition = endPosition
         self.speed = speed
@@ -43,6 +55,7 @@ struct MovingPlatformMotion: Equatable {
         let dx = endPosition.x - startPosition.x
         let dy = endPosition.y - startPosition.y
         self.totalDistance = (dx * dx + dy * dy).squareRoot()
+        self.progress = min(max(initialProgress, 0), 1)
     }
 
     /// Текущая позиция платформы — линейная интерполяция концов по прогрессу.
