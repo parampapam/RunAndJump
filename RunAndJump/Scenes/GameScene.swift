@@ -17,6 +17,7 @@ final class GameScene: SKScene {
     private var playerState: PlayerState
     private var jumpController = JumpController()
     private var ladderController = LadderController()
+    private var invulnerabilityController = InvulnerabilityController()
     private var platformRideController = PlatformRideController()
     private var lastUpdateTime: TimeInterval = 0
 
@@ -263,6 +264,20 @@ final class GameScene: SKScene {
 
     // MARK: - Обработка событий
 
+    /// Обрабатывает столкновение с врагом с учётом окна неуязвимости.
+    private func handleEnemyHit() {
+        // Пока действует неуязвимость — удары врага игнорируются.
+        guard !invulnerabilityController.isInvulnerable(at: lastUpdateTime) else { return }
+
+        handle(.enemyHit)
+
+        // Если удар не смертельный — даём окно неуязвимости и запускаем мерцание.
+        // При смертельном ударе сцена перезапускается, индикация не нужна.
+        guard !GameRules.isDead(playerState) else { return }
+        invulnerabilityController.trigger(at: lastUpdateTime)
+        player.startBlinking(for: InvulnerabilityController.damageRecoveryDuration)
+    }
+
     private func handle(_ event: GameEvent) {
         playerState = GameRules.apply(event, to: playerState)
         hud.update(with: playerState)
@@ -385,7 +400,7 @@ extension GameScene: SKPhysicsContactDelegate {
 
         // Контакт игрока с врагом.
         if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.enemy) {
-            handle(.enemyHit)
+            handleEnemyHit()
             return
         }
 

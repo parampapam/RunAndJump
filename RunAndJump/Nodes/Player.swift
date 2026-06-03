@@ -82,6 +82,31 @@ final class Player: SKSpriteNode {
         physicsBody?.applyImpulse(CGVector(dx: 0, dy: jumpImpulse))
     }
 
+    // MARK: - Визуальная индикация неуязвимости
+
+    private static let blinkActionKey = "invulnerabilityBlink"
+    /// Длина одного цикла «погас-зажёгся», секунды.
+    private static let blinkCycleDuration: TimeInterval = 0.2
+
+    /// Запускает мерцание на `duration` секунд, затем восстанавливает непрозрачность.
+    /// Используется, пока действует неуязвимость.
+    func startBlinking(for duration: TimeInterval) {
+        let halfCycle = Self.blinkCycleDuration / 2
+        let blink = SKAction.sequence([
+            .fadeAlpha(to: 0.3, duration: halfCycle),
+            .fadeAlpha(to: 1.0, duration: halfCycle)
+        ])
+        let cycles = max(1, Int((duration / Self.blinkCycleDuration).rounded()))
+        let restore = SKAction.run { [weak self] in self?.alpha = 1.0 }
+        run(.sequence([.repeat(blink, count: cycles), restore]), withKey: Self.blinkActionKey)
+    }
+
+    /// Немедленно прекращает мерцание и делает игрока полностью видимым.
+    func stopBlinking() {
+        removeAction(forKey: Self.blinkActionKey)
+        alpha = 1.0
+    }
+
     // MARK: - Игровой цикл
 
     func update() {
