@@ -195,7 +195,8 @@ final class GameScene: SKScene {
             }
         }
 
-        applyLadderAction(ladderController.update())
+        let playerFeetY = player.position.y - player.size.height / 2
+        applyLadderAction(ladderController.update(playerFeetY: playerFeetY))
 
         if jumpController.consumeJumpIfPossible(at: currentTime) {
             player.jump()
@@ -241,17 +242,39 @@ final class GameScene: SKScene {
             }
 
         case .climb(let verticalVelocity):
-            let currentVx = player.physicsBody?.velocity.dx ?? 0
-            player.physicsBody?.velocity = CGVector(dx: currentVx, dy: verticalVelocity)
+            // На лестнице горизонтальное отклонение стика игнорируем: гасим
+            // боковую скорость и каждый кадр держим игрока строго по центру
+            // лестницы. Иначе невыводимый «дрейф» джойстика сносит его вбок,
+            // и он срывается с лестницы. Спрыгнуть посреди лестницы можно
+            // только кнопкой прыжка (см. inputDidPressJump).
+            player.physicsBody?.velocity = CGVector(dx: 0, dy: verticalVelocity)
+            if let ladder = currentLadder {
+                player.position.x = ladder.position.x
+            }
 
         case .releaseLadder:
             playerState.locomotionMode = .normal
             player.physicsBody?.affectedByGravity = true
-            player.disableClimbingMode()     // ← добавили
+            player.disableClimbingMode()
+            // Если отпустили, всё ещё касаясь лестницы — значит дошли до её
+            // основания. Ставим ступни ровно на опору (землю или платформу) и
+            // гасим вертикальную скорость, чтобы не провалиться сквозь платформу,
+            // через которую в режиме лазания проходили. При сходе сверху
+            // currentLadder уже nil (контакт потерян) — там доводит гравитация.
+            if let ladder = currentLadder {
+                player.position.y = ladderBottomY(of: ladder) + player.size.height / 2
+                player.physicsBody?.velocity.dy = 0
+            }
 
         case .idle:
             break
         }
+    }
+
+    /// Y нижнего края лестницы — её основание (верх земли или платформы, на
+    /// которой она стоит).
+    private func ladderBottomY(of ladder: Ladder) -> CGFloat {
+        ladder.position.y - ladder.size.height / 2
     }
 
     private func updateCamera() {
@@ -326,28 +349,10 @@ final class GameScene: SKScene {
 
 extension GameScene: GameInputDelegate {
 
-    func inputDidPressLeft() {
-        player.startMovingLeft()
-    }
-
-    func inputDidPressRight() {
-        player.startMovingRight()
-    }
-
-    func inputDidPressUp() {
-        ladderController.didPressUp()
-    }
-
-    func inputDidPressDown() {
-        ladderController.didPressDown()
-    }
-
-    func inputDidReleaseHorizontal() {
-        player.stopMoving()
-    }
-
-    func inputDidReleaseVertical() {
-        ladderController.didReleaseVertical()
+    func inputDidUpdateDirection(horizontal: CGFloat, vertical: CGFloat) {
+        // Горизонталь — аналоговая скорость персонажа; вертикаль — лазание по лестнице.
+        player.setHorizontalInput(horizontal)
+        ladderController.setVerticalInput(vertical)
     }
 
     func inputDidPressJump() {
@@ -393,8 +398,8 @@ extension GameScene: SKPhysicsContactDelegate {
             if let ladderBody = bodyOfCategory(PhysicsCategory.ladder, in: bodies),
                let ladder = ladderBody.node as? Ladder {
                 currentLadder = ladder
+                ladderController.didTouchLadder(bottomY: ladderBottomY(of: ladder))
             }
-            ladderController.didTouchLadder()
             return
         }
 

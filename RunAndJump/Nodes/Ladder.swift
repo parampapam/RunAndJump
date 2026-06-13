@@ -9,7 +9,13 @@ import SpriteKit
 
 final class Ladder: SKNode {
 
+    /// Габариты лестницы. Нужны сцене, чтобы вычислить нижний край
+    /// (основание): по нему `LadderController` понимает, что игрок спустился
+    /// до опоры — земли или платформы.
+    let size: CGSize
+
     init(size: CGSize) {
+        self.size = size
         super.init()
         setupPhysics(size: size)
         setupVisual(size: size)

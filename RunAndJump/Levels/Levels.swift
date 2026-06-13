@@ -112,6 +112,10 @@ enum Levels {
             ),
             PlatformDescriptor(
                 position: CGPoint(x: 650, y: groundTop + 230),
+                size: CGSize(width: 200, height: 20)
+            ),
+            PlatformDescriptor(
+                position: CGPoint(x: 740, y: groundTop + 340),
                 size: CGSize(width: 160, height: 20)
             ),
             PlatformDescriptor(
@@ -142,6 +146,10 @@ enum Levels {
             LadderDescriptor(
                 position: CGPoint(x: 625, y: groundTop + 128),
                 size: CGSize(width: 40, height: 256)
+            ),
+            LadderDescriptor(
+                position: CGPoint(x: 715, y: groundTop + 303),
+                size: CGSize(width: 40, height: 126)
             ),
         ],
         enemies: [

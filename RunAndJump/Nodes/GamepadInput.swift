@@ -17,10 +17,13 @@ import GameController
 /// «влево/вправо/вверх/вниз/прыжок».
 ///
 /// Маппинг:
-/// - D-pad и левый стик по X → влево / вправо (с порогом, чтобы стик не
-///   срабатывал от лёгкого отклонения);
-/// - D-pad и левый стик по Y → вверх / вниз (лестница);
+/// - D-pad и левый стик по X → горизонтальная ось (влево / вправо);
+/// - D-pad и левый стик по Y → вертикальная ось (вверх / вниз, лестница);
 /// - кнопка ✕ (cross на DualSense, A на Xbox) → прыжок.
+///
+/// Как и экранный джойстик, геймпад отдаёт *аналоговый* вектор: чем сильнее
+/// отклонён стик, тем выше доля скорости. D-pad как цифровая крестовина даёт
+/// полное отклонение по нажатой стороне.
 @MainActor
 final class GamepadInput {
 
@@ -30,23 +33,33 @@ final class GamepadInput {
     /// один пригодный геймпад. Сцена прячет/показывает экранные кнопки.
     var onConnectionChange: ((Bool) -> Void)?
 
-    /// Минимальное отклонение оси, ниже которого ввод считаем нейтральным.
-    /// Отсекает дрейф стика и не даёт ему «дрожать» на границе.
-    private let axisThreshold: CGFloat = 0.5
+    /// Та же чистая математика, что и у экранного джойстика. Оси контроллера
+    /// уже нормированы, поэтому радиус = 1. Мёртвая зона побольше — у физических
+    /// стиков заметнее дрейф.
+    private let stick = AnalogStick(radius: 1, deadZone: 0.2)
 
-    private enum Horizontal { case left, right, none }
-    private enum Vertical { case up, down, none }
-
-    // Текущее дискретное состояние осей — события шлём только при переходах,
-    // а не на каждый кадр, пока ось удерживается.
-    private var horizontal: Horizontal = .none
-    private var vertical: Vertical = .none
+    // Последний отправленный вектор — события шлём только при изменении,
+    // а не на каждый «дрожащий» отсчёт оси внутри мёртвой зоны.
+    private var lastDirection: CGVector = .zero
 
     private var observers: [NSObjectProtocol] = []
 
-    /// Есть ли подключённый геймпад с расширенным профилем.
+    /// Есть ли подключённый пригодный геймпад с расширенным профилем.
     var isConnected: Bool {
-        GCController.controllers().contains { $0.extendedGamepad != nil }
+        GCController.controllers().contains(where: Self.isRealGamepad)
+    }
+
+    /// Отсекает виртуальный контроллер, который iOS Simulator всегда подсовывает
+    /// сам (`vendorName == "Gamepad"`, мостит клавиатуру хоста). На реальном
+    /// устройстве его не существует, поэтому фильтр включён только в симуляторе —
+    /// в продакшене поведение не меняется. Без него экранное управление было бы
+    /// навсегда скрыто в симуляторе, как будто подключён настоящий геймпад.
+    private static func isRealGamepad(_ controller: GCController) -> Bool {
+        guard controller.extendedGamepad != nil else { return false }
+        #if targetEnvironment(simulator)
+        if controller.vendorName == "Gamepad" { return false }
+        #endif
+        return true
     }
 
     // MARK: - Наблюдение
@@ -119,46 +132,28 @@ final class GamepadInput {
 
     private func recomputeAxes(_ pad: GCExtendedGamepad) {
         // Берём ту ось, что отклонена сильнее: D-pad или стик.
+        // (В GameController ось Y направлена вверх — это совпадает с нашим
+        // соглашением «вверх = положительный».)
         let x = dominant(CGFloat(pad.dpad.xAxis.value), CGFloat(pad.leftThumbstick.xAxis.value))
         let y = dominant(CGFloat(pad.dpad.yAxis.value), CGFloat(pad.leftThumbstick.yAxis.value))
 
-        let newHorizontal: Horizontal = x < -axisThreshold ? .left
-            : (x > axisThreshold ? .right : .none)
-        if newHorizontal != horizontal {
-            horizontal = newHorizontal
-            switch newHorizontal {
-            case .left:  delegate?.inputDidPressLeft()
-            case .right: delegate?.inputDidPressRight()
-            case .none:  delegate?.inputDidReleaseHorizontal()
-            }
-        }
-
-        // В GameController ось Y направлена вверх (вверх = положительная).
-        let newVertical: Vertical = y > axisThreshold ? .up
-            : (y < -axisThreshold ? .down : .none)
-        if newVertical != vertical {
-            vertical = newVertical
-            switch newVertical {
-            case .up:   delegate?.inputDidPressUp()
-            case .down: delegate?.inputDidPressDown()
-            case .none: delegate?.inputDidReleaseVertical()
-            }
-        }
+        let direction = stick.direction(for: CGVector(dx: x, dy: y))
+        sendDirection(direction)
     }
 
     private func dominant(_ a: CGFloat, _ b: CGFloat) -> CGFloat {
         abs(a) >= abs(b) ? a : b
     }
 
+    /// Отправляет вектор делегату, только если он реально изменился.
+    private func sendDirection(_ direction: CGVector) {
+        guard direction != lastDirection else { return }
+        lastDirection = direction
+        delegate?.inputDidUpdateDirection(horizontal: direction.dx, vertical: direction.dy)
+    }
+
     private func resetAxes() {
-        if horizontal != .none {
-            horizontal = .none
-            delegate?.inputDidReleaseHorizontal()
-        }
-        if vertical != .none {
-            vertical = .none
-            delegate?.inputDidReleaseVertical()
-        }
+        sendDirection(.zero)
     }
 
     private func notifyConnection() {
