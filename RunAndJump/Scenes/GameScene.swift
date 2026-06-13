@@ -195,7 +195,8 @@ final class GameScene: SKScene {
             }
         }
 
-        applyLadderAction(ladderController.update())
+        let playerFeetY = player.position.y - player.size.height / 2
+        applyLadderAction(ladderController.update(playerFeetY: playerFeetY))
 
         if jumpController.consumeJumpIfPossible(at: currentTime) {
             player.jump()
@@ -254,11 +255,26 @@ final class GameScene: SKScene {
         case .releaseLadder:
             playerState.locomotionMode = .normal
             player.physicsBody?.affectedByGravity = true
-            player.disableClimbingMode()     // ← добавили
+            player.disableClimbingMode()
+            // Если отпустили, всё ещё касаясь лестницы — значит дошли до её
+            // основания. Ставим ступни ровно на опору (землю или платформу) и
+            // гасим вертикальную скорость, чтобы не провалиться сквозь платформу,
+            // через которую в режиме лазания проходили. При сходе сверху
+            // currentLadder уже nil (контакт потерян) — там доводит гравитация.
+            if let ladder = currentLadder {
+                player.position.y = ladderBottomY(of: ladder) + player.size.height / 2
+                player.physicsBody?.velocity.dy = 0
+            }
 
         case .idle:
             break
         }
+    }
+
+    /// Y нижнего края лестницы — её основание (верх земли или платформы, на
+    /// которой она стоит).
+    private func ladderBottomY(of ladder: Ladder) -> CGFloat {
+        ladder.position.y - ladder.size.height / 2
     }
 
     private func updateCamera() {
@@ -361,12 +377,6 @@ extension GameScene: SKPhysicsContactDelegate {
         if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground)
             || matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
             jumpController.didTouchGround(at: lastUpdateTime)
-            // Только земля (не платформа): по ней отпускаем лестницу при спуске.
-            // Сквозь платформы в режиме лазания игрок проходит, поэтому опорой
-            // для «спустился до низа» служит именно земля.
-            if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground) {
-                ladderController.didTouchGround()
-            }
             if let platformBody = bodyOfCategory(PhysicsCategory.platform, in: bodies),
                let movingPlatform = platformBody.node as? MovingPlatform {
                 let attached = platformRideController.tryAttach(
@@ -388,8 +398,8 @@ extension GameScene: SKPhysicsContactDelegate {
             if let ladderBody = bodyOfCategory(PhysicsCategory.ladder, in: bodies),
                let ladder = ladderBody.node as? Ladder {
                 currentLadder = ladder
+                ladderController.didTouchLadder(bottomY: ladderBottomY(of: ladder))
             }
-            ladderController.didTouchLadder()
             return
         }
 
@@ -424,9 +434,6 @@ extension GameScene: SKPhysicsContactDelegate {
         if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground)
             || matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
             jumpController.didLeaveGround(at: lastUpdateTime)
-            if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground) {
-                ladderController.didLeaveGround()
-            }
             if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform),
                let platformBody = bodyOfCategory(PhysicsCategory.platform, in: bodies),
                platformBody.node is MovingPlatform {
