@@ -241,8 +241,15 @@ final class GameScene: SKScene {
             }
 
         case .climb(let verticalVelocity):
-            let currentVx = player.physicsBody?.velocity.dx ?? 0
-            player.physicsBody?.velocity = CGVector(dx: currentVx, dy: verticalVelocity)
+            // На лестнице горизонтальное отклонение стика игнорируем: гасим
+            // боковую скорость и каждый кадр держим игрока строго по центру
+            // лестницы. Иначе невыводимый «дрейф» джойстика сносит его вбок,
+            // и он срывается с лестницы. Спрыгнуть посреди лестницы можно
+            // только кнопкой прыжка (см. inputDidPressJump).
+            player.physicsBody?.velocity = CGVector(dx: 0, dy: verticalVelocity)
+            if let ladder = currentLadder {
+                player.position.x = ladder.position.x
+            }
 
         case .releaseLadder:
             playerState.locomotionMode = .normal
@@ -326,28 +333,10 @@ final class GameScene: SKScene {
 
 extension GameScene: GameInputDelegate {
 
-    func inputDidPressLeft() {
-        player.startMovingLeft()
-    }
-
-    func inputDidPressRight() {
-        player.startMovingRight()
-    }
-
-    func inputDidPressUp() {
-        ladderController.didPressUp()
-    }
-
-    func inputDidPressDown() {
-        ladderController.didPressDown()
-    }
-
-    func inputDidReleaseHorizontal() {
-        player.stopMoving()
-    }
-
-    func inputDidReleaseVertical() {
-        ladderController.didReleaseVertical()
+    func inputDidUpdateDirection(horizontal: CGFloat, vertical: CGFloat) {
+        // Горизонталь — аналоговая скорость персонажа; вертикаль — лазание по лестнице.
+        player.setHorizontalInput(horizontal)
+        ladderController.setVerticalInput(vertical)
     }
 
     func inputDidPressJump() {
@@ -372,6 +361,12 @@ extension GameScene: SKPhysicsContactDelegate {
         if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground)
             || matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
             jumpController.didTouchGround(at: lastUpdateTime)
+            // Только земля (не платформа): по ней отпускаем лестницу при спуске.
+            // Сквозь платформы в режиме лазания игрок проходит, поэтому опорой
+            // для «спустился до низа» служит именно земля.
+            if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground) {
+                ladderController.didTouchGround()
+            }
             if let platformBody = bodyOfCategory(PhysicsCategory.platform, in: bodies),
                let movingPlatform = platformBody.node as? MovingPlatform {
                 let attached = platformRideController.tryAttach(
@@ -429,6 +424,9 @@ extension GameScene: SKPhysicsContactDelegate {
         if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground)
             || matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
             jumpController.didLeaveGround(at: lastUpdateTime)
+            if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground) {
+                ladderController.didLeaveGround()
+            }
             if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform),
                let platformBody = bodyOfCategory(PhysicsCategory.platform, in: bodies),
                platformBody.node is MovingPlatform {

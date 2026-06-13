@@ -29,6 +29,13 @@ struct LadderController {
     /// Скорость лазания по лестнице в точках в секунду.
     var climbSpeed: CGFloat = 120
 
+    /// Насколько сильно нужно отклонить ввод по вертикали, чтобы НАЧАТЬ лазание.
+    /// Защищает от случайного «примагничивания» к лестнице, когда игрок просто
+    /// проходит мимо, держа стик вбок: у джойстика всегда есть небольшой
+    /// вертикальный дрейф, и без порога он мгновенно цеплялся бы за лестницу.
+    /// На скорость уже идущего лазания не влияет — там работает любой ввод.
+    var climbStartThreshold: CGFloat = 0.5
+
     // MARK: Состояние
 
     /// Сейчас игрок находится на лестнице (в режиме climbing).
@@ -37,7 +44,13 @@ struct LadderController {
     /// Игрок прямо сейчас касается хотя бы одной лестницы.
     private var isTouchingLadder: Bool = false
 
-    /// Текущий вертикальный ввод: -1 (вниз), 0 (ничего), +1 (вверх).
+    /// Игрок прямо сейчас стоит на земле (контакт с категорией ground).
+    /// Нужно, чтобы отпускать лестницу при спуске до пола и не цепляться
+    /// «вниз» у её основания.
+    private var isGrounded: Bool = false
+
+    /// Текущий аналоговый вертикальный ввод в [-1, 1]: знак — направление
+    /// (+ вверх, − вниз), модуль — доля скорости лазания.
     private var verticalInput: CGFloat = 0
 
     // MARK: События контактов с лестницей
@@ -50,18 +63,25 @@ struct LadderController {
         isTouchingLadder = false
     }
 
+    // MARK: События контактов с землёй
+
+    mutating func didTouchGround() {
+        isGrounded = true
+    }
+
+    mutating func didLeaveGround() {
+        isGrounded = false
+    }
+
     // MARK: События ввода
 
-    mutating func didPressUp() {
-        verticalInput = 1
-    }
-
-    mutating func didPressDown() {
-        verticalInput = -1
-    }
-
-    mutating func didReleaseVertical() {
-        verticalInput = 0
+    /// Задаёт аналоговый вертикальный ввод в [-1, 1] (+ вверх, − вниз).
+    /// Значение уже очищено от мёртвой зоны источником ввода. Начать лазание
+    /// можно лишь при отклонении не меньше `climbStartThreshold` (чтобы дрейф
+    /// стика при ходьбе вбок не цеплял за лестницу); скорость уже идущего
+    /// лазания масштабируется любым ненулевым значением.
+    mutating func setVerticalInput(_ value: CGFloat) {
+        verticalInput = value
     }
 
     // MARK: События со стороны других контроллеров
@@ -84,10 +104,28 @@ struct LadderController {
             return .releaseLadder
         }
 
-        // Не на лестнице, но касаемся и игрок дал вертикальный ввод — цепляемся.
-        if !isClimbing && isTouchingLadder && verticalInput != 0 {
-            isClimbing = true
-            return .startClimbing
+        // Спустились по лестнице и упёрлись в землю — отпускаем лестницу, чтобы
+        // можно было идти вбок (а не висеть, пока не прыгнешь). Срабатывает,
+        // только когда игрок не лезет ВВЕРХ осознанно — иначе начало подъёма с
+        // земли сразу же отцеплялось бы.
+        if isClimbing && isGrounded && verticalInput < climbStartThreshold {
+            isClimbing = false
+            return .releaseLadder
+        }
+
+        // Не на лестнице, но касаемся и игрок осознанно отклонил ввод по
+        // вертикали (сильнее порога) — цепляемся и центрируемся. Лёгкий дрейф
+        // стика при ходьбе вбок порог не проходит, поэтому мимо лестницы можно
+        // спокойно пройти. С земли цепляемся только при движении ВВЕРХ (вниз
+        // некуда — там опора), иначе толчок вниз у основания лестницы дёргал бы
+        // climbing каждый кадр. В воздухе цепляемся и вверх, и вниз.
+        if !isClimbing && isTouchingLadder {
+            let wantsUp = verticalInput >= climbStartThreshold
+            let wantsDown = verticalInput <= -climbStartThreshold
+            if wantsUp || (wantsDown && !isGrounded) {
+                isClimbing = true
+                return .startClimbing
+            }
         }
 
         // На лестнице — лезем (или висим, если ввода нет).

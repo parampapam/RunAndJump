@@ -12,12 +12,14 @@ final class Player: SKSpriteNode {
     private let movementSpeed: CGFloat = 250
     private let jumpImpulse: CGFloat = 50
 
-    private var horizontalDirection: CGFloat = 0
+    /// Аналоговый горизонтальный ввод в [-1, 1]. Знак — направление,
+    /// модуль — доля максимальной скорости.
+    private var horizontalInput: CGFloat = 0
 
-    var hasHorizontalInput: Bool { horizontalDirection != 0 }
+    var hasHorizontalInput: Bool { horizontalInput != 0 }
 
     /// Горизонтальная скорость от ввода игрока (pts/s), без учёта платформы.
-    var horizontalVelocity: CGFloat { horizontalDirection * movementSpeed }
+    var horizontalVelocity: CGFloat { horizontalInput * movementSpeed }
 
     // MARK: - Управление коллизиями
 
@@ -66,16 +68,11 @@ final class Player: SKSpriteNode {
 
     // MARK: - Команды движения
 
-    func startMovingLeft() {
-        horizontalDirection = -1
-    }
-
-    func startMovingRight() {
-        horizontalDirection = 1
-    }
-
-    func stopMoving() {
-        horizontalDirection = 0
+    /// Задаёт аналоговый горизонтальный ввод. -1 — полный ход влево,
+    /// +1 — полный ход вправо, 0 — стоп, промежуточные значения — частичная
+    /// скорость.
+    func setHorizontalInput(_ value: CGFloat) {
+        horizontalInput = value
     }
 
     func jump() {
@@ -113,7 +110,7 @@ final class Player: SKSpriteNode {
         guard let body = physicsBody else { return }
         // Перезаписываем горизонтальную скорость, оставляя вертикальную (гравитация, прыжок).
         body.velocity = CGVector(
-            dx: horizontalDirection * movementSpeed,
+            dx: horizontalInput * movementSpeed,
             dy: body.velocity.dy
         )
     }
