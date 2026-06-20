@@ -77,6 +77,10 @@ final class GameScene: SKScene {
         gamepadInput.stopObserving()
     }
 
+    override func didChangeSize(_ oldSize: CGSize) {
+        updateCameraZoom()
+    }
+
     // MARK: - Setup
 
     private func setupCamera() {
@@ -277,12 +281,19 @@ final class GameScene: SKScene {
         ladder.position.y - ladder.size.height / 2
     }
 
+    // MARK: - Камера
+
     private func updateCamera() {
         let halfW = size.width / 2
         let halfH = size.height / 2
         let targetX = max(halfW, min(configuration.levelWidth - halfW, player.position.x))
         let targetY = max(halfH, min(configuration.levelHeight - halfH, player.position.y))
         cameraNode.position = CGPoint(x: targetX, y: targetY)
+    }
+
+    func updateCameraZoom() {
+        let visibleWorldHeight = WorldMetrics.visibleTilesTall * WorldMetrics.tileSize
+        camera?.setScale(visibleWorldHeight / size.height)
     }
 
     // MARK: - Обработка событий
