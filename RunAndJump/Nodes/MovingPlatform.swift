@@ -30,6 +30,7 @@ final class MovingPlatform: SKSpriteNode {
             to: CGPoint(x: size.width / 2, y: size.height / 2)
         )
         body.isDynamic = false
+        body.restitution = 0
         body.categoryBitMask = PhysicsCategory.platform
         body.contactTestBitMask = PhysicsCategory.none
         physicsBody = body

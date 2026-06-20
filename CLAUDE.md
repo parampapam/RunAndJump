@@ -52,17 +52,19 @@ All game logic lives here as value types (structs/enums) with pure functions. Th
 - **`LevelConfiguration`** — declarative struct defining scene size, player start, ground, enemies, pickups, and portal positions for a level. No SpriteKit types here.
 - **`Levels` enum** — hardcodes the three levels as `LevelConfiguration` values.
 - **`PhysicsCategory`** — bitmask constants for SpriteKit physics contacts.
+- **`WorldMetrics`** — world scale constants: `tileSize` (60 pts/tile) and `visibleTilesTall` (camera zoom — how many tiles tall the scene shows).
+- **`PlayerAnimation` / `PlayerAnimationState`** — pure selection of animation state (idle / running / jumping) and facing (left/right) from `isOnGround` and horizontal input. Relies on `isOnGround` being stable (supports rest with `restitution = 0`).
 
 ### Scene / Node layer (`Scenes/`, `Nodes/`, `Movement/`) — SpriteKit
 
 - **`GameScene`** — main SKScene. Initialises from `LevelConfiguration` via `LevelBuilder`, runs the game loop in `update()`, handles `SKPhysicsContactDelegate`, and drives state transitions (playing → died → restart or completed → next level via `GameProgress`).
 - **`VictoryScene`** — shown after all levels complete; displays total bonus.
-- **`Player`** — moves at 250 pts/s horizontally; jump impulse 120. Reads commands from `InputController`.
+- **`Player`** — one tile in size (`WorldMetrics.tileSize`, 60×60); moves at 250 pts/s horizontally; jump impulse 150 (≈2.3 tiles high). Renders the `Player` sprite atlas, picking frames via `PlayerAnimation` and mirroring by `xScale` for facing. Reads commands from `InputController` / `GamepadInput`.
 - **`Enemy`** / `LevelObject` — SpriteKit node with an injected `EnemyMovement` strategy (`StationaryMovement`, `PatrollingMovement`). Enemies and pickups are non-dynamic; their positions are updated manually each frame.
 - **`Pickup`** — green = health, yellow = bonus points.
 - **`Portal`** — level exit (purple).
 - **`HUDNode`** — overlays health and bonus points.
-- **`InputController`** — touch-based left/right/jump buttons; tracks per-touch events to detect button release.
+- **`InputController`** — on-screen draggable analog joystick (left) + jump button (right); analog deflection math lives in the pure `AnalogStick`. `GamepadInput` mirrors the same commands from a physical controller and hides the on-screen controls while connected.
 - **`LevelBuilder`** — factory that creates SpriteKit nodes from descriptor structs in `LevelConfiguration`.
 
 ## Testing

@@ -10,7 +10,7 @@ import SpriteKit
 final class Player: SKSpriteNode {
 
     private let movementSpeed: CGFloat = 250
-    private let jumpImpulse: CGFloat = 50
+    private let jumpImpulse: CGFloat = 150
 
     /// Аналоговый горизонтальный ввод в [-1, 1]. Знак — направление,
     /// модуль — доля максимальной скорости.
@@ -36,9 +36,12 @@ final class Player: SKSpriteNode {
     }
 
     init() {
-        let size = CGSize(width: 32, height: 32)
-        let texture: SKTexture? = nil
-        super.init(texture: texture, color: .red, size: size)
+        // Персонаж размером в тайл — единый источник масштаба мира (WorldMetrics).
+        let size = CGSize(width: WorldMetrics.tileSize, height: WorldMetrics.tileSize)
+        super.init(texture: nil, color: .red, size: size)
+
+        // Стартуем с кадра покоя, чтобы спрайт был виден до первого update.
+        texture = animationFrames[.idle]?.first
 
         let body = SKPhysicsBody(rectangleOf: size)
         body.isDynamic = true
@@ -77,6 +80,72 @@ final class Player: SKSpriteNode {
 
     func jump() {
         physicsBody?.applyImpulse(CGVector(dx: 0, dy: jumpImpulse))
+    }
+
+    // MARK: - Анимация
+
+    /// Атлас с кадрами игрока. В атласе все кадры нарисованы «вправо».
+    private let atlas = SKTextureAtlas(named: "Player")
+
+    /// Кадры на каждое состояние анимации. Лениво — атлас читается один раз.
+    /// idle — один статичный кадр: стоя персонаж не должен «дёргаться».
+    private lazy var animationFrames: [PlayerAnimationState: [SKTexture]] = [
+        .idle:    ["player_idle_0"].map { atlas.textureNamed($0) },
+        .running: ["player_walk_0", "player_walk_1"].map { atlas.textureNamed($0) },
+        .jumping: ["player_jump"].map { atlas.textureNamed($0) }
+    ]
+
+    /// Длительность кадра для каждого состояния, секунды.
+    private let frameDurations: [PlayerAnimationState: TimeInterval] = [
+        .idle: 0.4,
+        .running: 0.18,
+        .jumping: 0.1
+    ]
+
+    private static let animationKey = "playerAnimation"
+
+    /// Текущее проигрываемое состояние; nil — анимация ещё не запускалась.
+    private var currentAnimationState: PlayerAnimationState?
+    /// Текущее направление взгляда (по умолчанию — вправо, как в атласе).
+    private var facing: PlayerFacing = .right
+
+    /// Обновляет визуальное состояние: выбор кадров и зеркалирование по направлению.
+    /// `isOnGround` берём из `JumpController`, остальное — из текущего ввода.
+    func updateAnimation(isOnGround: Bool) {
+        let newFacing = PlayerAnimation.facing(horizontalInput: horizontalInput, current: facing)
+        if newFacing != facing {
+            facing = newFacing
+            // Кадры нарисованы вправо: для движения влево зеркалим узел по X.
+            xScale = facing == .right ? 1 : -1
+        }
+
+        let newState = PlayerAnimation.state(
+            isOnGround: isOnGround,
+            horizontalInput: horizontalInput
+        )
+        guard newState != currentAnimationState else { return }
+        currentAnimationState = newState
+        playAnimation(for: newState)
+    }
+
+    private func playAnimation(for state: PlayerAnimationState) {
+        guard let frames = animationFrames[state], !frames.isEmpty else { return }
+        removeAction(forKey: Self.animationKey)
+
+        // Одиночный кадр — просто ставим текстуру, без бесконечного действия.
+        guard frames.count > 1 else {
+            texture = frames[0]
+            return
+        }
+
+        // resize/restore = false: размер узла фиксирован (физика от него не зависит).
+        let animate = SKAction.animate(
+            with: frames,
+            timePerFrame: frameDurations[state] ?? 0.15,
+            resize: false,
+            restore: false
+        )
+        run(.repeatForever(animate), withKey: Self.animationKey)
     }
 
     // MARK: - Визуальная индикация неуязвимости

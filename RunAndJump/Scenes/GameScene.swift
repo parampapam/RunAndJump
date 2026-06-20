@@ -88,6 +88,8 @@ final class GameScene: SKScene {
         addChild(cameraNode)
         camera = cameraNode
         cameraNode.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        // Зум во время init пропускается (камеры ещё нет) — выставляем его здесь.
+        updateCameraZoom()
     }
 
     private func setupGround() {
@@ -97,6 +99,9 @@ final class GameScene: SKScene {
 
         let body = SKPhysicsBody(rectangleOf: groundSize)
         body.isDynamic = false
+        // Без упругости: SpriteKit берёт max(restitution) двух тел, и дефолтные
+        // 0.2 у опоры подбрасывали бы стоящего игрока (микро-баунс).
+        body.restitution = 0
         body.categoryBitMask = PhysicsCategory.ground
         // Земля сама ни с кем не "ищет" контактов — её роль пассивная.
         body.contactTestBitMask = PhysicsCategory.none
@@ -114,6 +119,7 @@ final class GameScene: SKScene {
             wall.position = CGPoint(x: xPos, y: wallHeight / 2)
             let body = SKPhysicsBody(rectangleOf: wall.size)
             body.isDynamic = false
+            body.restitution = 0
             body.categoryBitMask = PhysicsCategory.wall
             body.contactTestBitMask = PhysicsCategory.none
             wall.physicsBody = body
@@ -191,6 +197,7 @@ final class GameScene: SKScene {
         }
 
         player.update()
+        player.updateAnimation(isOnGround: jumpController.isGrounded)
 
         // Обновляем все игровые объекты с поведением (враги и т. п.).
         for child in children {
@@ -284,16 +291,23 @@ final class GameScene: SKScene {
     // MARK: - Камера
 
     private func updateCamera() {
-        let halfW = size.width / 2
-        let halfH = size.height / 2
+        // Видимая область камеры = размер сцены, умноженный на её масштаб (зум).
+        // Клэмп считаем по ней, иначе при scale != 1 по краям уровня видна пустота.
+        let scale = cameraNode.yScale
+        let halfW = size.width * scale / 2
+        let halfH = size.height * scale / 2
         let targetX = max(halfW, min(configuration.levelWidth - halfW, player.position.x))
         let targetY = max(halfH, min(configuration.levelHeight - halfH, player.position.y))
         cameraNode.position = CGPoint(x: targetX, y: targetY)
     }
 
-    func updateCameraZoom() {
+    private func updateCameraZoom() {
+        // didChangeSize прилетает уже из super.init(size:) — до setupCamera, когда
+        // камеры ещё нет. Поэтому идём через optional camera, а не cameraNode!.
+        // Плюс на раннем layout-проходе size может быть нулевым — деление дало бы inf.
+        guard let camera, size.height > 0 else { return }
         let visibleWorldHeight = WorldMetrics.visibleTilesTall * WorldMetrics.tileSize
-        camera?.setScale(visibleWorldHeight / size.height)
+        camera.setScale(visibleWorldHeight / size.height)
     }
 
     // MARK: - Обработка событий
