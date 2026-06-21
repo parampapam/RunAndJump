@@ -5,7 +5,7 @@
 //  Created by Roman Pospelov on 20.06.2026.
 //
 
-import Foundation
+import CoreGraphics
 
 enum WorldMetrics {
     static let tileSize: CGFloat = 60           // Единицы мира (пункты) на тайл

@@ -23,7 +23,7 @@ final class Pickup: LevelObject {
 
     let kind: PickupKind
 
-    init(kind: PickupKind, size: CGSize = CGSize(width: 30, height: 30)) {
+    init(kind: PickupKind, size: CGSize = Grid.size(ObjectSize.pickup)) {
         self.kind = kind
         super.init(size: size, color: kind.color)
 

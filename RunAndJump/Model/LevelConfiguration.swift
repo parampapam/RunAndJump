@@ -8,50 +8,51 @@
 import CoreGraphics
 
 /// Декларативное описание уровня. Чистые данные, без SpriteKit.
+/// Координаты объектов — в тайлах, привязка к нижнему-левому углу.
 struct LevelConfiguration: Equatable {
     let name: String
     let sceneSize: CGSize
     let levelWidth: CGFloat
     let levelHeight: CGFloat
-    let playerStart: CGPoint
+    let playerStart: TileCoordinate   // нижний-левый угол игрока
     let groundHeight: CGFloat
     let platforms: [PlatformDescriptor]
     let movingPlatforms: [MovingPlatformDescriptor]
     let ladders: [LadderDescriptor]
     let enemies: [EnemyDescriptor]
     let pickups: [PickupDescriptor]
-    let portal: CGPoint
+    let portal: TileCoordinate        // нижний-левый угол портала
 }
 
-/// Декларативное описание лестницы.
+/// Декларативное описание лестницы (нижний-левый угол + размер, в тайлах).
 struct LadderDescriptor: Equatable {
-    let position: CGPoint   // центр лестницы
-    let size: CGSize        // ширина и высота
+    let rect: TileRect
 }
 
 /// Декларативное описание врага.
 struct EnemyDescriptor: Equatable {
     enum Behavior: Equatable {
         case stationary
+        /// Патруль между двумя X. `leftX`/`rightX` — диапазон X **нижнего-левого
+        /// угла** врага в тайлах; `speed` — скорость в пунктах/с.
         case patrolling(leftX: CGFloat, rightX: CGFloat, speed: CGFloat)
     }
 
-    let position: CGPoint
+    let origin: TileCoordinate   // нижний-левый угол
     let behavior: Behavior
 }
 
-/// Декларативное описание платформы.
+/// Декларативное описание платформы (нижний-левый угол + размер, в тайлах).
 struct PlatformDescriptor: Equatable {
-    let position: CGPoint
-    let size: CGSize
+    let rect: TileRect
 }
 
 /// Декларативное описание подвижной платформы.
 struct MovingPlatformDescriptor: Equatable {
-    let size: CGSize
-    let startPosition: CGPoint
-    let endPosition: CGPoint
-    let speed: CGFloat      // pts/s
+    let size: TileSize
+    let start: TileCoordinate   // нижний-левый угол в крайней точке
+    let end: TileCoordinate
+    let speed: CGFloat          // пункты/с
     let pauseDuration: Double   // задержка в крайних точках, секунды
 }
 
@@ -65,6 +66,6 @@ struct PickupDescriptor: Equatable {
         case bonus(points: Int)
     }
 
-    let position: CGPoint
+    let origin: TileCoordinate   // нижний-левый угол
     let kind: Kind
 }

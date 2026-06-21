@@ -7,15 +7,17 @@
 
 import CoreGraphics
 
+/// Уровни заданы в **тайлах**, привязка — к нижнему-левому углу объекта.
+/// Земля занимает нижний ряд (высота 1 тайл), поэтому её верх — на y = 1:
+/// объекты «на земле» ставятся с y = 1. Платформы задаются прямоугольником
+/// (угол + размер), их «толщина» 0.25 тайла, а y угла = высота_верха − 0.25.
 enum Levels {
 
     static let sceneSize = CGSize(width: 1334, height: 750)
     static let levelWidth: CGFloat = 2668
     static let levelHeight: CGFloat = 750
-    static let groundHeight: CGFloat = 32
-
-    /// Y-координата поверхности земли — точка, на которую "ставим" объекты.
-    private static let groundTop: CGFloat = groundHeight
+    /// Земля — ровно один тайл высотой, чтобы её верх лёг на линию сетки (y = 1).
+    static let groundHeight: CGFloat = WorldMetrics.tileSize
 
     static let all: [LevelConfiguration] = [level1, level2, level3]
 
@@ -26,74 +28,49 @@ enum Levels {
         sceneSize: sceneSize,
         levelWidth: levelWidth,
         levelHeight: levelHeight,
-        playerStart: CGPoint(x: 100, y: groundTop + 100),
+        playerStart: TileCoordinate(x: 1, y: 1),
         groundHeight: groundHeight,
         platforms: [
-            PlatformDescriptor(
-                position: CGPoint(x: 350, y: groundTop + 130),
-                size: CGSize(width: 200, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 800, y: groundTop + 230),
-                size: CGSize(width: 200, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 1450, y: groundTop + 180),
-                size: CGSize(width: 200, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 1950, y: groundTop + 260),
-                size: CGSize(width: 200, height: 20)
-            ),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 5, y: 2.75),
+                                              size: TileSize(width: 3, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 13, y: 4.75),
+                                              size: TileSize(width: 3, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 24, y: 2.75),
+                                              size: TileSize(width: 3, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 32, y: 4.75),
+                                              size: TileSize(width: 3, height: 0.25))),
         ],
         movingPlatforms: [
-            // Горизонтальная платформа в середине уровня — мост над пустотой.
+            // Горизонтальный мост над серединой уровня (верх на y = 4).
             MovingPlatformDescriptor(
-                size: CGSize(width: 160, height: 20),
-                startPosition: CGPoint(x: 1100, y: groundTop + 200),
-                endPosition: CGPoint(x: 1350, y: groundTop + 200),
+                size: TileSize(width: 3, height: 0.25),
+                start: TileCoordinate(x: 18, y: 3.75),
+                end: TileCoordinate(x: 22, y: 3.75),
                 speed: 90,
                 pauseDuration: 0.6
             ),
         ],
-        // Лестница от земли до первой платформы (верх платформы: groundTop+140=172, +16 запас → y до 188).
+        // Лестница от земли (y = 1) до первой платформы (верх y = 3).
         ladders: [
-            LadderDescriptor(
-                position: CGPoint(x: 320, y: groundTop + 78),
-                size: CGSize(width: 40, height: 156)
-            ),
+            LadderDescriptor(rect: TileRect(origin: TileCoordinate(x: 4.5, y: 1),
+                                            size: TileSize(width: 0.5, height: 2.25))),
         ],
         enemies: [
-            EnemyDescriptor(
-                position: CGPoint(x: 400, y: groundTop + 20),
-                behavior: .stationary
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 800, y: groundTop + 20),
-                behavior: .patrolling(leftX: 700, rightX: 900, speed: 100)
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 1500, y: groundTop + 20),
-                behavior: .patrolling(leftX: 1400, rightX: 1600, speed: 120)
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 2100, y: groundTop + 20),
-                behavior: .stationary
-            ),
+            EnemyDescriptor(origin: TileCoordinate(x: 10, y: 1), behavior: .stationary),
+            EnemyDescriptor(origin: TileCoordinate(x: 15, y: 1),
+                            behavior: .patrolling(leftX: 14, rightX: 18, speed: 100)),
+            EnemyDescriptor(origin: TileCoordinate(x: 28, y: 1),
+                            behavior: .patrolling(leftX: 26, rightX: 30, speed: 120)),
+            EnemyDescriptor(origin: TileCoordinate(x: 38, y: 1), behavior: .stationary),
         ],
         pickups: [
-            PickupDescriptor(position: CGPoint(x: 300, y: groundTop + 100),
-                             kind: .health),
-            PickupDescriptor(position: CGPoint(x: 600, y: groundTop + 100),
-                             kind: .bonus(points: 5)),
-            PickupDescriptor(position: CGPoint(x: 1000, y: groundTop + 100),
-                             kind: .bonus(points: 10)),
-            PickupDescriptor(position: CGPoint(x: 1700, y: groundTop + 100),
-                             kind: .bonus(points: 15)),
-            PickupDescriptor(position: CGPoint(x: 2300, y: groundTop + 100),
-                             kind: .health),
+            PickupDescriptor(origin: TileCoordinate(x: 3, y: 1.5), kind: .health),
+            PickupDescriptor(origin: TileCoordinate(x: 9, y: 1.5), kind: .bonus(points: 5)),
+            PickupDescriptor(origin: TileCoordinate(x: 20, y: 1.5), kind: .bonus(points: 10)),
+            PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.5), kind: .bonus(points: 15)),
+            PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.5), kind: .health),
         ],
-        portal: CGPoint(x: levelWidth - 80, y: groundTop + 40)
+        portal: TileCoordinate(x: 42, y: 1)
     )
 
     // MARK: - Level 2
@@ -103,90 +80,59 @@ enum Levels {
         sceneSize: sceneSize,
         levelWidth: levelWidth,
         levelHeight: levelHeight,
-        playerStart: CGPoint(x: 100, y: groundTop + 100),
+        playerStart: TileCoordinate(x: 1, y: 1),
         groundHeight: groundHeight,
         platforms: [
-            PlatformDescriptor(
-                position: CGPoint(x: 300, y: groundTop + 130),
-                size: CGSize(width: 160, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 650, y: groundTop + 230),
-                size: CGSize(width: 200, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 740, y: groundTop + 340),
-                size: CGSize(width: 160, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 1050, y: groundTop + 130),
-                size: CGSize(width: 160, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 1500, y: groundTop + 200),
-                size: CGSize(width: 160, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 2000, y: groundTop + 280),
-                size: CGSize(width: 160, height: 20)
-            ),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 4, y: 2.75),
+                                              size: TileSize(width: 3, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 9, y: 4.75),
+                                              size: TileSize(width: 3, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 12, y: 6.75),
+                                              size: TileSize(width: 2, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 16, y: 2.75),
+                                              size: TileSize(width: 3, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 23, y: 3.75),
+                                              size: TileSize(width: 3, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 31, y: 4.75),
+                                              size: TileSize(width: 3, height: 0.25))),
         ],
         movingPlatforms: [
-            // Вертикальная платформа — лифт к высокой платформе.
+            // Вертикальный лифт (верх ходит между y = 2 и y = 6).
             MovingPlatformDescriptor(
-                size: CGSize(width: 160, height: 20),
-                startPosition: CGPoint(x: 1750, y: groundTop + 60),
-                endPosition: CGPoint(x: 1750, y: groundTop + 260),
+                size: TileSize(width: 3, height: 0.25),
+                start: TileCoordinate(x: 27, y: 1.75),
+                end: TileCoordinate(x: 27, y: 5.75),
                 speed: 100,
                 pauseDuration: 1.0
             ),
         ],
-        // Лестница к платформе на x=650 (верх: groundTop+240=272, +16 запас → y до 288).
         ladders: [
-            LadderDescriptor(
-                position: CGPoint(x: 625, y: groundTop + 128),
-                size: CGSize(width: 40, height: 256)
-            ),
-            LadderDescriptor(
-                position: CGPoint(x: 715, y: groundTop + 303),
-                size: CGSize(width: 40, height: 126)
-            ),
+            // Земля → платформа на y = 5.
+            LadderDescriptor(rect: TileRect(origin: TileCoordinate(x: 8.5, y: 1),
+                                            size: TileSize(width: 0.5, height: 4.25))),
+            // Платформа y = 5 → платформа y = 7.
+            LadderDescriptor(rect: TileRect(origin: TileCoordinate(x: 11.5, y: 5),
+                                            size: TileSize(width: 0.5, height: 2.25))),
         ],
         enemies: [
-            EnemyDescriptor(
-                position: CGPoint(x: 350, y: groundTop + 20),
-                behavior: .patrolling(leftX: 250, rightX: 450, speed: 120)
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 700, y: groundTop + 20),
-                behavior: .patrolling(leftX: 600, rightX: 800, speed: 150)
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 1000, y: groundTop + 20),
-                behavior: .stationary
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 1600, y: groundTop + 20),
-                behavior: .patrolling(leftX: 1500, rightX: 1700, speed: 160)
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 2200, y: groundTop + 20),
-                behavior: .patrolling(leftX: 2100, rightX: 2300, speed: 180)
-            ),
+            EnemyDescriptor(origin: TileCoordinate(x: 5, y: 1),
+                            behavior: .patrolling(leftX: 4, rightX: 8, speed: 120)),
+            EnemyDescriptor(origin: TileCoordinate(x: 11, y: 1),
+                            behavior: .patrolling(leftX: 10, rightX: 14, speed: 150)),
+            EnemyDescriptor(origin: TileCoordinate(x: 18, y: 1), behavior: .stationary),
+            EnemyDescriptor(origin: TileCoordinate(x: 33, y: 1),
+                            behavior: .patrolling(leftX: 32, rightX: 36, speed: 160)),
+            EnemyDescriptor(origin: TileCoordinate(x: 39, y: 1),
+                            behavior: .patrolling(leftX: 38, rightX: 41, speed: 180)),
         ],
         pickups: [
-            PickupDescriptor(position: CGPoint(x: 500, y: groundTop + 100),
-                             kind: .bonus(points: 10)),
-            PickupDescriptor(position: CGPoint(x: 900, y: groundTop + 100),
-                             kind: .bonus(points: 15)),
-            PickupDescriptor(position: CGPoint(x: 1150, y: groundTop + 100),
-                             kind: .health),
-            PickupDescriptor(position: CGPoint(x: 1800, y: groundTop + 100),
-                             kind: .bonus(points: 20)),
-            PickupDescriptor(position: CGPoint(x: 2400, y: groundTop + 100),
-                             kind: .health),
+            PickupDescriptor(origin: TileCoordinate(x: 7, y: 1.5), kind: .bonus(points: 10)),
+            PickupDescriptor(origin: TileCoordinate(x: 15, y: 1.5), kind: .bonus(points: 15)),
+            PickupDescriptor(origin: TileCoordinate(x: 20, y: 1.5), kind: .health),
+            PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.5), kind: .bonus(points: 20)),
+            PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.5), kind: .health),
         ],
-        portal: CGPoint(x: levelWidth - 80, y: groundTop + 40)
+        portal: TileCoordinate(x: 42, y: 1)
     )
 
     // MARK: - Level 3
@@ -196,105 +142,67 @@ enum Levels {
         sceneSize: sceneSize,
         levelWidth: levelWidth,
         levelHeight: levelHeight,
-        playerStart: CGPoint(x: 100, y: groundTop + 100),
+        playerStart: TileCoordinate(x: 1, y: 1),
         groundHeight: groundHeight,
         platforms: [
-            PlatformDescriptor(
-                position: CGPoint(x: 250, y: groundTop + 130),
-                size: CGSize(width: 150, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 550, y: groundTop + 230),
-                size: CGSize(width: 150, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 850, y: groundTop + 300),
-                size: CGSize(width: 150, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 1150, y: groundTop + 230),
-                size: CGSize(width: 150, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 1500, y: groundTop + 160),
-                size: CGSize(width: 150, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 1850, y: groundTop + 280),
-                size: CGSize(width: 150, height: 20)
-            ),
-            PlatformDescriptor(
-                position: CGPoint(x: 2200, y: groundTop + 340),
-                size: CGSize(width: 150, height: 20)
-            ),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 4, y: 2.75),
+                                              size: TileSize(width: 2, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 9, y: 4.75),
+                                              size: TileSize(width: 2, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 14, y: 6.75),
+                                              size: TileSize(width: 2, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 19, y: 4.75),
+                                              size: TileSize(width: 2, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 24, y: 2.75),
+                                              size: TileSize(width: 2, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 31, y: 4.75),
+                                              size: TileSize(width: 2, height: 0.25))),
+            PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 36, y: 6.75),
+                                              size: TileSize(width: 2, height: 0.25))),
         ],
         movingPlatforms: [
-            // Горизонтальная подвижная платформа в начале уровня.
+            // Горизонтальная подвижная платформа в начале уровня (верх y = 4).
             MovingPlatformDescriptor(
-                size: CGSize(width: 140, height: 20),
-                startPosition: CGPoint(x: 380, y: groundTop + 200),
-                endPosition: CGPoint(x: 600, y: groundTop + 200),
+                size: TileSize(width: 3, height: 0.25),
+                start: TileCoordinate(x: 6, y: 3.75),
+                end: TileCoordinate(x: 10, y: 3.75),
                 speed: 120,
                 pauseDuration: 0.5
             ),
-            // Вертикальная подвижная платформа во второй половине.
+            // Вертикальная подвижная платформа во второй половине (верх y = 2…6).
             MovingPlatformDescriptor(
-                size: CGSize(width: 140, height: 20),
-                startPosition: CGPoint(x: 1700, y: groundTop + 60),
-                endPosition: CGPoint(x: 1700, y: groundTop + 300),
+                size: TileSize(width: 3, height: 0.25),
+                start: TileCoordinate(x: 28, y: 1.75),
+                end: TileCoordinate(x: 28, y: 5.75),
                 speed: 110,
                 pauseDuration: 0.8
             ),
         ],
-        // Лестница от земли до высокой платформы на x=850 (верх: groundTop+310=342, +16 запас → y до 358).
+        // Высокая лестница от земли до платформы на y = 7.
         ladders: [
-            LadderDescriptor(
-                position: CGPoint(x: 825, y: groundTop + 163),
-                size: CGSize(width: 40, height: 326)
-            ),
+            LadderDescriptor(rect: TileRect(origin: TileCoordinate(x: 13.5, y: 1),
+                                            size: TileSize(width: 0.5, height: 6.5))),
         ],
         enemies: [
-            EnemyDescriptor(
-                position: CGPoint(x: 300, y: groundTop + 20),
-                behavior: .stationary
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 500, y: groundTop + 20),
-                behavior: .patrolling(leftX: 450, rightX: 600, speed: 180)
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 800, y: groundTop + 20),
-                behavior: .patrolling(leftX: 750, rightX: 900, speed: 200)
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 1100, y: groundTop + 20),
-                behavior: .stationary
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 1600, y: groundTop + 20),
-                behavior: .patrolling(leftX: 1500, rightX: 1700, speed: 210)
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 2000, y: groundTop + 20),
-                behavior: .patrolling(leftX: 1950, rightX: 2100, speed: 220)
-            ),
-            EnemyDescriptor(
-                position: CGPoint(x: 2400, y: groundTop + 20),
-                behavior: .stationary
-            ),
+            EnemyDescriptor(origin: TileCoordinate(x: 5, y: 1), behavior: .stationary),
+            EnemyDescriptor(origin: TileCoordinate(x: 9, y: 1),
+                            behavior: .patrolling(leftX: 8, rightX: 11, speed: 180)),
+            EnemyDescriptor(origin: TileCoordinate(x: 14, y: 1),
+                            behavior: .patrolling(leftX: 13, rightX: 16, speed: 200)),
+            EnemyDescriptor(origin: TileCoordinate(x: 19, y: 1), behavior: .stationary),
+            EnemyDescriptor(origin: TileCoordinate(x: 27, y: 1),
+                            behavior: .patrolling(leftX: 26, rightX: 30, speed: 210)),
+            EnemyDescriptor(origin: TileCoordinate(x: 34, y: 1),
+                            behavior: .patrolling(leftX: 33, rightX: 37, speed: 220)),
+            EnemyDescriptor(origin: TileCoordinate(x: 40, y: 1), behavior: .stationary),
         ],
         pickups: [
-            PickupDescriptor(position: CGPoint(x: 400, y: groundTop + 100),
-                             kind: .bonus(points: 20)),
-            PickupDescriptor(position: CGPoint(x: 700, y: groundTop + 100),
-                             kind: .bonus(points: 25)),
-            PickupDescriptor(position: CGPoint(x: 1000, y: groundTop + 100),
-                             kind: .bonus(points: 30)),
-            PickupDescriptor(position: CGPoint(x: 1700, y: groundTop + 100),
-                             kind: .bonus(points: 35)),
-            PickupDescriptor(position: CGPoint(x: 2300, y: groundTop + 100),
-                             kind: .health),
+            PickupDescriptor(origin: TileCoordinate(x: 7, y: 1.5), kind: .bonus(points: 20)),
+            PickupDescriptor(origin: TileCoordinate(x: 12, y: 1.5), kind: .bonus(points: 25)),
+            PickupDescriptor(origin: TileCoordinate(x: 17, y: 1.5), kind: .bonus(points: 30)),
+            PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.5), kind: .bonus(points: 35)),
+            PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.5), kind: .health),
         ],
-        portal: CGPoint(x: levelWidth - 80, y: groundTop + 40)
+        portal: TileCoordinate(x: 42, y: 1)
     )
 }
