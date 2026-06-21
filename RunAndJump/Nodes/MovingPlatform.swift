@@ -12,13 +12,15 @@ final class MovingPlatform: SKSpriteNode {
     private var motion: OscillatingMotion
     private var clock = FrameClock()
 
-    init(descriptor: MovingPlatformDescriptor) {
-        let size = descriptor.size
+    /// Принимает уже переведённые в пункты центр и размер: преобразование из
+    /// тайлов делает `LevelBuilder`.
+    init(size: CGSize, startPosition: CGPoint, endPosition: CGPoint,
+         speed: CGFloat, pauseDuration: Double) {
         motion = OscillatingMotion(
-            startPosition: descriptor.startPosition,
-            endPosition: descriptor.endPosition,
-            speed: descriptor.speed,
-            pauseDuration: descriptor.pauseDuration
+            startPosition: startPosition,
+            endPosition: endPosition,
+            speed: speed,
+            pauseDuration: pauseDuration
         )
 
         super.init(texture: nil, color: .systemOrange, size: size)

@@ -11,7 +11,7 @@ final class Enemy: LevelObject {
 
     private let movement: EnemyMovement
 
-    init(size: CGSize = CGSize(width: 40, height: 40), movement: EnemyMovement = StationaryMovement()) {
+    init(size: CGSize = Grid.size(ObjectSize.enemy), movement: EnemyMovement = StationaryMovement()) {
         self.movement = movement
         super.init(size: size, color: .black)
 

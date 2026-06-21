@@ -129,7 +129,7 @@ final class GameScene: SKScene {
 
     private func setupPlayer() {
         player = Player()
-        player.position = configuration.playerStart
+        player.position = Grid.center(origin: configuration.playerStart, size: ObjectSize.player)
         addChild(player)
     }
 
@@ -160,11 +160,10 @@ final class GameScene: SKScene {
         for platformDescriptor in configuration.platforms {
             addChild(LevelBuilder.makePlatform(from: platformDescriptor))
             // Запоминаем сплошные рамки — об них упирается игрок при езде на подвижной платформе.
+            // Нижний-левый угол прямоугольника на сетке прямо ложится в origin CGRect.
             platformRideController.obstacles.append(CGRect(
-                x: platformDescriptor.position.x - platformDescriptor.size.width / 2,
-                y: platformDescriptor.position.y - platformDescriptor.size.height / 2,
-                width: platformDescriptor.size.width,
-                height: platformDescriptor.size.height
+                origin: Grid.point(platformDescriptor.rect.origin),
+                size: Grid.size(platformDescriptor.rect.size)
             ))
         }
         for descriptor in configuration.movingPlatforms {
@@ -181,7 +180,7 @@ final class GameScene: SKScene {
         for ladderDescriptor in configuration.ladders {
             addChild(LevelBuilder.makeLadder(from: ladderDescriptor))
         }
-        addChild(LevelBuilder.makePortal(at: configuration.portal))
+        addChild(LevelBuilder.makePortal(from: configuration.portal))
     }
 
     // MARK: - Игровой цикл

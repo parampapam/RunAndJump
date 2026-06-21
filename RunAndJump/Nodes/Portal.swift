@@ -9,7 +9,7 @@ import SpriteKit
 
 final class Portal: LevelObject {
 
-    init(size: CGSize = CGSize(width: 32, height: 64)) {
+    init(size: CGSize = Grid.size(ObjectSize.portal)) {
         super.init(size: size, color: .purple)
 
         physicsBody?.categoryBitMask = PhysicsCategory.portal
