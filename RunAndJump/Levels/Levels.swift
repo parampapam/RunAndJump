@@ -14,8 +14,8 @@ import CoreGraphics
 enum Levels {
 
     static let sceneSize = CGSize(width: 1334, height: 750)
-    static let levelWidth: CGFloat = 2668
-    static let levelHeight: CGFloat = 750
+    static let levelWidth: CGFloat = 45
+    static let levelHeight: CGFloat = 16
     /// Земля — ровно один тайл высотой, чтобы её верх лёг на линию сетки (y = 1).
     static let groundHeight: CGFloat = WorldMetrics.tileSize
 
@@ -26,8 +26,8 @@ enum Levels {
     static let level1 = LevelConfiguration(
         name: "Level 1",
         sceneSize: sceneSize,
-        levelWidth: levelWidth,
-        levelHeight: levelHeight,
+        levelWidthInTiles: levelWidth,
+        levelHeightInTiles: levelHeight,
         playerStart: TileCoordinate(x: 1, y: 1),
         groundHeight: groundHeight,
         platforms: [
@@ -78,8 +78,8 @@ enum Levels {
     static let level2 = LevelConfiguration(
         name: "Level 2",
         sceneSize: sceneSize,
-        levelWidth: levelWidth,
-        levelHeight: levelHeight,
+        levelWidthInTiles: levelWidth,
+        levelHeightInTiles: levelHeight,
         playerStart: TileCoordinate(x: 1, y: 1),
         groundHeight: groundHeight,
         platforms: [
@@ -140,8 +140,8 @@ enum Levels {
     static let level3 = LevelConfiguration(
         name: "Level 3",
         sceneSize: sceneSize,
-        levelWidth: levelWidth,
-        levelHeight: levelHeight,
+        levelWidthInTiles: levelWidth,
+        levelHeightInTiles: levelHeight,
         playerStart: TileCoordinate(x: 1, y: 1),
         groundHeight: groundHeight,
         platforms: [

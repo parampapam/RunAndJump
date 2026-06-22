@@ -12,8 +12,8 @@ import CoreGraphics
 struct LevelConfiguration: Equatable {
     let name: String
     let sceneSize: CGSize
-    let levelWidth: CGFloat
-    let levelHeight: CGFloat
+    let levelWidthInTiles: CGFloat
+    let levelHeightInTiles: CGFloat
     let playerStart: TileCoordinate   // нижний-левый угол игрока
     let groundHeight: CGFloat
     let platforms: [PlatformDescriptor]
@@ -22,6 +22,10 @@ struct LevelConfiguration: Equatable {
     let enemies: [EnemyDescriptor]
     let pickups: [PickupDescriptor]
     let portal: TileCoordinate        // нижний-левый угол портала
+
+    /// Размер уровня в пикселях
+    var levelWidth: CGFloat { levelWidthInTiles * WorldMetrics.tileSize }
+    var levelHeight: CGFloat { levelHeightInTiles * WorldMetrics.tileSize }
 }
 
 /// Декларативное описание лестницы (нижний-левый угол + размер, в тайлах).
