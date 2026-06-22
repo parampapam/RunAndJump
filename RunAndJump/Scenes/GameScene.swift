@@ -32,6 +32,11 @@ final class GameScene: SKScene {
     private var movingPlatforms: [MovingPlatform] = []
     // Подвижная платформа, на которой сейчас стоит игрок; nil = не на подвижной платформе.
     private var playerStandingPlatform: MovingPlatform?
+    // Опоры (земля + платформы), которых игрок касается прямо сейчас. Сообщаем
+    // jumpController об отрыве от земли только когда исчезла последняя опора —
+    // иначе платформа, прошедшая сквозь стоящего на земле игрока, ложно снимает
+    // приземление и прыжок пропадает навсегда (см. GroundContactTracker).
+    private var groundContacts = GroundContactTracker<ObjectIdentifier>()
     // Лестница, в зоне которой сейчас игрок — нужна, чтобы встать по её центру.
     private weak var currentLadder: Ladder?
 
@@ -398,11 +403,10 @@ extension GameScene: SKPhysicsContactDelegate {
         let bodies = (contact.bodyA, contact.bodyB)
 
         // Контакт игрока с землёй или платформой — обновляем jumpController.
-        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground)
-            || matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
+        if let supportBody = supportingBody(in: bodies) {
+            groundContacts.add(ObjectIdentifier(supportBody))
             jumpController.didTouchGround(at: lastUpdateTime)
-            if let platformBody = bodyOfCategory(PhysicsCategory.platform, in: bodies),
-               let movingPlatform = platformBody.node as? MovingPlatform {
+            if let movingPlatform = supportBody.node as? MovingPlatform {
                 let attached = platformRideController.tryAttach(
                     platformPosition: movingPlatform.position,
                     platformSize: movingPlatform.size,
@@ -455,15 +459,17 @@ extension GameScene: SKPhysicsContactDelegate {
     func didEnd(_ contact: SKPhysicsContact) {
         let bodies = (contact.bodyA, contact.bodyB)
 
-        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground)
-            || matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
-            jumpController.didLeaveGround(at: lastUpdateTime)
-            if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform),
-               let platformBody = bodyOfCategory(PhysicsCategory.platform, in: bodies),
-               platformBody.node is MovingPlatform {
+        if let supportBody = supportingBody(in: bodies) {
+            // Уходим с земли только когда исчезла ПОСЛЕДНЯЯ опора — иначе платформа,
+            // прошедшая сквозь стоящего на земле игрока, ложно «снимает» приземление.
+            if groundContacts.remove(ObjectIdentifier(supportBody)) {
+                jumpController.didLeaveGround(at: lastUpdateTime)
+            }
+            if supportBody.node is MovingPlatform {
                 playerStandingPlatform = nil
                 platformRideController.didLeavePlatform()
             }
+            return
         }
 
         if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ladder) {
@@ -478,6 +484,18 @@ extension GameScene: SKPhysicsContactDelegate {
     private func matchesPair(_ bodies: (SKPhysicsBody, SKPhysicsBody), _ a: UInt32, _ b: UInt32) -> Bool {
         let combined = bodies.0.categoryBitMask | bodies.1.categoryBitMask
         return combined == (a | b)
+    }
+
+    /// Тело-опора (земля или платформа) в контакте с игроком, иначе nil.
+    /// Опоры держат `supportingContacts` — состояние «игрок на земле».
+    private func supportingBody(in bodies: (SKPhysicsBody, SKPhysicsBody)) -> SKPhysicsBody? {
+        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ground) {
+            return bodyOfCategory(PhysicsCategory.ground, in: bodies)
+        }
+        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.platform) {
+            return bodyOfCategory(PhysicsCategory.platform, in: bodies)
+        }
+        return nil
     }
 
     /// Находит тело заданной категории, чтобы достать его узел.

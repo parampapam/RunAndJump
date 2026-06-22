@@ -68,6 +68,35 @@ struct JumpControllerTests {
         #expect(jc.consumeJumpIfPossible(at: 0.05) == false)
     }
 
+    @Test func pinnedToGround_canJumpAgainAfterLockout() {
+        // Прыжок не оторвал игрока от земли (платформа прижала сверху): никаких
+        // didLeaveGround/didTouchGround между попытками. Прыжок не должен умереть
+        // навсегда — после локаута он снова доступен, раз игрок всё ещё на земле.
+        var jc = JumpController()
+        jc.didTouchGround(at: 0)
+
+        jc.didPressJump(at: 0)
+        #expect(jc.consumeJumpIfPossible(at: 0) == true)
+
+        // Внутри локаута — второй прыжок нельзя.
+        jc.didPressJump(at: 0.1)
+        #expect(jc.consumeJumpIfPossible(at: 0.1) == false)
+
+        // После локаута, оставаясь на земле, — снова можно.
+        jc.didPressJump(at: 0.3)
+        #expect(jc.consumeJumpIfPossible(at: 0.3) == true)
+    }
+
+    @Test func jumpKeepsGroundedStateUntilContactEnds() {
+        // consume больше не подделывает grounded — флаг честно отражает контакты,
+        // чтобы анимация не залипала в прыжке, пока игрок физически на земле.
+        var jc = JumpController()
+        jc.didTouchGround(at: 0)
+        jc.didPressJump(at: 0)
+        #expect(jc.consumeJumpIfPossible(at: 0) == true)
+        #expect(jc.isGrounded == true)
+    }
+
     @Test func dithering_doesNotBreakGroundedState() {
         // Симулируем дрожание: контакт пропадает и сразу восстанавливается.
         var jc = JumpController()
