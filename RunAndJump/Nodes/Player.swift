@@ -90,15 +90,15 @@ final class Player: SKSpriteNode {
     /// Кадры на каждое состояние анимации. Лениво — атлас читается один раз.
     /// idle — один статичный кадр: стоя персонаж не должен «дёргаться».
     private lazy var animationFrames: [PlayerAnimationState: [SKTexture]] = [
-        .idle:    ["player_idle_0"].map { atlas.textureNamed($0) },
+        .idle:    ["player_idle_0", "player_idle_1"].map { atlas.textureNamed($0) },
         .running: ["player_walk_0", "player_walk_1"].map { atlas.textureNamed($0) },
         .jumping: ["player_jump"].map { atlas.textureNamed($0) }
     ]
 
     /// Длительность кадра для каждого состояния, секунды.
     private let frameDurations: [PlayerAnimationState: TimeInterval] = [
-        .idle: 0.4,
-        .running: 0.18,
+        .idle: 2,
+        .running: 0.08,
         .jumping: 0.1
     ]
 
@@ -131,6 +131,7 @@ final class Player: SKSpriteNode {
     private func playAnimation(for state: PlayerAnimationState) {
         guard let frames = animationFrames[state], !frames.isEmpty else { return }
         removeAction(forKey: Self.animationKey)
+        speed = 1
 
         // Одиночный кадр — просто ставим текстуру, без бесконечного действия.
         guard frames.count > 1 else {
@@ -142,6 +143,7 @@ final class Player: SKSpriteNode {
         let animate = SKAction.animate(
             with: frames,
             timePerFrame: frameDurations[state] ?? 0.15,
+//            timePerFrame: frameDuration(for: state, horizontalInput: horizontalInput),
             resize: false,
             restore: false
         )
@@ -182,5 +184,11 @@ final class Player: SKSpriteNode {
             dx: horizontalInput * movementSpeed,
             dy: body.velocity.dy
         )
+
+        if currentAnimationState == .running {
+            speed = horizontalInput.magnitude
+        } else {
+            speed = 1
+        }
     }
 }
