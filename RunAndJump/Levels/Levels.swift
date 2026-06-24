@@ -70,6 +70,16 @@ enum Levels {
             PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.5), kind: .bonus(points: 15)),
             PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.5), kind: .health),
         ],
+        // Цветы стоят на земле (нижний край на y = 1), разбросаны по уровню.
+        decorations: [
+            DecorationDescriptor(kind: .flower1, origin: TileCoordinate(x: 2, y: 1)),
+            DecorationDescriptor(kind: .flower2, origin: TileCoordinate(x: 7, y: 1)),
+            DecorationDescriptor(kind: .flower3, origin: TileCoordinate(x: 12, y: 1)),
+            DecorationDescriptor(kind: .flower4, origin: TileCoordinate(x: 21, y: 1)),
+            DecorationDescriptor(kind: .flower1, origin: TileCoordinate(x: 27, y: 1)),
+            DecorationDescriptor(kind: .flower2, origin: TileCoordinate(x: 34, y: 1)),
+            DecorationDescriptor(kind: .flower3, origin: TileCoordinate(x: 41, y: 1)),
+        ],
         portal: TileCoordinate(x: 42, y: 1)
     )
 
@@ -131,6 +141,14 @@ enum Levels {
             PickupDescriptor(origin: TileCoordinate(x: 20, y: 1.5), kind: .health),
             PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.5), kind: .bonus(points: 20)),
             PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.5), kind: .health),
+        ],
+        decorations: [
+            DecorationDescriptor(kind: .flower2, origin: TileCoordinate(x: 3, y: 1)),
+            DecorationDescriptor(kind: .flower3, origin: TileCoordinate(x: 13, y: 1)),
+            DecorationDescriptor(kind: .flower4, origin: TileCoordinate(x: 22, y: 1)),
+            DecorationDescriptor(kind: .flower1, origin: TileCoordinate(x: 25, y: 1)),
+            DecorationDescriptor(kind: .flower2, origin: TileCoordinate(x: 36, y: 1)),
+            DecorationDescriptor(kind: .flower4, origin: TileCoordinate(x: 43, y: 1)),
         ],
         portal: TileCoordinate(x: 42, y: 1)
     )
@@ -202,6 +220,15 @@ enum Levels {
             PickupDescriptor(origin: TileCoordinate(x: 17, y: 1.5), kind: .bonus(points: 30)),
             PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.5), kind: .bonus(points: 35)),
             PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.5), kind: .health),
+        ],
+        decorations: [
+            DecorationDescriptor(kind: .flower3, origin: TileCoordinate(x: 2, y: 1)),
+            DecorationDescriptor(kind: .flower1, origin: TileCoordinate(x: 11, y: 1)),
+            DecorationDescriptor(kind: .flower4, origin: TileCoordinate(x: 16, y: 1)),
+            DecorationDescriptor(kind: .flower2, origin: TileCoordinate(x: 23, y: 1)),
+            DecorationDescriptor(kind: .flower3, origin: TileCoordinate(x: 32, y: 1)),
+            DecorationDescriptor(kind: .flower1, origin: TileCoordinate(x: 38, y: 1)),
+            DecorationDescriptor(kind: .flower4, origin: TileCoordinate(x: 43, y: 1)),
         ],
         portal: TileCoordinate(x: 42, y: 1)
     )
