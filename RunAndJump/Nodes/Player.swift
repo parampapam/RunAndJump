@@ -89,18 +89,10 @@ final class Player: SKSpriteNode {
 
     /// Кадры на каждое состояние анимации. Лениво — атлас читается один раз.
     /// idle — один статичный кадр: стоя персонаж не должен «дёргаться».
-    private lazy var animationFrames: [PlayerAnimationState: [SKTexture]] = [
-        .idle:    ["player_idle_0", "player_idle_1"].map { atlas.textureNamed($0) },
-        .running: ["player_walk_0", "player_walk_1"].map { atlas.textureNamed($0) },
-        .jumping: ["player_jump"].map { atlas.textureNamed($0) }
-    ]
-
-    /// Длительность кадра для каждого состояния, секунды.
-    private let frameDurations: [PlayerAnimationState: TimeInterval] = [
-        .idle: 2,
-        .running: 0.08,
-        .jumping: 0.1
-    ]
+    private lazy var animationFrames: [PlayerAnimationState: [SKTexture]] =
+    AnimationFrames.Player.byState.mapValues { names in
+            names.map { atlas.textureNamed($0) }
+        }
 
     private static let animationKey = "playerAnimation"
 
@@ -131,6 +123,8 @@ final class Player: SKSpriteNode {
     private func playAnimation(for state: PlayerAnimationState) {
         guard let frames = animationFrames[state], !frames.isEmpty else { return }
         removeAction(forKey: Self.animationKey)
+
+        // Возвращение скорости к единице, так как при беге скорость анимация зависит от скорости перемещения
         speed = 1
 
         // Одиночный кадр — просто ставим текстуру, без бесконечного действия.
@@ -142,8 +136,7 @@ final class Player: SKSpriteNode {
         // resize/restore = false: размер узла фиксирован (физика от него не зависит).
         let animate = SKAction.animate(
             with: frames,
-            timePerFrame: frameDurations[state] ?? 0.15,
-//            timePerFrame: frameDuration(for: state, horizontalInput: horizontalInput),
+            timePerFrame: AnimationDuration.Player.byState[state] ?? AnimationDuration.fallback,
             resize: false,
             restore: false
         )
@@ -185,6 +178,8 @@ final class Player: SKSpriteNode {
             dy: body.velocity.dy
         )
 
+        // При беге скорость анимации зависит от скорости перемещения персонажа
+        // (от отклонения стика вправо или влево)
         if currentAnimationState == .running {
             speed = horizontalInput.magnitude
         } else {
