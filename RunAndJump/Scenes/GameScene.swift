@@ -99,7 +99,9 @@ final class GameScene: SKScene {
 
     private func setupGround() {
         let groundSize = CGSize(width: configuration.levelWidth, height: configuration.groundHeight)
-        ground = SKSpriteNode(color: .brown, size: groundSize)
+        // Земля прозрачна: её внешний вид даёт травяное покрытие, а сам узел
+        // несёт только физическое тело для коллизий.
+        ground = SKSpriteNode(color: .clear, size: groundSize)
         ground.position = CGPoint(x: configuration.levelWidth / 2, y: groundSize.height / 2)
 
         let body = SKPhysicsBody(rectangleOf: groundSize)
@@ -113,6 +115,11 @@ final class GameScene: SKScene {
         ground.physicsBody = body
 
         addChild(ground)
+
+        // Покрываем землю травой — ряд тайлов по всей ширине уровня.
+        for tile in LevelBuilder.makeGroundCover(widthInTiles: Int(configuration.levelWidthInTiles)) {
+            addChild(tile)
+        }
     }
 
     private func setupBoundaries() {
@@ -184,6 +191,9 @@ final class GameScene: SKScene {
         }
         for ladderDescriptor in configuration.ladders {
             addChild(LevelBuilder.makeLadder(from: ladderDescriptor))
+        }
+        for decorationDescriptor in configuration.decorations {
+            addChild(LevelBuilder.makeDecoration(from: decorationDescriptor))
         }
         addChild(LevelBuilder.makePortal(from: configuration.portal))
     }

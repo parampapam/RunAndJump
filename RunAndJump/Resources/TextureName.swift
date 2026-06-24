@@ -22,5 +22,11 @@ enum TextureName {
         static let flower2 = "grass tiles (34)"
         static let flower3 = "grass tiles (49)"
         static let flower4 = "grass tiles (63)"
+
+        // TODO: добавить ассеты в атлас Grassland. Пока имена-заглушки — если
+        // поставить такую декорацию на уровень до появления ассета, SpriteKit
+        // нарисует красный плейсхолдер.
+        static let bush = "bush"
+        static let tree = "tree"
     }
 }

@@ -13,6 +13,42 @@ import SpriteKit
 @MainActor
 enum LevelBuilder {
 
+    /// Атлас травяных тайлов и декораций (земля, цветы и пр.).
+    private static let grasslandAtlas = SKTextureAtlas(named: "Grassland")
+
+    /// Травяное покрытие земли: один ряд тайлов по всей ширине уровня.
+    /// Узлы чисто визуальные — коллизия остаётся на едином физическом теле
+    /// земли (создаётся в сцене).
+    static func makeGroundCover(widthInTiles: Int) -> [SKSpriteNode] {
+        let grass = grasslandAtlas.textureNamed(TextureName.Ground.grass)
+        let tileSize = TileSize(width: 1, height: 1)
+        return (0..<max(0, widthInTiles)).map { column in
+            let tile = SKSpriteNode(texture: grass, size: Grid.size(tileSize))
+            tile.position = Grid.center(origin: TileCoordinate(x: CGFloat(column), y: 0),
+                                        size: tileSize)
+            tile.zPosition = ZPosition.ground
+            return tile
+        }
+    }
+
+    static func makeDecoration(from descriptor: DecorationDescriptor) -> Decoration {
+        let texture = grasslandAtlas.textureNamed(textureName(for: descriptor.kind))
+        let decoration = Decoration(texture: texture, size: Grid.size(descriptor.kind.size))
+        decoration.position = Grid.center(origin: descriptor.origin, size: descriptor.kind.size)
+        return decoration
+    }
+
+    private static func textureName(for kind: DecorationKind) -> String {
+        switch kind {
+        case .flower1: return TextureName.Ground.flower1
+        case .flower2: return TextureName.Ground.flower2
+        case .flower3: return TextureName.Ground.flower3
+        case .flower4: return TextureName.Ground.flower4
+        case .bush:    return TextureName.Ground.bush
+        case .tree:    return TextureName.Ground.tree
+        }
+    }
+
     static func makeEnemy(from descriptor: EnemyDescriptor) -> Enemy {
         let tileSize = ObjectSize.enemy
         let movement: EnemyMovement

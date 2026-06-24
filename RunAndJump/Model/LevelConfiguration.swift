@@ -21,6 +21,7 @@ struct LevelConfiguration: Equatable {
     let ladders: [LadderDescriptor]
     let enemies: [EnemyDescriptor]
     let pickups: [PickupDescriptor]
+    let decorations: [DecorationDescriptor]
     let portal: TileCoordinate        // нижний-левый угол портала
 
     /// Размер уровня в пикселях
@@ -58,6 +59,38 @@ struct MovingPlatformDescriptor: Equatable {
     let end: TileCoordinate
     let speed: CGFloat          // пункты/с
     let pauseDuration: Double   // задержка в крайних точках, секунды
+}
+
+/// Декларативное описание декоративного объекта заднего плана.
+/// Описывает, **какой** объект и **где** располагается. Декорации не участвуют
+/// в игровой механике — только украшают сцену.
+struct DecorationDescriptor: Equatable {
+    let kind: DecorationKind
+    let origin: TileCoordinate   // нижний-левый угол
+}
+
+/// Вид декорации. Пока это цветы и заготовки под куст/дерево.
+/// Каждый вид знает свой габарит в тайлах — у разных объектов он разный.
+enum DecorationKind: Equatable {
+    case flower1
+    case flower2
+    case flower3
+    case flower4
+    case bush
+    case tree
+
+    /// Размер декорации в тайлах. У цветов — ровно один тайл; куст пошире,
+    /// дерево — выше тайла (так система сразу поддерживает крупные объекты).
+    var size: TileSize {
+        switch self {
+        case .flower1, .flower2, .flower3, .flower4:
+            return TileSize(width: 1, height: 1)
+        case .bush:
+            return TileSize(width: 2, height: 1)
+        case .tree:
+            return TileSize(width: 2, height: 3)
+        }
+    }
 }
 
 /// Декларативное описание награды.
