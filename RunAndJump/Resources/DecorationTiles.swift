@@ -21,27 +21,64 @@ struct DecorationTile: Equatable {
 enum DecorationTiles {
     static func tiles(for kind: DecorationKind) -> [DecorationTile] {
         switch kind {
-        case .flower1:
-            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Ground.flower1)]
-        case .flower2:
-            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Ground.flower2)]
-        case .flower3:
-            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Ground.flower3)]
-        case .flower4:
-            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Ground.flower4)]
-        case .tree:
-            // 1 тайл в ширину, 2 в высоту: низ (ствол) и верх (крона).
+        case .purpleFlower:
+            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Flower.purple)]
+        case .yellowFlower:
+            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Flower.yellow)]
+        case .whiteFlower:
+            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Flower.white)]
+        case .pinkFlower:
+            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Flower.pink)]
+        case .darkTree:
             return [
-                DecorationTile(column: 0, row: 0, textureName: TextureName.Ground.treeBottom),
-                DecorationTile(column: 0, row: 1, textureName: TextureName.Ground.treeTop),
+                DecorationTile(column: 0, row: 0, textureName: TextureName.Tree.Dark.bottom),
+                DecorationTile(column: 0, row: 1, textureName: TextureName.Tree.Dark.top),
             ]
-        case .bush:
-            // 3 тайла в ширину, 1 в высоту.
+        case .tallDarkTree:
             return [
-                DecorationTile(column: 0, row: 0, textureName: TextureName.Ground.bushLeft),
-                DecorationTile(column: 1, row: 0, textureName: TextureName.Ground.bushMiddle),
-                DecorationTile(column: 2, row: 0, textureName: TextureName.Ground.bushRight),
+                DecorationTile(column: 0, row: 0, textureName: TextureName.Tree.Dark.trunk),
+                DecorationTile(column: 0, row: 1, textureName: TextureName.Tree.Dark.bottom),
+                DecorationTile(column: 0, row: 2, textureName: TextureName.Tree.Dark.top),
             ]
+        case .lightTree:
+                return [
+                    DecorationTile(column: 0, row: 0, textureName: TextureName.Tree.Light.bottom),
+                    DecorationTile(column: 0, row: 1, textureName: TextureName.Tree.Light.top),
+                ]
+        case .tallLightTree:
+                return [
+                    DecorationTile(column: 0, row: 0, textureName: TextureName.Tree.Light.trunk),
+                    DecorationTile(column: 0, row: 1, textureName: TextureName.Tree.Light.bottom),
+                    DecorationTile(column: 0, row: 2, textureName: TextureName.Tree.Light.top),
+                ]
+        case .bigDarkBush:
+            return [
+                DecorationTile(column: 0, row: 0, textureName: TextureName.Bush.Big.Dark.left),
+                DecorationTile(column: 1, row: 0, textureName: TextureName.Bush.Big.Dark.middle),
+                DecorationTile(column: 2, row: 0, textureName: TextureName.Bush.Big.Dark.right),
+            ]
+        case .bigLightBush:
+            return [
+                DecorationTile(column: 0, row: 0, textureName: TextureName.Bush.Big.Light.left),
+                DecorationTile(column: 1, row: 0, textureName: TextureName.Bush.Big.Light.middle),
+                DecorationTile(column: 2, row: 0, textureName: TextureName.Bush.Big.Light.right),
+            ]
+        case .smallDarkBush:
+            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Bush.Small.dark)]
+        case .smallLightBush:
+            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Bush.Small.light)]
+        case .leftArrow:
+            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Arrow.left)]
+        case .rightArrow:
+            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Arrow.right)]
+        case .shortLightGrass:
+            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Grass.Short.light)]
+        case .shortDarkGrass:
+            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Grass.Short.dark)]
+        case .tallLightGrass:
+            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Grass.Tall.light)]
+        case .tallDarkGrass:
+            return [DecorationTile(column: 0, row: 0, textureName: TextureName.Grass.Tall.dark)]
         }
     }
 }

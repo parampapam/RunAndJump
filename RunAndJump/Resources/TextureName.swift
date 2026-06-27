@@ -16,23 +16,67 @@ enum TextureName {
         static let jump  = "player_jump"
     }
 
-    enum Ground {
-        static let grass = "grass tiles (24)"
-        static let flower1 = "grass tiles (14)"
-        static let flower2 = "grass tiles (34)"
-        static let flower3 = "grass tiles (49)"
-        static let flower4 = "grass tiles (63)"
+    enum Flower {
+        static let purple = "grass tiles (14)"
+        static let yellow = "grass tiles (34)"
+        static let white = "grass tiles (49)"
+        static let pink = "grass tiles (63)"
+    }
 
-        // TODO: добавить ассеты в атлас Grassland. Пока имена-заглушки — если
-        // поставить такую декорацию на уровень до появления ассета, SpriteKit
-        // нарисует красный плейсхолдер.
-        //
-        // Дерево — 1 плитка в ширину, 2 в высоту (разные текстуры снизу/сверху).
-        static let treeBottom = "tree_bottom"
-        static let treeTop = "tree_top"
-        // Куст — 3 плитки в ширину, 1 в высоту.
-        static let bushLeft = "bush_left"
-        static let bushMiddle = "bush_middle"
-        static let bushRight = "bush_right"
+    enum Mushroom {
+        static let wide = "grass tiles (8)"
+        static let tall = "grass tiles (55)"
+    }
+
+    enum Arrow {
+        static let right = "grass tiles (23)"
+        static let left = "grass tiles (16)"
+    }
+
+    enum Grass {
+        enum Short {
+            static let dark = "grass tiles (10)"
+            static let light = "grass tiles (53)"
+        }
+        enum Tall {
+            static let dark = "grass tiles (56)"
+            static let light = "grass tiles (35)"
+        }
+    }
+
+    enum Bush {
+        enum Small {
+            static let dark = "grass tiles (41)"
+            static let light = "grass tiles (25)"
+        }
+        enum Big {
+            enum Dark {
+                static let left = "grass tiles (54)"
+                static let middle = "grass tiles (29)"
+                static let right = "grass tiles (40)"
+            }
+            enum Light {
+                static let left = "grass tiles (13)"
+                static let middle = "grass tiles (30)"
+                static let right = "grass tiles (4)"
+            }
+        }
+    }
+
+    enum Tree {
+        enum Dark {
+            static let top = "grass tiles (62)"
+            static let bottom = "grass tiles (61)"
+            static let trunk = "grass tiles (18)"
+        }
+        enum Light {
+            static let top = "grass tiles (38)"
+            static let bottom = "grass tiles (39)"
+            static let trunk = "grass tiles (18)"
+        }
+    }
+
+    enum Ground {
+        static let grassland = "grass tiles (24)"
     }
 }

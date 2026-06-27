@@ -20,7 +20,7 @@ enum LevelBuilder {
     /// Узлы чисто визуальные — коллизия остаётся на едином физическом теле
     /// земли (создаётся в сцене).
     static func makeGroundCover(widthInTiles: Int) -> [SKSpriteNode] {
-        let grass = grasslandAtlas.textureNamed(TextureName.Ground.grass)
+        let grass = grasslandAtlas.textureNamed(TextureName.Ground.grassland)
         let tileSize = TileSize(width: 1, height: 1)
         return (0..<max(0, widthInTiles)).map { column in
             let tile = SKSpriteNode(texture: grass, size: Grid.size(tileSize))

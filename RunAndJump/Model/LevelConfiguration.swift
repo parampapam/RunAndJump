@@ -74,12 +74,24 @@ struct DecorationDescriptor: Equatable {
 /// каждой плитки задаёт раскладка `DecorationTiles` (в слое ресурсов), поэтому
 /// модель знает только *какой* объект, а не из чего он нарисован.
 enum DecorationKind: Equatable {
-    case flower1
-    case flower2
-    case flower3
-    case flower4
-    case bush
-    case tree
+    case purpleFlower
+    case yellowFlower
+    case whiteFlower
+    case pinkFlower
+    case bigLightBush
+    case bigDarkBush
+    case smallLightBush
+    case smallDarkBush
+    case darkTree
+    case tallDarkTree
+    case shortLightGrass
+    case shortDarkGrass
+    case tallLightGrass
+    case tallDarkGrass
+    case lightTree
+    case tallLightTree
+    case leftArrow
+    case rightArrow
 }
 
 /// Декларативное описание награды.
