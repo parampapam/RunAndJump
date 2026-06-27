@@ -32,21 +32,20 @@ enum LevelBuilder {
     }
 
     static func makeDecoration(from descriptor: DecorationDescriptor) -> Decoration {
-        let texture = grasslandAtlas.textureNamed(textureName(for: descriptor.kind))
-        let decoration = Decoration(texture: texture, size: Grid.size(descriptor.kind.size))
-        decoration.position = Grid.center(origin: descriptor.origin, size: descriptor.kind.size)
-        return decoration
-    }
-
-    private static func textureName(for kind: DecorationKind) -> String {
-        switch kind {
-        case .flower1: return TextureName.Ground.flower1
-        case .flower2: return TextureName.Ground.flower2
-        case .flower3: return TextureName.Ground.flower3
-        case .flower4: return TextureName.Ground.flower4
-        case .bush:    return TextureName.Ground.bush
-        case .tree:    return TextureName.Ground.tree
+        let oneTile = TileSize(width: 1, height: 1)
+        let sprites = DecorationTiles.tiles(for: descriptor.kind).map { tile -> SKSpriteNode in
+            let sprite = SKSpriteNode(texture: grasslandAtlas.textureNamed(tile.textureName),
+                                      size: Grid.size(oneTile))
+            // Центр ячейки относительно нижнего-левого угла декорации.
+            sprite.position = Grid.center(
+                origin: TileCoordinate(x: CGFloat(tile.column), y: CGFloat(tile.row)),
+                size: oneTile
+            )
+            return sprite
         }
+        let decoration = Decoration(tiles: sprites)
+        decoration.position = Grid.point(descriptor.origin)
+        return decoration
     }
 
     static func makeEnemy(from descriptor: EnemyDescriptor) -> Enemy {

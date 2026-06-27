@@ -70,7 +70,9 @@ struct DecorationDescriptor: Equatable {
 }
 
 /// Вид декорации. Пока это цветы и заготовки под куст/дерево.
-/// Каждый вид знает свой габарит в тайлах — у разных объектов он разный.
+/// Декорация — составной объект из плиток: занимаемый габарит и текстуры
+/// каждой плитки задаёт раскладка `DecorationTiles` (в слое ресурсов), поэтому
+/// модель знает только *какой* объект, а не из чего он нарисован.
 enum DecorationKind: Equatable {
     case flower1
     case flower2
@@ -78,19 +80,6 @@ enum DecorationKind: Equatable {
     case flower4
     case bush
     case tree
-
-    /// Размер декорации в тайлах. У цветов — ровно один тайл; куст пошире,
-    /// дерево — выше тайла (так система сразу поддерживает крупные объекты).
-    var size: TileSize {
-        switch self {
-        case .flower1, .flower2, .flower3, .flower4:
-            return TileSize(width: 1, height: 1)
-        case .bush:
-            return TileSize(width: 2, height: 1)
-        case .tree:
-            return TileSize(width: 2, height: 3)
-        }
-    }
 }
 
 /// Декларативное описание награды.

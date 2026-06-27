@@ -26,7 +26,13 @@ enum TextureName {
         // TODO: добавить ассеты в атлас Grassland. Пока имена-заглушки — если
         // поставить такую декорацию на уровень до появления ассета, SpriteKit
         // нарисует красный плейсхолдер.
-        static let bush = "bush"
-        static let tree = "tree"
+        //
+        // Дерево — 1 плитка в ширину, 2 в высоту (разные текстуры снизу/сверху).
+        static let treeBottom = "tree_bottom"
+        static let treeTop = "tree_top"
+        // Куст — 3 плитки в ширину, 1 в высоту.
+        static let bushLeft = "bush_left"
+        static let bushMiddle = "bush_middle"
+        static let bushRight = "bush_right"
     }
 }
