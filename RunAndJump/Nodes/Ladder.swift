@@ -14,18 +14,23 @@ final class Ladder: SKNode {
     /// до опоры — земли или платформы.
     let size: CGSize
 
-    init(size: CGSize) {
-        self.size = size
+    private static let ladderAtlas = SKTextureAtlas(named: "Ladder")
+
+    /// - Parameter heightInTiles: запрошенная высота лестницы в тайлах.
+    ///   Итоговый размер (`size`) может быть чуть больше — см. `LadderTiling`.
+    init(heightInTiles: CGFloat) {
+        let (tiles, totalHeightInTiles) = LadderTiling.layout(forRequestedHeightInTiles: heightInTiles)
+        self.size = Grid.size(TileSize(width: ObjectSize.ladder.width, height: totalHeightInTiles))
         super.init()
-        setupPhysics(size: size)
-        setupVisual(size: size)
+        setupPhysics()
+        setupVisual(tiles: tiles)
     }
 
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func setupPhysics(size: CGSize) {
+    private func setupPhysics() {
         let body = SKPhysicsBody(rectangleOf: size)
         // Лестница не двигается и не подвержена силам.
         body.isDynamic = false
@@ -41,31 +46,16 @@ final class Ladder: SKNode {
         physicsBody = body
     }
 
-    private func setupVisual(size: CGSize) {
-        let railWidth: CGFloat = 8
-        let rungHeight: CGFloat = 4
-        let rungSpacing: CGFloat = 24
-        let ladderColor = SKColor.gray
-        let railAlpha: CGFloat = 0.5
-
-        let leftRail = SKSpriteNode(color: ladderColor, size: CGSize(width: railWidth, height: size.height))
-        leftRail.position = CGPoint(x: -size.width / 2 + railWidth / 2, y: 0)
-        leftRail.alpha = railAlpha
-        addChild(leftRail)
-
-        let rightRail = SKSpriteNode(color: ladderColor, size: CGSize(width: railWidth, height: size.height))
-        rightRail.position = CGPoint(x: size.width / 2 - railWidth / 2, y: 0)
-        rightRail.alpha = railAlpha
-        addChild(rightRail)
-
-        let rungWidth = size.width - railWidth * 2
-        var rungY = -size.height / 2 + rungSpacing
-        while rungY < size.height / 2 {
-            let rung = SKSpriteNode(color: ladderColor, size: CGSize(width: rungWidth, height: rungHeight))
-            rung.position = CGPoint(x: 0, y: rungY)
-            rung.alpha = railAlpha
-            addChild(rung)
-            rungY += rungSpacing
+    private func setupVisual(tiles: [LadderTiling.Tile]) {
+        var tileY = -size.height / 2
+        for tile in tiles {
+            let tileHeight = Grid.size(TileSize(width: ObjectSize.ladder.width, height: tile.heightInTiles)).height
+            let texture = Ladder.ladderAtlas.textureNamed(tile.textureName)
+            let node = SKSpriteNode(texture: texture, size: CGSize(width: size.width, height: tileHeight))
+            tileY += tileHeight / 2
+            node.position = CGPoint(x: 0, y: tileY)
+            addChild(node)
+            tileY += tileHeight / 2
         }
     }
 }

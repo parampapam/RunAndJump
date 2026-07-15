@@ -76,6 +76,15 @@ enum TextureName {
         }
     }
 
+    enum Ladder {
+        static let up = "town tiles (53)"
+        static let up_75pct = "town tiles (53) 90px"
+        static let up_50pct = "town tiles (53) 60px"
+        static let up_25pct = "town tiles (53) 30px"
+        static let middle = "town tiles (44)"
+        static let bottom = "town tiles (57)"
+    }
+
     enum Ground {
         static let grassland = "grass tiles (24)"
     }

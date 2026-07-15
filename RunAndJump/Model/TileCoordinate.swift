@@ -19,6 +19,8 @@ struct TileCoordinate: Equatable {
 struct TileSize: Equatable {
     var width: CGFloat
     var height: CGFloat
+
+    static let one: TileSize = .init(width: 1, height: 1)
 }
 
 /// Прямоугольник на сетке, заданный **нижним-левым углом** и размером (в тайлах).

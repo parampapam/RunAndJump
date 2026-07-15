@@ -52,8 +52,7 @@ enum Levels {
         ],
         // Лестница от земли (y = 1) до первой платформы (верх y = 3).
         ladders: [
-            LadderDescriptor(rect: TileRect(origin: TileCoordinate(x: 4.5, y: 1),
-                                            size: TileSize(width: 0.5, height: 2.25))),
+            LadderDescriptor(origin: TileCoordinate(x: 4.5, y: 1), height: 2.25),
         ],
         enemies: [
             EnemyDescriptor(origin: TileCoordinate(x: 10, y: 1), behavior: .stationary),
@@ -124,11 +123,9 @@ enum Levels {
         ],
         ladders: [
             // Земля → платформа на y = 5.
-            LadderDescriptor(rect: TileRect(origin: TileCoordinate(x: 8.5, y: 1),
-                                            size: TileSize(width: 0.5, height: 4.25))),
+            LadderDescriptor(origin: TileCoordinate(x: 8.5, y: 1), height: 5),
             // Платформа y = 5 → платформа y = 7.
-            LadderDescriptor(rect: TileRect(origin: TileCoordinate(x: 11.5, y: 5),
-                                            size: TileSize(width: 0.5, height: 2.25))),
+            LadderDescriptor(origin: TileCoordinate(x: 11.5, y: 5), height: 3)
         ],
         enemies: [
             EnemyDescriptor(origin: TileCoordinate(x: 5, y: 1),
@@ -204,8 +201,7 @@ enum Levels {
         ],
         // Высокая лестница от земли до платформы на y = 7.
         ladders: [
-            LadderDescriptor(rect: TileRect(origin: TileCoordinate(x: 13.5, y: 1),
-                                            size: TileSize(width: 0.5, height: 6.5))),
+            LadderDescriptor(origin: TileCoordinate(x: 13.5, y: 1), height: 7)
         ],
         enemies: [
             EnemyDescriptor(origin: TileCoordinate(x: 5, y: 1), behavior: .stationary),

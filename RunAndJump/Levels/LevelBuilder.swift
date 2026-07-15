@@ -21,7 +21,7 @@ enum LevelBuilder {
     /// земли (создаётся в сцене).
     static func makeGroundCover(widthInTiles: Int) -> [SKSpriteNode] {
         let grass = grasslandAtlas.textureNamed(TextureName.Ground.grassland)
-        let tileSize = TileSize(width: 1, height: 1)
+        let tileSize = TileSize.one
         return (0..<max(0, widthInTiles)).map { column in
             let tile = SKSpriteNode(texture: grass, size: Grid.size(tileSize))
             tile.position = Grid.center(origin: TileCoordinate(x: CGFloat(column), y: 0),
@@ -32,7 +32,7 @@ enum LevelBuilder {
     }
 
     static func makeDecoration(from descriptor: DecorationDescriptor) -> Decoration {
-        let oneTile = TileSize(width: 1, height: 1)
+        let oneTile = TileSize.one
         let sprites = DecorationTiles.tiles(for: descriptor.kind).map { tile -> SKSpriteNode in
             let sprite = SKSpriteNode(texture: grasslandAtlas.textureNamed(tile.textureName),
                                       size: Grid.size(oneTile))
@@ -107,8 +107,13 @@ enum LevelBuilder {
     }
 
     static func makeLadder(from descriptor: LadderDescriptor) -> Ladder {
-        let ladder = Ladder(size: Grid.size(descriptor.rect.size))
-        ladder.position = Grid.center(of: descriptor.rect)
+        let ladder = Ladder(heightInTiles: descriptor.height)
+        // Низ фиксирован в `descriptor.origin`; высота узла может быть чуть
+        // больше запрошенной (см. `LadderTiling`), поэтому центр считаем от
+        // уже нормализованного `ladder.size`, а не от исходных тайлов —
+        // иначе низ лестницы «утонет» в опоре под ней.
+        let origin = Grid.point(descriptor.origin)
+        ladder.position = CGPoint(x: origin.x + ladder.size.width / 2, y: origin.y + ladder.size.height / 2)
         return ladder
     }
 }

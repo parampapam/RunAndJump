@@ -31,7 +31,8 @@ struct LevelConfiguration: Equatable {
 
 /// Декларативное описание лестницы (нижний-левый угол + размер, в тайлах).
 struct LadderDescriptor: Equatable {
-    let rect: TileRect
+    let origin: TileCoordinate
+    let height: CGFloat
 }
 
 /// Декларативное описание врага.
