@@ -308,11 +308,9 @@ final class GameScene: SKScene {
         // Видимая область камеры = размер сцены, умноженный на её масштаб (зум).
         // Клэмп считаем по ней, иначе при scale != 1 по краям уровня видна пустота.
         let scale = cameraNode.yScale
-        let halfW = size.width * scale / 2
-        let halfH = size.height * scale / 2
-        let targetX = max(halfW, min(configuration.levelWidth - halfW, player.position.x))
-        let targetY = max(halfH, min(configuration.levelHeight - halfH, player.position.y))
-        cameraNode.position = CGPoint(x: targetX, y: targetY)
+        let viewportSize = CGSize(width: size.width * scale, height: size.height * scale)
+        let levelSize = CGSize(width: configuration.levelWidth, height: configuration.levelHeight)
+        cameraNode.position = CameraMath.clampedPosition(target: player.position, viewportSize: viewportSize, levelSize: levelSize)
     }
 
     private func updateCameraZoom() {
