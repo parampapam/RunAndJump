@@ -88,4 +88,38 @@ enum TextureName {
     enum Ground {
         static let grassland = "grass tiles (24)"
     }
+
+    enum Coin {
+        static let bronze0 = "coin_bronze_0"
+        static let bronze1 = "coin_bronze_1"
+        static let bronze2 = "coin_bronze_2"
+        static let bronze3 = "coin_bronze_3"
+        static let bronze4 = "coin_bronze_4"
+        static let bronze5 = "coin_bronze_5"
+        static let bronze6 = "coin_bronze_6"
+        static let bronze7 = "coin_bronze_7"
+        static let silver0 = "coin_silver_0"
+        static let silver1 = "coin_silver_1"
+        static let silver2 = "coin_silver_2"
+        static let silver3 = "coin_silver_3"
+        static let silver4 = "coin_silver_4"
+        static let silver5 = "coin_silver_5"
+        static let silver6 = "coin_silver_6"
+        static let silver7 = "coin_silver_7"
+        static let gold0 = "coin_gold_0"
+        static let gold1 = "coin_gold_1"
+        static let gold2 = "coin_gold_2"
+        static let gold3 = "coin_gold_3"
+        static let gold4 = "coin_gold_4"
+        static let gold5 = "coin_gold_5"
+        static let gold6 = "coin_gold_6"
+        static let gold7 = "coin_gold_7"
+    }
+
+    enum Heart {
+        static let heart0 = "heart_0"
+        static let heart1 = "heart_1"
+        static let heart2 = "heart_2"
+        static let heart3 = "heart_3"
+    }
 }
