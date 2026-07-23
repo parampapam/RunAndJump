@@ -1,0 +1,677 @@
+{
+  ".claude/settings.local.json": {
+    "mtime": 1782131996.0298197,
+    "ast_hash": "98b3a80e802bcd1e0e3aef16081c0784",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/AccentColor.colorset/Contents.json": {
+    "mtime": 1777475816.9128146,
+    "ast_hash": "55019f7265dde0a78318b0807f98e847",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/AppIcon.appiconset/Contents.json": {
+    "mtime": 1777475817.975991,
+    "ast_hash": "cbe75704b2680422c4156009a528e292",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Contents.json": {
+    "mtime": 1784793183.602816,
+    "ast_hash": "9deb2ada1cc834bbebf8bbad9c8978a1",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/Contents.json": {
+    "mtime": 1784793217.103607,
+    "ast_hash": "9deb2ada1cc834bbebf8bbad9c8978a1",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_attack_0.imageset/Contents.json": {
+    "mtime": 1781963027.262776,
+    "ast_hash": "c8a78b4b8b740b0d4aa63661bc35b792",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_attack_1.imageset/Contents.json": {
+    "mtime": 1781963427.649908,
+    "ast_hash": "5cbc84bb970aec76a080954f7e240c39",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_attack_2.imageset/Contents.json": {
+    "mtime": 1781963429.031284,
+    "ast_hash": "b51234217b004b79f60f1e47c2ab0380",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_attack_3.imageset/Contents.json": {
+    "mtime": 1781963430.894202,
+    "ast_hash": "b019caa5ccf40d4eda9f0d595376a2d2",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_attack_4.imageset/Contents.json": {
+    "mtime": 1781963432.091362,
+    "ast_hash": "ea755889ef059a2c5feeaf169a4c1b73",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_attack_5.imageset/Contents.json": {
+    "mtime": 1781963433.332026,
+    "ast_hash": "a12f0b97a5914ab7b5244ab797c325f5",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_duck.imageset/Contents.json": {
+    "mtime": 1781963434.637034,
+    "ast_hash": "5134ceb61d2104a89dcac3e9571fc30b",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_fall.imageset/Contents.json": {
+    "mtime": 1781963435.60195,
+    "ast_hash": "c9c527edab30bf92530d13a8b33dd142",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_game_over.imageset/Contents.json": {
+    "mtime": 1781963437.373656,
+    "ast_hash": "a3810ef001f908f4f6b932ec64f96550",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_happy_0.imageset/Contents.json": {
+    "mtime": 1781963439.104733,
+    "ast_hash": "3c44e5eaa657a3b102aeea15d1b68dfa",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_happy_1.imageset/Contents.json": {
+    "mtime": 1781963440.704825,
+    "ast_hash": "4c6e7a850374e67b63503f7247487ab9",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_hurt.imageset/Contents.json": {
+    "mtime": 1781963443.14013,
+    "ast_hash": "db783cc7049a7c926988bb8358d7ee0d",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_idle_0.imageset/Contents.json": {
+    "mtime": 1781963444.199235,
+    "ast_hash": "b70b3e2f1338c31138952a60e358944f",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_idle_1.imageset/Contents.json": {
+    "mtime": 1781963445.016119,
+    "ast_hash": "a72f99191699064fbc81408b3e787d7f",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_jump.imageset/Contents.json": {
+    "mtime": 1781963446.679244,
+    "ast_hash": "fab2da1a61b73c921210ac81c390d2e1",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_walk_0.imageset/Contents.json": {
+    "mtime": 1782157076.23778,
+    "ast_hash": "1e3ca9bda04aab9201068b22052d0289",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_walk_1.imageset/Contents.json": {
+    "mtime": 1781963450.897927,
+    "ast_hash": "789e465271d567dec1addfe3d31c3b45",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Contents.json": {
+    "mtime": 1782654999.424144,
+    "ast_hash": "9deb2ada1cc834bbebf8bbad9c8978a1",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/Contents.json": {
+    "mtime": 1782584278.58779,
+    "ast_hash": "9deb2ada1cc834bbebf8bbad9c8978a1",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (10).imageset/Contents.json": {
+    "mtime": 1782120619.27279,
+    "ast_hash": "451d67327c67c97f7b8ad7039fe36062",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (14).imageset/Contents.json": {
+    "mtime": 1782120619.272745,
+    "ast_hash": "e4cd90250b53c44c0bbff004c7106dc1",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (16).imageset/Contents.json": {
+    "mtime": 1782120619.271559,
+    "ast_hash": "ef9dacd61e92bc488aaf56aa7c94b5f1",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (23).imageset/Contents.json": {
+    "mtime": 1782120619.272291,
+    "ast_hash": "3cfc9cd36d9f5d9389b146d6812e1b7d",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (24).imageset/Contents.json": {
+    "mtime": 1782316573.049501,
+    "ast_hash": "d1a071e3ac40adea8a5db7e1deb44e91",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (34).imageset/Contents.json": {
+    "mtime": 1782115563.006504,
+    "ast_hash": "439d30e8ad0bb9cb78334a3f7b9695aa",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (35).imageset/Contents.json": {
+    "mtime": 1782120619.272186,
+    "ast_hash": "4547b22b211d83465d02a11c7af01c4b",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (49).imageset/Contents.json": {
+    "mtime": 1782120619.272613,
+    "ast_hash": "46edc64e38331398fc504dc452cae785",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (53).imageset/Contents.json": {
+    "mtime": 1782120619.271774,
+    "ast_hash": "c28fdfbca907fe3dcd0b36fdda9d1093",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (56).imageset/Contents.json": {
+    "mtime": 1782120619.271973,
+    "ast_hash": "8215aacc4bc4ba42327244e93169862e",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (63).imageset/Contents.json": {
+    "mtime": 1782120619.272471,
+    "ast_hash": "29c2652255a4640b66e7e5c7ae1536bc",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (8).imageset/Contents.json": {
+    "mtime": 1782120619.27205,
+    "ast_hash": "9d89fe883fe6ae5dabe3369c0723c892",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/heart_empty.imageset/Contents.json": {
+    "mtime": 1779217429.998853,
+    "ast_hash": "fcee8b517e5598dfdf770313780f71aa",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/heart_full.imageset/Contents.json": {
+    "mtime": 1779217435.179376,
+    "ast_hash": "dbeb26b416ea78ebab5422b7af397769",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/heart_half.imageset/Contents.json": {
+    "mtime": 1779217455.224317,
+    "ast_hash": "ddbf5ea7ffee46a67f17d9a25ab97ea5",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/menu_button.imageset/Contents.json": {
+    "mtime": 1779267310.177806,
+    "ast_hash": "ef4a199b8972b9461f0329ebb3b35e1c",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/settings_button.imageset/Contents.json": {
+    "mtime": 1779267319.021075,
+    "ast_hash": "39c72ba5fdb807158476f63f7d5bafac",
+    "semantic_hash": ""
+  },
+  "RunAndJump/ContentView.swift": {
+    "mtime": 1779263794.3931673,
+    "ast_hash": "0aa0fe1bb7d9d9e238038f6725a9df21",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Levels/Grid.swift": {
+    "mtime": 1782070805.958013,
+    "ast_hash": "dff4db1081d483b8357be71a6910b4a5",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Levels/LevelBuilder.swift": {
+    "mtime": 1784831305.0915058,
+    "ast_hash": "f80a4b9da27f8e010fc384d3e6b016d4",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Levels/Levels.swift": {
+    "mtime": 1784831305.0924857,
+    "ast_hash": "45194b3d38bc2a2ab652fe4ce5585bbc",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Levels/ObjectSize.swift": {
+    "mtime": 1784831305.0931232,
+    "ast_hash": "5fdcba2529d940fd9d077a143f79df95",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Levels/WorldMetrics.swift": {
+    "mtime": 1782070805.9591055,
+    "ast_hash": "d13a01d050c94db758b859459d8cee9a",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/AnalogStick.swift": {
+    "mtime": 1781368196.5598598,
+    "ast_hash": "a3da599b16e511da3ffeaebb56b3ccbd",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/FrameClock.swift": {
+    "mtime": 1780325798.0032246,
+    "ast_hash": "0578af6eb797e4f15b6c202aac1bec4c",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/GameProgress.swift": {
+    "mtime": 1780079339.6546023,
+    "ast_hash": "166a2efcfcbd84a91121affd53bfc4f3",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/GameRules.swift": {
+    "mtime": 1778734300.4253762,
+    "ast_hash": "59d91c9b60eb0853890940c0925cb54c",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/GroundContactTracker.swift": {
+    "mtime": 1782132153.3993711,
+    "ast_hash": "c1413c35b22ce5d835aab04e52f3ae6a",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/InvulnerabilityController.swift": {
+    "mtime": 1780506373.1929977,
+    "ast_hash": "9e38b7eea5a1986b39dab9ffb7eef35f",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/JumpController.swift": {
+    "mtime": 1782132153.3999107,
+    "ast_hash": "06a816a4aaa8d203f3fd9facd534171d",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/LadderController.swift": {
+    "mtime": 1781368196.5602214,
+    "ast_hash": "7026d617fdcde5fe2948711c3d398efd",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/LevelConfiguration.swift": {
+    "mtime": 1784831305.0934117,
+    "ast_hash": "f591c8c814bec61d2d180431883a5517",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/OscillatingMotion.swift": {
+    "mtime": 1780325798.0033824,
+    "ast_hash": "2143e38cd1d78eb5c6118c2e4ff93c33",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/PhysicsCategory.swift": {
+    "mtime": 1779554702.9909766,
+    "ast_hash": "c6047df0124027d9ba70aea65f75b4fb",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/PlatformRideController.swift": {
+    "mtime": 1780298273.4597702,
+    "ast_hash": "f17ca7309d01a494f4b31bf2ddebde93",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/PlayerAnimationState.swift": {
+    "mtime": 1781978631.647127,
+    "ast_hash": "1e150aca0989f391cae34c9301f6db1e",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/PlayerState.swift": {
+    "mtime": 1780127175.7984142,
+    "ast_hash": "2949062d837f8bcd6e9acc53f28a2860",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Model/TileCoordinate.swift": {
+    "mtime": 1784831305.0938852,
+    "ast_hash": "d5fef3702ff23817f98a463b9fbe25fa",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Movement/EnemyMovement.swift": {
+    "mtime": 1778734300.418322,
+    "ast_hash": "2131cb5f9ea87f1efaf98ee065324267",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Movement/PatrollingMovement.swift": {
+    "mtime": 1780325798.0039098,
+    "ast_hash": "320a67bd75d6c2cd017edd61e864c24f",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Movement/StationaryMovement.swift": {
+    "mtime": 1778734300.411128,
+    "ast_hash": "9818c4d56c43b18d8afd5a3ea8bf0875",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/Decoration.swift": {
+    "mtime": 1784831305.094238,
+    "ast_hash": "cd67ecc018da8d019194966440a77199",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/Enemy.swift": {
+    "mtime": 1782070805.9599464,
+    "ast_hash": "053c6508bf713c8deaa1cb86583f491f",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/GameInputDelegate.swift": {
+    "mtime": 1781368196.5604835,
+    "ast_hash": "ee6212f93f2dbe91152c5fa0303b40ac",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/GamepadInput.swift": {
+    "mtime": 1781368196.5608125,
+    "ast_hash": "fa9377772d1a270af1caf1cbf795b2b5",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/HUDNode.swift": {
+    "mtime": 1779390042.1398792,
+    "ast_hash": "8e8344d39b3c1472d63f3599b0d2a28c",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/InputController.swift": {
+    "mtime": 1781368196.5611835,
+    "ast_hash": "b4470ede98e94f0f452c91e9fee6a740",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/Ladder.swift": {
+    "mtime": 1784831305.0950441,
+    "ast_hash": "4a82096f40f47553660612cf79cf7230",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/LevelObject.swift": {
+    "mtime": 1779267608.2249844,
+    "ast_hash": "ff4c4a28055bcd0ffbdf04fad2d38781",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/MovingPlatform.swift": {
+    "mtime": 1782070805.960151,
+    "ast_hash": "da3c28a386539c6629f4b5dd09692148",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/Pickup.swift": {
+    "mtime": 1782070805.9606347,
+    "ast_hash": "6ab941565fa9773165e50862d3912234",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/Platform.swift": {
+    "mtime": 1781978631.64759,
+    "ast_hash": "9bcd36dc77fbfe3a26a958c7a2652003",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/Player.swift": {
+    "mtime": 1782320875.6291263,
+    "ast_hash": "2144e20793174816b7cd5ee93833c4f1",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/Portal.swift": {
+    "mtime": 1782070805.9609408,
+    "ast_hash": "058982ba6d240d5306d52c9ea47b6aac",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Nodes/ZPosition.swift": {
+    "mtime": 1782325188.7080116,
+    "ast_hash": "b55764472e8a2e1cab815123aac68415",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Resources/AnimationFrames.swift": {
+    "mtime": 1782320639.0476718,
+    "ast_hash": "ffc2bf27f6d0d7bcd062badc437b7e91",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Resources/TextureName.swift": {
+    "mtime": 1784831305.095303,
+    "ast_hash": "3ea69fdb225d8f27c41bb295be369eb2",
+    "semantic_hash": ""
+  },
+  "RunAndJump/RunAndJumpApp.swift": {
+    "mtime": 1777476740.3689654,
+    "ast_hash": "aa647371a91c3dddb49c866041b00e7a",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Scenes/GameScene.swift": {
+    "mtime": 1784831305.0958505,
+    "ast_hash": "1ca35ee24164c700b1f82839fcd65be7",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Scenes/VictoryScene.swift": {
+    "mtime": 1778669841.5575845,
+    "ast_hash": "bb46a79f42aaa5957edced8b5d34686f",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/AnalogStickTests.swift": {
+    "mtime": 1781368196.5623689,
+    "ast_hash": "33ef8244f84e49158bab179933a413e3",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/FrameClockTests.swift": {
+    "mtime": 1780325798.0042987,
+    "ast_hash": "f1d1f081c64fabfc5debbe74e361affb",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/GameProgressTests.swift": {
+    "mtime": 1780076411.986184,
+    "ast_hash": "16dae0b24e0923d2fa8edaabcd34c2a1",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/GameRulesTests.swift": {
+    "mtime": 1780076459.9681618,
+    "ast_hash": "9c3632a7fa821f76c14bdc9b1a3eb9b7",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/GridTests.swift": {
+    "mtime": 1782070805.9612978,
+    "ast_hash": "bb71bbe1b7cc1109b141adcd904f3fde",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/GroundContactTrackerTests.swift": {
+    "mtime": 1782132153.4008682,
+    "ast_hash": "4f63c3856d3a59e3d4ac45e18fe6828e",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/InvulnerabilityControllerTests.swift": {
+    "mtime": 1780506373.19426,
+    "ast_hash": "bf9e078b07e02236bf515f7d310ca797",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/JumpControllerLadderTests.swift": {
+    "mtime": 1780127175.8015351,
+    "ast_hash": "3984b1754139cdd836295664a7957cca",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/JumpControllerTests.swift": {
+    "mtime": 1782132153.4019923,
+    "ast_hash": "6cbc3ff53ec3a9eb792cf681e530aa52",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/LadderControllerTests.swift": {
+    "mtime": 1781368196.5625696,
+    "ast_hash": "d9243b5bfc3b39b647a166ad111e09cd",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/OscillatingMotionTests.swift": {
+    "mtime": 1780325798.004463,
+    "ast_hash": "9d2d03b8538783d8262a4a1f1ba500fb",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/PlatformRideControllerTests.swift": {
+    "mtime": 1780298273.4616501,
+    "ast_hash": "4ad8ff735e1564e078fec2c1bcc9daa1",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/PlayerAnimationTests.swift": {
+    "mtime": 1781978631.6484652,
+    "ast_hash": "62350f6a9f9011ac43b822eb2e3a0459",
+    "semantic_hash": ""
+  },
+  "RunAndJumpTests/RunAndJumpTests.swift": {
+    "mtime": 1777475818.1478693,
+    "ast_hash": "feffc492e81aba75df5a6735e5bbf1c6",
+    "semantic_hash": ""
+  },
+  "RunAndJumpUITests/RunAndJumpUITests.swift": {
+    "mtime": 1777475818.1620247,
+    "ast_hash": "d5834a2b39db5ab09fb919b82bb3dfe7",
+    "semantic_hash": ""
+  },
+  "RunAndJumpUITests/RunAndJumpUITestsLaunchTests.swift": {
+    "mtime": 1777475818.1631284,
+    "ast_hash": "3763a66749010992f7759e8b7d4f0b55",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1784831305.0909092,
+    "ast_hash": "dc5aee2371b8ae74cb54296bc9c1df7d",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_attack_0.imageset/player_attack_0.png": {
+    "mtime": 1781963027.263052,
+    "ast_hash": "d3ab6564cc3029334ed636b3623ea686",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_attack_1.imageset/player_attack_1.png": {
+    "mtime": 1781963427.650022,
+    "ast_hash": "fed2e157733c4d49a255262d6d5db147",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_attack_2.imageset/player_attack_2.png": {
+    "mtime": 1781963429.031329,
+    "ast_hash": "4fea550120dfa99c6f7e4a6283179b49",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_attack_3.imageset/player_attack_3.png": {
+    "mtime": 1781963430.893975,
+    "ast_hash": "94ae681ceb85a9ff4275b5d1548da897",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_attack_4.imageset/player_attack_4.png": {
+    "mtime": 1781963432.091181,
+    "ast_hash": "6361f1dfdb7da77e309328270fb69196",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_attack_5.imageset/player_attack_5.png": {
+    "mtime": 1781963433.332072,
+    "ast_hash": "c885c184719a5c7b9c1d6976533f5175",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_duck.imageset/player_duck.png": {
+    "mtime": 1781963434.637199,
+    "ast_hash": "ab10f36e6e1f67035ea76fc15e28d735",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_fall.imageset/player_fall.png": {
+    "mtime": 1781963435.6021,
+    "ast_hash": "58d6f33690ba048bf7759c71afb3d284",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_game_over.imageset/player_game_over.png": {
+    "mtime": 1781963437.373602,
+    "ast_hash": "7af0389f22857e371f3c5275a19cb359",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_happy_0.imageset/player_happy_0.png": {
+    "mtime": 1781963439.104655,
+    "ast_hash": "3a84436a0280191482625cfe96728874",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_happy_1.imageset/player_happy_1.png": {
+    "mtime": 1781963440.704873,
+    "ast_hash": "5f1bc44700872bfca31a3f1a9d496282",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_hurt.imageset/player_hurt.png": {
+    "mtime": 1781963443.139991,
+    "ast_hash": "d2018645cfe358b5345cb6a38cdaf831",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_idle_0.imageset/player_idle_0.png": {
+    "mtime": 1781963444.199285,
+    "ast_hash": "6471918699fe35657f89a3586fb3a861",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_idle_1.imageset/player_idle_1.png": {
+    "mtime": 1781963445.015913,
+    "ast_hash": "99c0f758cf585ac227e2e1dc1d827adb",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_jump.imageset/player_jump.png": {
+    "mtime": 1781963446.679191,
+    "ast_hash": "e4309a7bde0a491cbed7bc7f2a7a1066",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_walk_0.imageset/player_walk_0.png": {
+    "mtime": 1782157076.23793,
+    "ast_hash": "6471918699fe35657f89a3586fb3a861",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Player.spriteatlas/player_walk_1.imageset/player_walk_1.png": {
+    "mtime": 1781963450.897397,
+    "ast_hash": "2336c3e57e1a123f26205e1b1c3d9667",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (10).imageset/grass tiles (10).png": {
+    "mtime": 1782120469.76022,
+    "ast_hash": "9f687699e9de9dd37648d798ea2d0643",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (14).imageset/grass tiles (14).png": {
+    "mtime": 1782120479.362607,
+    "ast_hash": "653c0b0c260ad5c74736a16781c1b5e8",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (16).imageset/grass tiles (16).png": {
+    "mtime": 1782120501.77765,
+    "ast_hash": "5b7be3dd1231237aaf35d3aa36b27e0e",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (23).imageset/grass tiles (23).png": {
+    "mtime": 1782120517.988549,
+    "ast_hash": "c13c9b02c150461b2f2b05f4c0a33036",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (24).imageset/grass tiles (24).png": {
+    "mtime": 1782316573.049557,
+    "ast_hash": "64efe902a229afab2b76dc0f5ce12289",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (34).imageset/grass tiles (34).png": {
+    "mtime": 1782115440.445376,
+    "ast_hash": "428b99c8dcb464c37635788ff38e11a5",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (35).imageset/grass tiles (35).png": {
+    "mtime": 1782120545.027098,
+    "ast_hash": "29c2948308e896de341145d3979b0156",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (49).imageset/grass tiles (49).png": {
+    "mtime": 1782120563.778479,
+    "ast_hash": "6e8ccc206d11f740a388c6af4b9650a8",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (53).imageset/grass tiles (53).png": {
+    "mtime": 1782120580.175814,
+    "ast_hash": "e510bbdac75dcbacc2742cdef33367e8",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (56).imageset/grass tiles (56).png": {
+    "mtime": 1782120598.364185,
+    "ast_hash": "a7d55c6a2c52fc7e2b760596f44bfd02",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (63).imageset/grass tiles (63).png": {
+    "mtime": 1782120610.228137,
+    "ast_hash": "3470959549f488a1ec59a2cfcd86716b",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/Tiles/Grassland.spriteatlas/grass tiles (8).imageset/grass tiles (8).png": {
+    "mtime": 1782120469.760005,
+    "ast_hash": "f4730eaa3eb86098b2df52bb28b1f808",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/heart_empty.imageset/heart_3.png": {
+    "mtime": 1779217429.998989,
+    "ast_hash": "3ab3e4f7309ffc582fb0ffbdccb757a4",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/heart_full.imageset/heart_1.png": {
+    "mtime": 1779217435.179151,
+    "ast_hash": "0aece5a4e4efa2abf4d019c68c609d31",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/heart_half.imageset/heart_2.png": {
+    "mtime": 1779217455.224404,
+    "ast_hash": "db51a8c92fe938cae09c4e0253a44a2c",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/menu_button.imageset/icon_menu_18x18.png": {
+    "mtime": 1779267310.177897,
+    "ast_hash": "961fc39d42bd4f35d60f54f78318be13",
+    "semantic_hash": ""
+  },
+  "RunAndJump/Assets.xcassets/settings_button.imageset/icon_gear_18x18.png": {
+    "mtime": 1779267319.021217,
+    "ast_hash": "74185a425af0df18b6f10c79e59a3c3e",
+    "semantic_hash": ""
+  }
+}
