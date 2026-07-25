@@ -63,11 +63,11 @@ enum Levels {
             EnemyDescriptor(origin: TileCoordinate(x: 38, y: 1), behavior: .stationary),
         ],
         pickups: [
-            PickupDescriptor(origin: TileCoordinate(x: 7, y: 3.5), kind: .health),
-            PickupDescriptor(origin: TileCoordinate(x: 9, y: 1.5), kind: .bonus(points: 5)),
-            PickupDescriptor(origin: TileCoordinate(x: 20, y: 1.5), kind: .bonus(points: 10)),
-            PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.5), kind: .bonus(points: 15)),
-            PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.5), kind: .health),
+            PickupDescriptor(origin: TileCoordinate(x: 7, y: 3.25), kind: .health),
+            PickupDescriptor(origin: TileCoordinate(x: 9, y: 1.25), kind: .coin(.bronze)),
+            PickupDescriptor(origin: TileCoordinate(x: 20, y: 1.25), kind: .coin(.silver)),
+            PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.25), kind: .coin(.gold)),
+            PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.25), kind: .health),
         ],
         // Цветы стоят на земле (нижний край на y = 1), разбросаны по уровню.
         decorations: [
@@ -139,11 +139,11 @@ enum Levels {
                             behavior: .patrolling(leftX: 38, rightX: 41, speed: 180)),
         ],
         pickups: [
-            PickupDescriptor(origin: TileCoordinate(x: 7, y: 1.5), kind: .bonus(points: 10)),
-            PickupDescriptor(origin: TileCoordinate(x: 15, y: 1.5), kind: .bonus(points: 15)),
-            PickupDescriptor(origin: TileCoordinate(x: 20, y: 1.5), kind: .health),
-            PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.5), kind: .bonus(points: 20)),
-            PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.5), kind: .health),
+            PickupDescriptor(origin: TileCoordinate(x: 7, y: 1.25), kind: .coin(.silver)),
+            PickupDescriptor(origin: TileCoordinate(x: 15, y: 1.25), kind: .coin(.silver)),
+            PickupDescriptor(origin: TileCoordinate(x: 20, y: 1.25), kind: .health),
+            PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.25), kind: .coin(.gold)),
+            PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.25), kind: .health),
         ],
         decorations: [
             DecorationDescriptor(kind: .yellowFlower, origin: TileCoordinate(x: 3, y: 1)),
@@ -217,11 +217,11 @@ enum Levels {
             EnemyDescriptor(origin: TileCoordinate(x: 40, y: 1), behavior: .stationary),
         ],
         pickups: [
-            PickupDescriptor(origin: TileCoordinate(x: 7, y: 1.5), kind: .bonus(points: 20)),
-            PickupDescriptor(origin: TileCoordinate(x: 12, y: 1.5), kind: .bonus(points: 25)),
-            PickupDescriptor(origin: TileCoordinate(x: 17, y: 1.5), kind: .bonus(points: 30)),
-            PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.5), kind: .bonus(points: 35)),
-            PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.5), kind: .health),
+            PickupDescriptor(origin: TileCoordinate(x: 7, y: 1.25), kind: .coin(.silver)),
+            PickupDescriptor(origin: TileCoordinate(x: 12, y: 1.25), kind: .coin(.gold)),
+            PickupDescriptor(origin: TileCoordinate(x: 17, y: 1.25), kind: .coin(.gold)),
+            PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.25), kind: .coin(.gold)),
+            PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.25), kind: .health),
         ],
         decorations: [
             DecorationDescriptor(kind: .whiteFlower, origin: TileCoordinate(x: 2, y: 1)),

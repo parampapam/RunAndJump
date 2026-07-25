@@ -102,7 +102,7 @@ struct PickupDescriptor: Equatable {
     /// но по мере развития игры они могут разойтись.
     enum Kind: Equatable {
         case health
-        case bonus(points: Int)
+        case coin(CoinTier)
     }
 
     let origin: TileCoordinate   // нижний-левый угол

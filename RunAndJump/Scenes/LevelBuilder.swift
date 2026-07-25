@@ -75,8 +75,8 @@ enum LevelBuilder {
         switch descriptor.kind {
         case .health:
             kind = .health
-        case .bonus(let points):
-            kind = .bonus(points: points)
+        case .coin(let tier):
+            kind = .coin(tier)
         }
 
         let pickup = Pickup(kind: kind)
