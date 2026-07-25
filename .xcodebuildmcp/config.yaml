@@ -1,0 +1,16 @@
+schemaVersion: 1
+enabledWorkflows:
+  - simulator
+  - device
+debug: false
+sentryDisabled: false
+setupPreferences:
+  platforms:
+    - iOS
+sessionDefaults:
+  projectPath: RunAndJump.xcodeproj
+  scheme: RunAndJump
+  deviceId: 2300CF6E-8A62-50DC-AC5C-0BB04B09C7A8
+  simulatorId: 59A37150-A54B-4A29-8745-34FE9274CD1B
+  simulatorName: iPhone 17
+  simulatorPlatform: iOS Simulator
