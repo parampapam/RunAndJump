@@ -11,13 +11,15 @@ import SpriteKit
 /// Содержит общую визуальную и физическую настройку.
 class LevelObject: SKSpriteNode {
 
-    init(size: CGSize, color: SKColor) {
+    /// `bodySize` позволяет сделать физическое тело меньше узла — для спрайтов
+    /// с прозрачными полями, чтобы контакт срабатывал по видимой части.
+    init(size: CGSize, color: SKColor, bodySize: CGSize? = nil) {
         super.init(texture: nil, color: color, size: size)
 
         /// Все объекты статичные, включая патрулирующего врага. На него не действует гравитация
         /// и физика. Управление его движением через метод update, иначе враги будут падать с
         /// платформы и скользить по физике.
-        let body = SKPhysicsBody(rectangleOf: size)
+        let body = SKPhysicsBody(rectangleOf: bodySize ?? size)
         body.isDynamic = false
         body.allowsRotation = false
         physicsBody = body

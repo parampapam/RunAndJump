@@ -12,7 +12,11 @@ import CoreGraphics
 enum ObjectSize {
     static let player = TileSize.one
     static let enemy  = TileSize(width: 0.75, height: 0.75)
-    static let pickup = TileSize(width: 0.5, height: 0.5)
+    /// Спрайты наград (атлас Pickups) рисуют объект в центральной половине
+    /// кадра, остальное — прозрачные поля. Узел — целый тайл, чтобы видимая
+    /// часть была ~полтайла; хитбокс — по видимой части, а не по полям.
+    static let pickup = TileSize.one
+    static let pickupHitbox = TileSize(width: 0.5, height: 0.5)
     static let portal = TileSize(width: 0.75, height: 1.5)
     static let ladder = TileSize(width: 0.75, height: 1)
 }

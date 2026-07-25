@@ -447,12 +447,9 @@ extension GameScene: SKPhysicsContactDelegate {
 
         // Контакт игрока с подбираемой наградой.
         if let pickupBody = bodyOfCategory(PhysicsCategory.pickup, in: bodies), let pickup = pickupBody.node as? Pickup {
-            switch pickup.kind {
-            case .health:
-                handle(.healthPickup)
-            case .bonus(let points):
-                handle(.bonusPickup(points: points))
-            }
+            // Сцена не разбирает виды наград: маппинг «вид → событие»
+            // живёт в модели (PickupKind.event) и покрыт тестами.
+            handle(pickup.kind.event)
             pickup.removeFromParent()
             return
         }
