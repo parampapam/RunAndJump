@@ -116,6 +116,24 @@ enum TextureName {
         static let gold7 = "coin_gold_7"
     }
 
+    enum Enemie {
+        static let crab0 = "crab_walk_0"
+        static let crab1 = "crab_walk_1"
+        static let crab2 = "crab_walk_2"
+        static let crab3 = "crab_walk_3"
+        static let imp0 = "imp_walk_0"
+        static let imp1 = "imp_walk_1"
+        static let sniper0 = "sniper_walk_0"
+        static let sniper1 = "sniper_walk_1"
+        static let sniperProjectile = "sniper_projectile"
+        static let plant0 = "plant_idle_0"
+        static let plant1 = "plant_idle_1"
+        static let plant2 = "plant_idle_2"
+        static let plant3 = "plant_idle_3"
+        static let wasp0 = "wasp_idle_0"
+        static let wasp1 = "wasp_idle_1"
+    }
+
     enum Heart {
         static let heart0 = "heart_0"
         static let heart1 = "heart_1"

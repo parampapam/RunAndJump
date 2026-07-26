@@ -1,6 +1,7 @@
 {
-  "colors" : [
+  "images" : [
     {
+      "filename" : "imp_defeated.png",
       "idiom" : "universal"
     }
   ],
