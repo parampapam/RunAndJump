@@ -19,6 +19,10 @@ enum GameEvent: Equatable {
     case enemyHit
     case healthPickup
     case bonusPickup(points: Int)
+    /// Игрок прыгнул врагу на голову. Очки зависят от вида врага
+    /// (`EnemyKind.defeatPoints`) — событие несёт уже посчитанный номинал,
+    /// чтобы правила не знали про виды врагов.
+    case enemyDefeated(points: Int)
     case reachedPortal
 }
 
@@ -32,7 +36,7 @@ enum GameRules {
             new.health -= 1
         case .healthPickup:
             new.health += 1
-        case .bonusPickup(let points):
+        case .bonusPickup(let points), .enemyDefeated(let points):
             new.bonusPoints += points
         case .reachedPortal:
             // Сам факт достижения портала состояние не меняет;

@@ -35,17 +35,47 @@ struct LadderDescriptor: Equatable {
     let height: CGFloat
 }
 
-/// Декларативное описание врага.
+/// Декларативное описание врага: какой враг и где стоит.
+/// Двигается ли он — следует из вида (`EnemyKind.movementStyle`), поэтому
+/// параметры патруля нужны только ходячим видам.
 struct EnemyDescriptor: Equatable {
-    enum Behavior: Equatable {
-        case stationary
-        /// Патруль между двумя X. `leftX`/`rightX` — диапазон X **нижнего-левого
-        /// угла** врага в тайлах; `speed` — скорость в пунктах/с.
-        case patrolling(leftX: CGFloat, rightX: CGFloat, speed: CGFloat)
+
+    /// Параметры патруля. `leftX`/`rightX` — диапазон X **нижнего-левого угла**
+    /// врага в тайлах; `speed` — скорость в пунктах/с.
+    struct Patrol: Equatable {
+        let leftX: CGFloat
+        let rightX: CGFloat
+        let speed: CGFloat
     }
 
     let origin: TileCoordinate   // нижний-левый угол
-    let behavior: Behavior
+    let kind: EnemyKind
+    /// Нужен только патрулирующим видам; для неподвижных — `nil`.
+    let patrol: Patrol?
+
+    /// Итоговое поведение. Вид врага главнее описания: неподвижный вид стоит,
+    /// даже если ему по недосмотру задали патруль, а ходячий без параметров
+    /// патруля просто остаётся на месте (вместо падения на дефолтный диапазон).
+    var behavior: EnemyBehavior {
+        guard kind.movementStyle == .patrolling, let patrol else { return .stationary }
+        return .patrolling(leftX: patrol.leftX, rightX: patrol.rightX, speed: patrol.speed)
+    }
+
+    /// Неподвижный враг: растение или оса.
+    static func stationary(_ kind: EnemyKind, at origin: TileCoordinate) -> EnemyDescriptor {
+        EnemyDescriptor(origin: origin, kind: kind, patrol: nil)
+    }
+
+    /// Патрулирующий враг: краб, бес или снайпер.
+    static func patrolling(_ kind: EnemyKind,
+                           at origin: TileCoordinate,
+                           leftX: CGFloat,
+                           rightX: CGFloat,
+                           speed: CGFloat) -> EnemyDescriptor {
+        EnemyDescriptor(origin: origin,
+                        kind: kind,
+                        patrol: Patrol(leftX: leftX, rightX: rightX, speed: speed))
+    }
 }
 
 /// Декларативное описание платформы (нижний-левый угол + размер, в тайлах).

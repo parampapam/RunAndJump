@@ -65,7 +65,7 @@ enum LevelBuilder {
             )
         }
 
-        let enemy = Enemy(movement: movement)
+        let enemy = Enemy(kind: descriptor.kind, movement: movement)
         enemy.position = Grid.center(origin: descriptor.origin, size: tileSize)
         return enemy
     }

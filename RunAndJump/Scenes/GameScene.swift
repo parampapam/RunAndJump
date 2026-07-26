@@ -324,7 +324,32 @@ final class GameScene: SKScene {
 
     // MARK: - Обработка событий
 
-    /// Обрабатывает столкновение с врагом с учётом окна неуязвимости.
+    /// Разбирает касание врага: прыжок сверху убивает врага, всё остальное — урон.
+    /// Само правило чистое (`EnemyContactRules`), сцена лишь подставляет геометрию.
+    private func handleEnemyContact(with enemy: Enemy) {
+        // Поверженный враг уже не опасен: контакт с ним мог прийти в том же кадре,
+        // пока его физическое тело ещё не снято (снимается после шага симуляции).
+        guard !enemy.isDefeated else { return }
+
+        let outcome = EnemyContactRules.outcome(
+            playerBottom: player.position.y - player.size.height / 2,
+            playerVelocityY: player.physicsBody?.velocity.dy ?? 0,
+            enemyTop: enemy.position.y + enemy.size.height / 2,
+            enemyHeight: enemy.size.height
+        )
+
+        switch outcome {
+        case .stomp:
+            enemy.defeat()
+            player.bounceOffEnemy()
+            // Маппинг «вид врага → очки» живёт в модели и покрыт тестами.
+            handle(enemy.kind.defeatEvent)
+        case .damage:
+            handleEnemyHit()
+        }
+    }
+
+    /// Обрабатывает урон от врага с учётом окна неуязвимости.
     private func handleEnemyHit() {
         // Пока действует неуязвимость — удары врага игнорируются.
         guard !invulnerabilityController.isInvulnerable(at: lastUpdateTime) else { return }
@@ -440,8 +465,9 @@ extension GameScene: SKPhysicsContactDelegate {
         }
 
         // Контакт игрока с врагом.
-        if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.enemy) {
-            handleEnemyHit()
+        if let enemyBody = bodyOfCategory(PhysicsCategory.enemy, in: bodies),
+           let enemy = enemyBody.node as? Enemy {
+            handleEnemyContact(with: enemy)
             return
         }
 
