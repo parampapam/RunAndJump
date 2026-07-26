@@ -45,6 +45,44 @@ enum AnimationFrames {
             }
         }
     }
+
+    enum Enemy {
+        /// Кадры врага для его состояния (атлас `Enemies`). Живой цикл у ходячих —
+        /// шаг, у неподвижных — покачивание; поверженный враг — один кадр.
+        static func frames(for kind: EnemyKind, state: EnemyAnimationState) -> [String] {
+            switch state {
+            case .alive:   return aliveFrames(for: kind)
+            case .defeated: return [defeatedFrame(for: kind)]
+            }
+        }
+
+        private static func aliveFrames(for kind: EnemyKind) -> [String] {
+            switch kind {
+            case .crab:
+                return [TextureName.Enemy.crab0, TextureName.Enemy.crab1,
+                        TextureName.Enemy.crab2, TextureName.Enemy.crab3]
+            case .imp:
+                return [TextureName.Enemy.imp0, TextureName.Enemy.imp1]
+            case .sniper:
+                return [TextureName.Enemy.sniper0, TextureName.Enemy.sniper1]
+            case .plant:
+                return [TextureName.Enemy.plant0, TextureName.Enemy.plant1,
+                        TextureName.Enemy.plant2, TextureName.Enemy.plant3]
+            case .wasp:
+                return [TextureName.Enemy.wasp0, TextureName.Enemy.wasp1]
+            }
+        }
+
+        private static func defeatedFrame(for kind: EnemyKind) -> String {
+            switch kind {
+            case .crab:   return TextureName.Enemy.crabDefeated
+            case .imp:    return TextureName.Enemy.impDefeated
+            case .sniper: return TextureName.Enemy.sniperDefeated
+            case .plant:  return TextureName.Enemy.plantDefeated
+            case .wasp:   return TextureName.Enemy.waspDefeated
+            }
+        }
+    }
 }
 
 /// Длительность одного кадра анимации для каждого состояния, секунды.
@@ -66,6 +104,20 @@ enum AnimationDuration {
             switch kind {
             case .health: return 0.18
             case .coin:   return 0.1
+            }
+        }
+    }
+
+    enum Enemy {
+        /// Темп цикла задаёт характер врага: оса машет крыльями почти без пауз,
+        /// растение лениво покачивается, ходячие — в такт шагу.
+        static func timePerFrame(for kind: EnemyKind) -> TimeInterval {
+            switch kind {
+            case .crab:   return 0.12
+            case .imp:    return 0.15
+            case .sniper: return 0.2
+            case .plant:  return 0.3
+            case .wasp:   return 0.08
             }
         }
     }

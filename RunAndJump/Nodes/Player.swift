@@ -11,6 +11,8 @@ final class Player: SKSpriteNode {
 
     private let movementSpeed: CGFloat = 250
     private let jumpImpulse: CGFloat = 150
+    /// Импульс отскока от поверженного врага (≈2/3 обычного прыжка).
+    private let stompBounceImpulse: CGFloat = 100
 
     /// Аналоговый горизонтальный ввод в [-1, 1]. Знак — направление,
     /// модуль — доля максимальной скорости.
@@ -80,6 +82,15 @@ final class Player: SKSpriteNode {
 
     func jump() {
         physicsBody?.applyImpulse(CGVector(dx: 0, dy: jumpImpulse))
+    }
+
+    /// Отскок после прыжка на голову врагу — чуть ниже обычного прыжка.
+    func bounceOffEnemy() {
+        guard let body = physicsBody else { return }
+        // Сначала гасим падение: иначе высота отскока зависела бы от того,
+        // с какой скоростью игрок приземлился на врага.
+        body.velocity.dy = 0
+        body.applyImpulse(CGVector(dx: 0, dy: stompBounceImpulse))
     }
 
     // MARK: - Анимация

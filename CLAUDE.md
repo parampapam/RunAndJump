@@ -59,10 +59,11 @@ All game logic lives here as value types (structs/enums) with pure functions. Th
 
 ### Scene / Node layer (`Scenes/`, `Nodes/`, `Movement/`) — SpriteKit
 
+- **Прыжок сверху убивает врага**: `EnemyContactRules` (модель) решает по геометрии контакта, что это — `stomp` или `damage`; сцена вызывает `Enemy.defeat()` (кадр поражения → исчезновение), `Player.bounceOffEnemy()` и применяет `EnemyKind.defeatEvent` — очки за врага (`defeatPoints`) идут в общий бонус, как за монету. Физическое тело врага снимается отложенно, через `SKAction`, — менять физику внутри `didBegin` нельзя.
 - **`GameScene`** — main SKScene. Initialises from `LevelConfiguration` via `LevelBuilder`, runs the game loop in `update()`, handles `SKPhysicsContactDelegate`, and drives state transitions (playing → died → restart or completed → next level via `GameProgress`).
 - **`VictoryScene`** — shown after all levels complete; displays total bonus.
 - **`Player`** — one tile in size (`WorldMetrics.tileSize`, 60×60); moves at 250 pts/s horizontally; jump impulse 150 (≈2.3 tiles high). Renders the `Player` sprite atlas, picking frames via `PlayerAnimation` and mirroring by `xScale` for facing. Reads commands from `InputController` / `GamepadInput`.
-- **`Enemy`** / `LevelObject` — SpriteKit node with an injected `EnemyMovement` strategy (`StationaryMovement`, `PatrollingMovement`). Enemies and pickups are non-dynamic; their positions are updated manually each frame.
+- **`Enemy`** / `LevelObject` — SpriteKit node with an injected `EnemyMovement` strategy (`StationaryMovement`, `PatrollingMovement`). Carries an `EnemyKind` (crab / imp / sniper — patrolling; plant / wasp — stationary): the kind picks the frames from the `Enemies` atlas via `AnimationFrames.Enemy` and decides the movement style, so a level can't make a plant patrol. Facing comes from the per-frame position delta (`EnemyAnimation.facing`) and mirrors by `xScale`. Enemies and pickups are non-dynamic; their positions are updated manually each frame.
 - **`Pickup`** — green = health, yellow = bonus points.
 - **`Portal`** — level exit (purple).
 - **`HUDNode`** — overlays health and bonus points.
@@ -94,6 +95,8 @@ When adding new game logic, the test for it goes in the model layer too. If some
 
 **Extension points**
 - New enemy behaviour → implement `EnemyMovement`, don't subclass `Enemy`.
+- New enemy variant (same two movement types) → add a case to `EnemyKind` plus its frames in `AnimationFrames.Enemy` / `AnimationDuration.Enemy`; nothing in the node or the builder needs to change.
+- Place enemies with `EnemyDescriptor.stationary(_:at:)` / `.patrolling(_:at:leftX:rightX:speed:)` — the patrol range only exists for kinds that walk.
 - New level → add a `LevelConfiguration` to the `Levels` enum, don't create a new SKScene subclass.
 - New pickup type → extend the existing `Pickup` mechanism rather than introducing a parallel node.
 
