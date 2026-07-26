@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		158A804F2FC47D6600FF98C5 /* CLAUDE.md in Resources */ = {isa = PBXBuildFile; fileRef = 158A804E2FC47D6600FF98C5 /* CLAUDE.md */; };
+		1594BC5F3015FA0F004EA1B3 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 1594BC5E3015FA0F004EA1B3 /* AppIcon.icon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +33,7 @@
 		15082FE22FA2586A00E0C9BB /* RunAndJumpTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunAndJumpTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		15082FEC2FA2586A00E0C9BB /* RunAndJumpUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunAndJumpUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		158A804E2FC47D6600FF98C5 /* CLAUDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CLAUDE.md; sourceTree = "<group>"; };
+		1594BC5E3015FA0F004EA1B3 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -98,6 +100,7 @@
 				15082FEF2FA2586A00E0C9BB /* RunAndJumpUITests */,
 				15082FCA2FA2586800E0C9BB /* Products */,
 				158A804E2FC47D6600FF98C5 /* CLAUDE.md */,
+				1594BC5E3015FA0F004EA1B3 /* AppIcon.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -231,6 +234,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1594BC5F3015FA0F004EA1B3 /* AppIcon.icon in Resources */,
 				158A804F2FC47D6600FF98C5 /* CLAUDE.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -299,6 +303,8 @@
 				DEVELOPMENT_TEAM = 5FR24HPWD7;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RunAndJump/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Run'n'Jump";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.arcade-games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -333,6 +339,8 @@
 				DEVELOPMENT_TEAM = 5FR24HPWD7;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RunAndJump/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Run'n'Jump";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.arcade-games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
