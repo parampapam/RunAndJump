@@ -60,6 +60,7 @@ All game logic lives here as value types (structs/enums) with pure functions. Th
 ### Scene / Node layer (`Scenes/`, `Nodes/`, `Movement/`) — SpriteKit
 
 - **Прыжок сверху убивает врага**: `EnemyContactRules` (модель) решает по геометрии контакта, что это — `stomp` или `damage`; сцена вызывает `Enemy.defeat()` (кадр поражения → исчезновение), `Player.bounceOffEnemy()` и применяет `EnemyKind.defeatEvent` — очки за врага (`defeatPoints`) идут в общий бонус, как за монету. Физическое тело врага снимается отложенно, через `SKAction`, — менять физику внутри `didBegin` нельзя.
+- **Стрельба врагов**: оружие — свойство вида (`EnemyKind.weapon: EnemyWeapon?`, есть только у снайпера). `ShootingRules` решает, видит ли стрелок цель (впереди по взгляду, в пределах `sightRange` по X и `verticalTolerance` по Y), `ShootingController` держит тайминги (прицеливание `aimDelay` → выстрел → `cooldown`; потеря цели сбрасывает отсчёт), `ProjectileRules` считает точку вылета, скорость и время жизни. Всё это чистая модель; `Enemy.updateShooting(at:targetPosition:)` только подставляет геометрию узла и возвращает `ProjectileSpawn`, а узел `Projectile` создаёт сцена (`GameScene.updateShooters`), потому что иерархией владеет она. Попадание по игроку — обычный `.enemyHit` с окном неуязвимости; снаряд гаснет и от игрока, и от земли/платформы/стены, и по исчерпании дальности.
 - **`GameScene`** — main SKScene. Initialises from `LevelConfiguration` via `LevelBuilder`, runs the game loop in `update()`, handles `SKPhysicsContactDelegate`, and drives state transitions (playing → died → restart or completed → next level via `GameProgress`).
 - **`VictoryScene`** — shown after all levels complete; displays total bonus.
 - **`Player`** — one tile in size (`WorldMetrics.tileSize`, 60×60); moves at 250 pts/s horizontally; jump impulse 150 (≈2.3 tiles high). Renders the `Player` sprite atlas, picking frames via `PlayerAnimation` and mirroring by `xScale` for facing. Reads commands from `InputController` / `GamepadInput`.
@@ -96,6 +97,7 @@ When adding new game logic, the test for it goes in the model layer too. If some
 **Extension points**
 - New enemy behaviour → implement `EnemyMovement`, don't subclass `Enemy`.
 - New enemy variant (same two movement types) → add a case to `EnemyKind` plus its frames in `AnimationFrames.Enemy` / `AnimationDuration.Enemy`; nothing in the node or the builder needs to change.
+- New shooting enemy → return an `EnemyWeapon` from `EnemyKind.weapon`; `Enemy`, `LevelBuilder` and `GameScene` already handle any armed kind. Tuning an existing shooter = changing the numbers in that one `EnemyWeapon`.
 - Place enemies with `EnemyDescriptor.stationary(_:at:)` / `.patrolling(_:at:leftX:rightX:speed:)` — the patrol range only exists for kinds that walk.
 - New level → add a `LevelConfiguration` to the `Levels` enum, don't create a new SKScene subclass.
 - New pickup type → extend the existing `Pickup` mechanism rather than introducing a parallel node.

@@ -49,6 +49,22 @@ struct EnemyKindTests {
         #expect(EnemyKind.wasp.defeatPoints < EnemyKind.sniper.defeatPoints)
     }
 
+    /// Стреляет только снайпер — остальные виды безоружны.
+    @Test func onlySniperIsArmed() {
+        #expect(EnemyKind.sniper.weapon != nil)
+        for kind in EnemyKind.allCases where kind != .sniper {
+            #expect(kind.weapon == nil)
+        }
+    }
+
+    /// Снаряд должен долетать с предельной дистанции обстрела, иначе стрелок
+    /// впустую тратит выстрелы по краю своей же зоны видимости.
+    @Test func projectileOutrangesSight() throws {
+        let weapon = try #require(EnemyKind.sniper.weapon)
+        #expect(weapon.projectileRange >= weapon.sightRange)
+        #expect(weapon.projectileLifetime > 0)
+    }
+
     @Test func patrollingDescriptorKeepsItsRange() {
         let descriptor = EnemyDescriptor.patrolling(.crab,
                                                     at: TileCoordinate(x: 5, y: 1),
