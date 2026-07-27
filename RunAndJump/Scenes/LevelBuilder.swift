@@ -16,6 +16,9 @@ enum LevelBuilder {
     /// Атлас травяных тайлов и декораций (земля, цветы и пр.).
     private static let grasslandAtlas = SKTextureAtlas(named: "Grassland")
 
+    /// Атлас врагов — из него же берётся спрайт снаряда.
+    private static let enemiesAtlas = SKTextureAtlas(named: "Enemies")
+
     /// Травяное покрытие земли: один ряд тайлов по всей ширине уровня.
     /// Узлы чисто визуальные — коллизия остаётся на едином физическом теле
     /// земли (создаётся в сцене).
@@ -68,6 +71,14 @@ enum LevelBuilder {
         let enemy = Enemy(kind: descriptor.kind, movement: movement)
         enemy.position = Grid.center(origin: descriptor.origin, size: tileSize)
         return enemy
+    }
+
+    /// Снаряд по описанию выстрела. В отличие от прочих объектов, он рождается
+    /// не из конфигурации уровня, а по ходу игры — позиция уже в пунктах,
+    /// её посчитала модель (`ProjectileRules`).
+    static func makeProjectile(from spawn: ProjectileSpawn) -> Projectile {
+        Projectile(spawn: spawn,
+                   texture: enemiesAtlas.textureNamed(TextureName.Enemy.sniperProjectile))
     }
 
     static func makePickup(from descriptor: PickupDescriptor) -> Pickup {

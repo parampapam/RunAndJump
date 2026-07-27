@@ -63,6 +63,7 @@ final class Player: SKSpriteNode {
             | PhysicsCategory.pickup
             | PhysicsCategory.portal
             | PhysicsCategory.ladder
+            | PhysicsCategory.projectile
 
         physicsBody = body
     }

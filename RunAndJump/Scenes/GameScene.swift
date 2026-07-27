@@ -30,6 +30,9 @@ final class GameScene: SKScene {
     private var hud: HUDNode!
     private var cameraNode: SKCameraNode!
     private var movingPlatforms: [MovingPlatform] = []
+    // Враги, умеющие стрелять. Держим отдельным списком, чтобы каждый кадр
+    // не перебирать всех детей сцены ради нескольких стрелков.
+    private var shooters: [Enemy] = []
     // Подвижная платформа, на которой сейчас стоит игрок; nil = не на подвижной платформе.
     private var playerStandingPlatform: MovingPlatform?
     // Опоры (земля + платформы), которых игрок касается прямо сейчас. Сообщаем
@@ -184,7 +187,11 @@ final class GameScene: SKScene {
             movingPlatforms.append(platform)
         }
         for enemyDescriptor in configuration.enemies {
-            addChild(LevelBuilder.makeEnemy(from: enemyDescriptor))
+            let enemy = LevelBuilder.makeEnemy(from: enemyDescriptor)
+            addChild(enemy)
+            if enemy.canShoot {
+                shooters.append(enemy)
+            }
         }
         for pickupDescriptor in configuration.pickups {
             addChild(LevelBuilder.makePickup(from: pickupDescriptor))
@@ -219,6 +226,8 @@ final class GameScene: SKScene {
                 levelObject.update(at: currentTime)
             }
         }
+
+        updateShooters(at: currentTime)
 
         let playerFeetY = player.position.y - player.size.height / 2
         applyLadderAction(ladderController.update(playerFeetY: playerFeetY))
@@ -300,6 +309,19 @@ final class GameScene: SKScene {
     /// которой она стоит).
     private func ladderBottomY(of ladder: Ladder) -> CGFloat {
         ladder.position.y - ladder.size.height / 2
+    }
+
+    /// Даёт стрелкам сделать выстрел. Решение — за врагом (и чистой моделью
+    /// внутри него), создание узла — за сценой: иерархией владеет она.
+    private func updateShooters(at time: TimeInterval) {
+        // Повержённый стрелок уже покинул сцену — отпускаем и последнюю ссылку.
+        shooters.removeAll { $0.isDefeated }
+
+        for shooter in shooters {
+            guard let spawn = shooter.updateShooting(at: time,
+                                                     targetPosition: player.position) else { continue }
+            addChild(LevelBuilder.makeProjectile(from: spawn))
+        }
     }
 
     // MARK: - Камера
@@ -434,6 +456,21 @@ extension GameScene: SKPhysicsContactDelegate {
 
     func didBegin(_ contact: SKPhysicsContact) {
         let bodies = (contact.bodyA, contact.bodyB)
+
+        // Контакт снаряда: с игроком — урон, с геометрией уровня — просто гаснет.
+        if let projectileBody = bodyOfCategory(PhysicsCategory.projectile, in: bodies),
+           let projectile = projectileBody.node as? Projectile {
+            // Один снаряд бьёт один раз: за шаг симуляции контакт может прийти
+            // и от игрока, и от платформы, а тело снимается только после шага.
+            guard !projectile.isSpent else { return }
+
+            let other = projectileBody === bodies.0 ? bodies.1 : bodies.0
+            if other.categoryBitMask == PhysicsCategory.player {
+                handleEnemyHit()
+            }
+            projectile.hit()
+            return
+        }
 
         // Контакт игрока с землёй или платформой — обновляем jumpController.
         if let supportBody = supportingBody(in: bodies) {

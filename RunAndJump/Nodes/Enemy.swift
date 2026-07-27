@@ -20,7 +20,16 @@ final class Enemy: LevelObject {
     private static let animationKey = "enemyAnimation"
 
     /// Текущее направление взгляда (по умолчанию — вправо, как в атласе).
-    private var facing: EnemyFacing = .right
+    /// Снаружи нужно стрельбе: снаряд летит туда же, куда смотрит враг.
+    private(set) var facing: EnemyFacing = .right
+
+    /// Отсчёт выстрелов. Есть только у видов с оружием (`EnemyKind.weapon`);
+    /// у остальных nil — они не стрелки.
+    private var shooting: ShootingController?
+
+    /// Умеет ли этот враг стрелять. Сцена по этому признаку отбирает тех,
+    /// кого вообще нужно спрашивать о выстреле каждый кадр.
+    var canShoot: Bool { shooting != nil }
 
     /// Повержен ли враг. Такой враг не двигается, не бьёт игрока и вот-вот исчезнет.
     private(set) var isDefeated = false
@@ -35,6 +44,7 @@ final class Enemy: LevelObject {
          movement: EnemyMovement = StationaryMovement()) {
         self.kind = kind
         self.movement = movement
+        self.shooting = kind.weapon.map(ShootingController.init(weapon:))
         super.init(size: size, color: .clear)
 
         physicsBody?.categoryBitMask = PhysicsCategory.enemy
@@ -56,6 +66,27 @@ final class Enemy: LevelObject {
         let previousX = position.x
         movement.update(node: self, at: time)
         updateFacing(dx: position.x - previousX)
+    }
+
+    // MARK: - Стрельба
+
+    /// Спрашивает врага, стреляет ли он в этом кадре, и если да — возвращает
+    /// описание снаряда. Сам узел снаряда создаёт сцена: иерархией владеет она.
+    ///
+    /// Решение целиком за чистой моделью (`ShootingController` + `ProjectileRules`);
+    /// здесь только подстановка геометрии узла. Повержённый враг и вид без
+    /// оружия всегда возвращают nil.
+    func updateShooting(at time: TimeInterval, targetPosition: CGPoint) -> ProjectileSpawn? {
+        guard !isDefeated, let weapon = kind.weapon else { return nil }
+        guard shooting?.update(at: time,
+                               shooter: position,
+                               facing: facing,
+                               target: targetPosition) == true else { return nil }
+
+        return ProjectileRules.spawn(shooterCenter: position,
+                                     shooterSize: size,
+                                     facing: facing,
+                                     weapon: weapon)
     }
 
     // MARK: - Поражение
