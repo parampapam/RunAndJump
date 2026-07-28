@@ -250,16 +250,23 @@ final class GameScene: SKScene {
 
         let action = platformRideController.resolveRide(
             platformPosition: platform.position,
+            platformSize: platform.size,
             playerPosition: player.position,
             playerSize: player.size,
             horizontalInputVelocity: player.hasHorizontalInput ? player.horizontalVelocity : 0,
             dt: frameDuration
         )
 
-        if case .ride(let target) = action {
+        switch action {
+        case .ride(let target):
             player.position = target
             // Пока едем на платформе — гасим накопление гравитации, чтобы прыжок был чистым.
             body.velocity.dy = 0
+
+        case .idle:
+            // Контроллер сам решил, что езда кончилась (игрока снесло за край) —
+            // отпускаем хэндл, не дожидаясь didEnd от физики.
+            playerStandingPlatform = nil
         }
     }
 

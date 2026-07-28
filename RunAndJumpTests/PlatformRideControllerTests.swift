@@ -25,6 +25,7 @@ struct PlatformRideControllerTests {
         #expect(controller.isRiding == false)
         let action = controller.resolveRide(
             platformPosition: .zero,
+            platformSize: platformSize,
             playerPosition: .zero,
             playerSize: playerSize,
             horizontalInputVelocity: 0,
@@ -109,6 +110,7 @@ struct PlatformRideControllerTests {
         // Платформа сдвинулась на (30, 8). Игрок должен повторить ход, сохранив offset.
         let action = controller.resolveRide(
             platformPosition: CGPoint(x: 30, y: 8),
+            platformSize: platformSize,
             playerPosition: CGPoint(x: 5, y: restingPlayerY),
             playerSize: playerSize,
             horizontalInputVelocity: 0,
@@ -132,6 +134,7 @@ struct PlatformRideControllerTests {
         // Платформа на месте, игрок идёт вправо 100 pts/s за 0.1 с → +10 к offset.x.
         let action = controller.resolveRide(
             platformPosition: .zero,
+            platformSize: platformSize,
             playerPosition: CGPoint(x: 0, y: restingPlayerY),
             playerSize: playerSize,
             horizontalInputVelocity: 100,
@@ -159,6 +162,7 @@ struct PlatformRideControllerTests {
         // Игрок едет вправо так, что без преграды target.x ушёл бы за 40.
         let action = controller.resolveRide(
             platformPosition: .zero,
+            platformSize: platformSize,
             playerPosition: CGPoint(x: 0, y: 20),
             playerSize: playerSize,
             horizontalInputVelocity: 1000,
@@ -170,6 +174,69 @@ struct PlatformRideControllerTests {
             return
         }
         #expect(target.x == 24)
+    }
+
+    @Test("Вертикальная платформа проходит мимо преграды — игрока не бросает на её дальнюю сторону")
+    func verticalPassByDoesNotTeleportAcrossObstacle() {
+        var controller = PlatformRideController()
+        // Неподвижная платформа примыкает к правому краю подвижной (x = 50)
+        // и уходит вправо — та самая связка с третьего уровня.
+        controller.obstacles = [
+            CGRect(x: 50, y: 0, width: 120, height: 15)
+        ]
+        // Игрок стоит на правом краю: его бок (halfW = 16) заходит в полосу преграды.
+        _ = controller.tryAttach(
+            platformPosition: .zero,
+            platformSize: platformSize,
+            playerPosition: CGPoint(x: 45, y: restingPlayerY),
+            playerSize: playerSize,
+            at: 1.0
+        )
+
+        // Платформа идёт вниз, ввода нет. Солвер, разбирая боковое перекрытие,
+        // сдвинул игрока на пиксель вправо — раньше этот знак читался как
+        // «едем влево» и выбрасывал игрока за правый край преграды.
+        let action = controller.resolveRide(
+            platformPosition: CGPoint(x: 0, y: -16),
+            platformSize: platformSize,
+            playerPosition: CGPoint(x: 46, y: 10),
+            playerSize: playerSize,
+            horizontalInputVelocity: 0,
+            dt: 0.016
+        )
+
+        guard case .ride(let target) = action else {
+            Issue.record("ожидали .ride")
+            return
+        }
+        // Упор — в ближний, левый бок преграды: 50 - 16 = 34.
+        #expect(target.x == 34)
+        #expect(controller.isRiding == true)
+    }
+
+    @Test("Вынесло за край платформы — езда кончается, игрок не висит в воздухе")
+    func carriedOffTheEdgeStopsRiding() {
+        var controller = PlatformRideController()
+        _ = controller.tryAttach(
+            platformPosition: .zero,
+            platformSize: platformSize,
+            playerPosition: CGPoint(x: 0, y: restingPlayerY),
+            playerSize: playerSize,
+            at: 1.0
+        )
+
+        // Ушли на 100 вправо: под ногами платформы (полуширина 50 + полуширина
+        // игрока 16 = 66) уже нет.
+        let action = controller.resolveRide(
+            platformPosition: .zero,
+            platformSize: platformSize,
+            playerPosition: CGPoint(x: 0, y: restingPlayerY),
+            playerSize: playerSize,
+            horizontalInputVelocity: 1000,
+            dt: 0.1
+        )
+        #expect(action == .idle)
+        #expect(controller.isRiding == false)
     }
 
     @Test("Слез с платформы — снова idle")
@@ -188,6 +255,7 @@ struct PlatformRideControllerTests {
         #expect(controller.isRiding == false)
         let action = controller.resolveRide(
             platformPosition: .zero,
+            platformSize: platformSize,
             playerPosition: .zero,
             playerSize: playerSize,
             horizontalInputVelocity: 0,
