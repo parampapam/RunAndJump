@@ -96,6 +96,7 @@ struct PlatformRideController {
     /// Возвращает действие, которое нужно применить к игроку.
     mutating func resolveRide(
         platformPosition: CGPoint,
+        platformSize: CGSize,
         playerPosition: CGPoint,
         playerSize: CGSize,
         horizontalInputVelocity: CGFloat,
@@ -123,6 +124,15 @@ struct PlatformRideController {
         // и когда target.x уедет за край статичной платформы, ограничение спадёт
         // и игрока выстрелит вперёд.
         rideOffset.x = target.x - platformPosition.x
+
+        // Под ногами не осталось платформы — езда закончилась. Без этой проверки
+        // игрок, вытолкнутый за край (упор в преграду, разбор столкновения
+        // физикой), продолжал бы висеть в воздухе, повторяя ход платформы.
+        guard abs(rideOffset.x) <= platformSize.width / 2 + playerSize.width / 2 else {
+            isRiding = false
+            return .idle
+        }
+
         return .ride(targetPosition: target)
     }
 
@@ -135,10 +145,6 @@ struct PlatformRideController {
         currentX: CGFloat,
         playerSize: CGSize
     ) -> CGFloat {
-        let movingRight = target.x > currentX
-        let movingLeft = target.x < currentX
-        guard movingRight || movingLeft else { return target.x }
-
         let halfW = playerSize.width / 2
         let halfH = playerSize.height / 2
         let epsilon: CGFloat = 1
@@ -150,7 +156,11 @@ struct PlatformRideController {
             // Только боковое перекрытие: если игрок стоит на верхнем ребре — не преграда.
             guard bottom < frame.maxY - epsilon, top > frame.minY + epsilon else { continue }
             guard resultX + halfW > frame.minX, resultX - halfW < frame.maxX else { continue }
-            if movingRight {
+            // Сторону упора выбираем по тому, где игрок НАХОДИТСЯ, а не куда его
+            // несёт. Направление переноса ненадёжно: на вертикальной платформе
+            // ход по X нулевой, и знак задаёт дрожание солвера — по нему игрока
+            // выталкивало на дальнюю сторону преграды (телепорт через платформу).
+            if currentX < frame.midX {
                 resultX = min(resultX, frame.minX - halfW)
             } else {
                 resultX = max(resultX, frame.maxX + halfW)
