@@ -19,6 +19,7 @@ struct LevelConfiguration: Equatable {
     let platforms: [PlatformDescriptor]
     let movingPlatforms: [MovingPlatformDescriptor]
     let ladders: [LadderDescriptor]
+    let hazards: [HazardDescriptor]
     let enemies: [EnemyDescriptor]
     let pickups: [PickupDescriptor]
     let decorations: [DecorationDescriptor]
@@ -76,6 +77,17 @@ struct EnemyDescriptor: Equatable {
                         kind: kind,
                         patrol: Patrol(leftX: leftX, rightX: rightX, speed: speed))
     }
+}
+
+/// Декларативное описание опасной зоны — озера воды или лавы
+/// (нижний-левый угол + размер, в тайлах).
+///
+/// Прямоугольник — это и видимая поверхность, и зона урона: верх стоит чуть
+/// выше линии земли (y = 1), чтобы вошедший в озеро игрок гарантированно
+/// пересёкся с ним, а низ уходит в землю — так озеро выглядит утопленным.
+struct HazardDescriptor: Equatable {
+    let kind: HazardKind
+    let rect: TileRect
 }
 
 /// Декларативное описание платформы (нижний-левый угол + размер, в тайлах).

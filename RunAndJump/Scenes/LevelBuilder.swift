@@ -117,6 +117,12 @@ enum LevelBuilder {
         )
     }
 
+    static func makeHazard(from descriptor: HazardDescriptor) -> Hazard {
+        let hazard = Hazard(kind: descriptor.kind, size: Grid.size(descriptor.rect.size))
+        hazard.position = Grid.center(of: descriptor.rect)
+        return hazard
+    }
+
     static func makeLadder(from descriptor: LadderDescriptor) -> Ladder {
         let ladder = Ladder(heightInTiles: descriptor.height)
         // Низ фиксирован в `descriptor.origin`; высота узла может быть чуть
