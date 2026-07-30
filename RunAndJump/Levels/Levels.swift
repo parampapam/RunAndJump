@@ -57,8 +57,8 @@ enum Levels {
         // Озеро на ровном месте: два тайла — перепрыгивается с разбега.
         hazards: [
             HazardDescriptor(kind: .water,
-                             rect: TileRect(origin: TileCoordinate(x: 23, y: 0.5),
-                                            size: TileSize(width: 2, height: 0.6))),
+                             rect: TileRect(origin: TileCoordinate(x: 23, y: 0.15),
+                                            size: TileSize(width: 2, height: 1))),
         ],
         enemies: [
             .stationary(.plant, at: TileCoordinate(x: 10, y: 1)),
@@ -137,8 +137,8 @@ enum Levels {
         // Лава ровно под лифтом: можно перепрыгнуть, а можно переждать наверху.
         hazards: [
             HazardDescriptor(kind: .lava,
-                             rect: TileRect(origin: TileCoordinate(x: 27.5, y: 0.5),
-                                            size: TileSize(width: 2, height: 0.6))),
+                             rect: TileRect(origin: TileCoordinate(x: 27.5, y: 0.15),
+                                            size: TileSize(width: 2, height: 1))),
         ],
         enemies: [
             .patrolling(.crab, at: TileCoordinate(x: 5, y: 1),
@@ -219,11 +219,11 @@ enum Levels {
         // Лужа под подвижной платформой в начале и озеро лавы в конце уровня.
         hazards: [
             HazardDescriptor(kind: .water,
-                             rect: TileRect(origin: TileCoordinate(x: 6.25, y: 0.5),
-                                            size: TileSize(width: 1.5, height: 0.6))),
+                             rect: TileRect(origin: TileCoordinate(x: 6, y: 0.15),
+                                            size: TileSize(width: 2, height: 1))),
             HazardDescriptor(kind: .lava,
-                             rect: TileRect(origin: TileCoordinate(x: 20.5, y: 0.5),
-                                            size: TileSize(width: 2, height: 0.6))),
+                             rect: TileRect(origin: TileCoordinate(x: 20.5, y: 0.15),
+                                            size: TileSize(width: 2, height: 1))),
         ],
         enemies: [
             .stationary(.plant, at: TileCoordinate(x: 5, y: 1)),
