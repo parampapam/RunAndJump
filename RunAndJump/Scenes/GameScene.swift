@@ -410,10 +410,26 @@ final class GameScene: SKScene {
     /// именно нахождение в зоне, а не момент пересечения границы.
     private func updateHazards() {
         // В озере игрок утоплен по пояс — иначе кажется, что он идёт по воде.
-        player.setSubmerged(!occupiedHazards.isEmpty)
+        // Глубина зависит от того, насколько он зашёл: шагая по кромке, он
+        // опускается и всплывает плавно, а не проваливается рывком.
+        player.setSubmersion(hazardImmersionDepth())
 
         guard let hazard = occupiedHazards.last else { return }
         applyDamage(hazard.kind.event, recovery: hazard.kind.damageInterval)
+    }
+
+    /// Погружение по самой «глубокой» из зон, которых игрок сейчас касается.
+    /// Геометрию считает модель, сцена лишь подставляет габариты узлов.
+    private func hazardImmersionDepth() -> CGFloat {
+        let playerSpan = span(of: player.position.x, width: player.size.width)
+        return occupiedHazards.reduce(0) { deepest, hazard in
+            let hazardSpan = span(of: hazard.position.x, width: hazard.size.width)
+            return max(deepest, HazardImmersion.depth(player: playerSpan, hazard: hazardSpan))
+        }
+    }
+
+    private func span(of centerX: CGFloat, width: CGFloat) -> ClosedRange<CGFloat> {
+        (centerX - width / 2)...(centerX + width / 2)
     }
 
     private func handle(_ event: GameEvent) {
