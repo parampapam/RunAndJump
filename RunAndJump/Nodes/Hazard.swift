@@ -57,26 +57,21 @@ final class Hazard: SKNode {
         let rows = max(1, Int((size.height / WorldMetrics.tileSize).rounded()))
         let cell = CGSize(width: size.width / CGFloat(columns),
                           height: size.height / CGFloat(rows))
-        alpha = kind.opacity
-        addBacking(cell: cell)
+        addPit()
         addSurface(columns: columns, rows: rows, cell: cell)
     }
 
-    /// Подложка цветом жидкости под нижними рядами плиток: закрывает стыки
-    /// рядов, чтобы сквозь них не просвечивала земля.
+    /// Дно озера — заливка цветом неба во весь прямоугольник зоны.
     ///
-    /// Под верхним рядом подложки нет: там жидкость должна оставаться
-    /// полупрозрачной (сквозь неё видно утонувшего игрока), а прозрачный
-    /// гребень — рисовать силуэт волны на фоне неба. У озера в один ряд,
-    /// как все нынешние, подложки не будет вовсе.
-    private func addBacking(cell: CGSize) {
-        let height = size.height - cell.height
-        guard height > 0 else { return }
-
-        let backing = SKSpriteNode(color: kind.deepColor,
-                                   size: CGSize(width: size.width, height: height))
-        backing.position = CGPoint(x: 0, y: -cell.height / 2)
-        addChild(backing)
+    /// Жидкость полупрозрачна, и без дна сквозь неё просвечивал бы грунт с
+    /// травой. Дно «вырезает» землю под озером, но рисуется **позади игрока**
+    /// (`ZPosition.hazardPit`): у детей `zPosition` отсчитывается от родителя,
+    /// поэтому здесь и вычитание — глобально дно ложится между травой и
+    /// игровыми объектами, а плитки жидкости остаются поверх всех.
+    private func addPit() {
+        let pit = SKSpriteNode(color: ScenePalette.sky, size: size)
+        pit.zPosition = ZPosition.hazardPit - ZPosition.hazard
+        addChild(pit)
     }
 
     /// Плитки жидкости: два кадра со сдвинутыми волнами, поверхность
@@ -96,6 +91,9 @@ final class Hazard: SKNode {
         for column in 0..<columns {
             for row in 0..<rows {
                 let tile = SKSpriteNode(texture: textures.first, size: cell)
+                // Прозрачность — на самих плитках, а не на узле: у детей альфа
+                // перемножается с родительской, и дно перестало бы быть глухим.
+                tile.alpha = kind.opacity
                 tile.position = CGPoint(
                     x: -size.width / 2 + cell.width * (CGFloat(column) + 0.5),
                     y: size.height / 2 - cell.height * (CGFloat(row) + 0.5)
@@ -112,15 +110,6 @@ final class Hazard: SKNode {
 /// Оформление озера. Живёт в слое узлов: модель (`HazardKind`) знает только про
 /// механику и не имеет права видеть `SKColor`.
 private extension HazardKind {
-
-    /// Цвет подложки под плитками. Значения взяты из нижнего ряда пикселей
-    /// самих плиток — так стык подложки и плитки не виден.
-    var deepColor: SKColor {
-        switch self {
-        case .water: return SKColor(red: 97 / 255, green: 178 / 255, blue: 228 / 255, alpha: 1)
-        case .lava:  return SKColor(red: 234 / 255, green: 146 / 255, blue: 31 / 255, alpha: 1)
-        }
-    }
 
     /// Непрозрачность жидкости: сквозь неё просматривается всё, что под водой,
     /// в первую очередь утонувший по пояс игрок. Лава гуще воды.

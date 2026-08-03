@@ -68,7 +68,7 @@ final class GameScene: SKScene {
     // MARK: - Жизненный цикл
 
     override func didMove(to view: SKView) {
-        backgroundColor = SKColor(red: 0.5, green: 0.7, blue: 0.95, alpha: 1.0)
+        backgroundColor = ScenePalette.sky
 
         physicsWorld.gravity = CGVector(dx: 0, dy: -20)
         physicsWorld.contactDelegate = self
