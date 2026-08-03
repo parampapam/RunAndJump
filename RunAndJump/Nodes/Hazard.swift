@@ -24,10 +24,6 @@ final class Hazard: SKNode {
 
     private static let atlas = SKTextureAtlas(named: "Hazards")
 
-    /// Доля высоты плитки, которую занимает прозрачный «гребень» сверху
-    /// (над волной). Ниже него плитка непрозрачна — по этой границе и обрезаем
-    /// подложку, чтобы силуэт волны читался на фоне неба.
-    private static let crestFraction: CGFloat = 0.09
 
     init(kind: HazardKind, size: CGSize) {
         self.kind = kind
@@ -61,19 +57,25 @@ final class Hazard: SKNode {
         let rows = max(1, Int((size.height / WorldMetrics.tileSize).rounded()))
         let cell = CGSize(width: size.width / CGFloat(columns),
                           height: size.height / CGFloat(rows))
-        let crest = cell.height * Self.crestFraction
-
-        addBacking(below: crest)
+        alpha = kind.opacity
+        addBacking(cell: cell)
         addSurface(columns: columns, rows: rows, cell: cell)
     }
 
-    /// Подложка цветом жидкости: закрывает стыки плиток и их прозрачные
-    /// гребни, чтобы сквозь озеро не просвечивала земля. Верх подложки —
-    /// по нижней границе гребня верхнего ряда.
-    private func addBacking(below crest: CGFloat) {
+    /// Подложка цветом жидкости под нижними рядами плиток: закрывает стыки
+    /// рядов, чтобы сквозь них не просвечивала земля.
+    ///
+    /// Под верхним рядом подложки нет: там жидкость должна оставаться
+    /// полупрозрачной (сквозь неё видно утонувшего игрока), а прозрачный
+    /// гребень — рисовать силуэт волны на фоне неба. У озера в один ряд,
+    /// как все нынешние, подложки не будет вовсе.
+    private func addBacking(cell: CGSize) {
+        let height = size.height - cell.height
+        guard height > 0 else { return }
+
         let backing = SKSpriteNode(color: kind.deepColor,
-                                   size: CGSize(width: size.width, height: size.height - crest))
-        backing.position = CGPoint(x: 0, y: -crest / 2)
+                                   size: CGSize(width: size.width, height: height))
+        backing.position = CGPoint(x: 0, y: -cell.height / 2)
         addChild(backing)
     }
 
@@ -107,15 +109,25 @@ final class Hazard: SKNode {
     }
 }
 
-/// Цвет подложки под плитками. Живёт в слое узлов: модель (`HazardKind`) знает
-/// только про механику и не имеет права видеть `SKColor`. Значения взяты из
-/// нижнего ряда пикселей самих плиток — так стык подложки и плитки не виден.
+/// Оформление озера. Живёт в слое узлов: модель (`HazardKind`) знает только про
+/// механику и не имеет права видеть `SKColor`.
 private extension HazardKind {
 
+    /// Цвет подложки под плитками. Значения взяты из нижнего ряда пикселей
+    /// самих плиток — так стык подложки и плитки не виден.
     var deepColor: SKColor {
         switch self {
         case .water: return SKColor(red: 97 / 255, green: 178 / 255, blue: 228 / 255, alpha: 1)
         case .lava:  return SKColor(red: 234 / 255, green: 146 / 255, blue: 31 / 255, alpha: 1)
+        }
+    }
+
+    /// Непрозрачность жидкости: сквозь неё просматривается всё, что под водой,
+    /// в первую очередь утонувший по пояс игрок. Лава гуще воды.
+    var opacity: CGFloat {
+        switch self {
+        case .water: return 0.7
+        case .lava:  return 0.8
         }
     }
 }
