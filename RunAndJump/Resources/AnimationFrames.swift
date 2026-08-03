@@ -124,8 +124,8 @@ enum AnimationDuration {
         /// Вода колышется лениво, лава кипит заметно живее.
         static func timePerFrame(for kind: HazardKind) -> TimeInterval {
             switch kind {
-            case .water: return 0.5
-            case .lava:  return 0.3
+            case .water: return 0.33
+            case .lava:  return 0.2
             }
         }
     }

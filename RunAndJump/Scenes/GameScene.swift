@@ -235,7 +235,7 @@ final class GameScene: SKScene {
         }
 
         updateShooters(at: currentTime)
-        updateHazardDamage()
+        updateHazards()
 
         let playerFeetY = player.position.y - player.size.height / 2
         applyLadderAction(ladderController.update(playerFeetY: playerFeetY))
@@ -408,7 +408,10 @@ final class GameScene: SKScene {
     /// Пока игрок в озере, оно бьёт его снова и снова — паузу между ударами
     /// задаёт вид зоны. Проверяем каждый кадр, а не только по входу: важно
     /// именно нахождение в зоне, а не момент пересечения границы.
-    private func updateHazardDamage() {
+    private func updateHazards() {
+        // В озере игрок утоплен по пояс — иначе кажется, что он идёт по воде.
+        player.setSubmerged(!occupiedHazards.isEmpty)
+
         guard let hazard = occupiedHazards.last else { return }
         applyDamage(hazard.kind.event, recovery: hazard.kind.damageInterval)
     }

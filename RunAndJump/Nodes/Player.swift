@@ -95,6 +95,24 @@ final class Player: SKSpriteNode {
         body.applyImpulse(CGVector(dx: 0, dy: stompBounceImpulse))
     }
 
+    // MARK: - Погружение в жидкость
+
+    /// Насколько игрок утопает в озере — в долях собственной высоты.
+    private static let submersionDepth: CGFloat = 0.5
+
+    /// Показывает игрока утонувшим в жидкости (или снова стоящим на опоре).
+    ///
+    /// Сдвигается **только рисунок**: `anchorPoint` не трогает физическое тело —
+    /// оно построено от центра узла и остаётся на месте. Поэтому опора под
+    /// ногами, контакты с врагами и зона урона озера считаются там же, где и
+    /// раньше, а погружение — чистая картинка (жидкость рисуется поверх игрока,
+    /// см. `ZPosition.hazard`).
+    func setSubmerged(_ submerged: Bool) {
+        let anchorY = submerged ? 0.5 + Self.submersionDepth : 0.5
+        guard anchorPoint.y != anchorY else { return }
+        anchorPoint = CGPoint(x: 0.5, y: anchorY)
+    }
+
     // MARK: - Анимация
 
     /// Атлас с кадрами игрока. В атласе все кадры нарисованы «вправо».
