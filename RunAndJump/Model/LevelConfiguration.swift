@@ -19,6 +19,7 @@ struct LevelConfiguration: Equatable {
     let platforms: [PlatformDescriptor]
     let movingPlatforms: [MovingPlatformDescriptor]
     let ladders: [LadderDescriptor]
+    let hazards: [HazardDescriptor]
     let enemies: [EnemyDescriptor]
     let pickups: [PickupDescriptor]
     let decorations: [DecorationDescriptor]
@@ -76,6 +77,22 @@ struct EnemyDescriptor: Equatable {
                         kind: kind,
                         patrol: Patrol(leftX: leftX, rightX: rightX, speed: speed))
     }
+}
+
+/// Декларативное описание опасной зоны — озера воды или лавы
+/// (нижний-левый угол + размер, в тайлах).
+///
+/// Прямоугольник — это сразу три вещи: видимая жидкость, зона урона и **проём
+/// в земле**. Земля под озером вырезается (`GroundLayout`), а на дне ямы
+/// кладётся опора ниже поверхности на `HazardKind.depthInTiles`: игрок
+/// проваливается в озеро и выбирается прыжком.
+///
+/// Поэтому прямоугольник задаётся целыми тайлами и по сетке: обычное озеро —
+/// это ряд земли целиком, то есть `y = 0` и высота 1. На дробных границах
+/// травяная плитка на краю проёма обрежется, а плитка жидкости сплющится.
+struct HazardDescriptor: Equatable {
+    let kind: HazardKind
+    let rect: TileRect
 }
 
 /// Декларативное описание платформы (нижний-левый угол + размер, в тайлах).

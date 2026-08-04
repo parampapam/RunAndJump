@@ -18,4 +18,5 @@ enum PhysicsCategory {
     static let wall: UInt32      = 1 << 6  // 1000000
     static let ladder: UInt32    = 1 << 7  // 10000000
     static let projectile: UInt32 = 1 << 8 // 100000000
+    static let hazard: UInt32    = 1 << 9  // 1000000000
 }

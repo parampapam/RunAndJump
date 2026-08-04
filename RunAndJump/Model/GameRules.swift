@@ -17,6 +17,10 @@ enum LevelOutcome: Equatable {
 /// Игровое событие
 enum GameEvent: Equatable {
     case enemyHit
+    /// Игрок попал в опасную зону (озеро воды или лавы). Величина урона
+    /// зависит от вида зоны (`HazardKind.damage`) — событие несёт её с собой,
+    /// чтобы правила не знали про виды препятствий.
+    case hazardHit(damage: Int)
     case healthPickup
     case bonusPickup(points: Int)
     /// Игрок прыгнул врагу на голову. Очки зависят от вида врага
@@ -34,6 +38,8 @@ enum GameRules {
         switch event {
         case .enemyHit:
             new.health -= 1
+        case .hazardHit(let damage):
+            new.health -= damage
         case .healthPickup:
             new.health += 1
         case .bonusPickup(let points), .enemyDefeated(let points):

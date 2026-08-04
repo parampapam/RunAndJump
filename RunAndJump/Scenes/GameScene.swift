@@ -24,7 +24,6 @@ final class GameScene: SKScene {
     // MARK: - Узлы
 
     private var player: Player!
-    private var ground: SKSpriteNode!
     private var inputController: InputController!
     private let gamepadInput = GamepadInput()
     private var hud: HUDNode!
@@ -42,6 +41,10 @@ final class GameScene: SKScene {
     private var groundContacts = GroundContactTracker<ObjectIdentifier>()
     // Лестница, в зоне которой сейчас игрок — нужна, чтобы встать по её центру.
     private weak var currentLadder: Ladder?
+    // Опасные зоны (озёра), в которых игрок находится прямо сейчас. Список, а не
+    // одна ссылка: озёра могут соприкасаться, и выход из одного не должен
+    // отменять пребывание в другом. Урон наносит последняя — та, куда вошли.
+    private var occupiedHazards: [Hazard] = []
 
     // Длительность последнего кадра — нужна, чтобы ввод сдвигал игрока по платформе.
     private var previousUpdateTime: TimeInterval = 0
@@ -64,7 +67,7 @@ final class GameScene: SKScene {
     // MARK: - Жизненный цикл
 
     override func didMove(to view: SKView) {
-        backgroundColor = SKColor(red: 0.5, green: 0.7, blue: 0.95, alpha: 1.0)
+        backgroundColor = ScenePalette.sky
 
         physicsWorld.gravity = CGVector(dx: 0, dy: -20)
         physicsWorld.contactDelegate = self
@@ -100,28 +103,26 @@ final class GameScene: SKScene {
         updateCameraZoom()
     }
 
+    /// Земля — не сплошная полоса, а куски между проёмами под озёрами: озеро
+    /// должно быть настоящей ямой, в которую игрок проваливается. Границы
+    /// кусков считает чистый `GroundLayout`, дно ям кладём отдельными опорами.
     private func setupGround() {
-        let groundSize = CGSize(width: configuration.levelWidth, height: configuration.groundHeight)
-        // Земля прозрачна: её внешний вид даёт травяное покрытие, а сам узел
-        // несёт только физическое тело для коллизий.
-        ground = SKSpriteNode(color: .clear, size: groundSize)
-        ground.position = CGPoint(x: configuration.levelWidth / 2, y: groundSize.height / 2)
+        let segments = GroundLayout.segments(
+            levelWidthInTiles: configuration.levelWidthInTiles,
+            gaps: configuration.hazards.map { $0.rect.xSpan }
+        )
 
-        let body = SKPhysicsBody(rectangleOf: groundSize)
-        body.isDynamic = false
-        // Без упругости: SpriteKit берёт max(restitution) двух тел, и дефолтные
-        // 0.2 у опоры подбрасывали бы стоящего игрока (микро-баунс).
-        body.restitution = 0
-        body.categoryBitMask = PhysicsCategory.ground
-        // Земля сама ни с кем не "ищет" контактов — её роль пассивная.
-        body.contactTestBitMask = PhysicsCategory.none
-        ground.physicsBody = body
+        for segment in segments {
+            addChild(LevelBuilder.makeGround(span: segment, height: configuration.groundHeight))
+            // Покрываем кусок травой — она же и есть видимая земля.
+            for tile in LevelBuilder.makeGroundCover(span: segment) {
+                addChild(tile)
+            }
+        }
 
-        addChild(ground)
-
-        // Покрываем землю травой — ряд тайлов по всей ширине уровня.
-        for tile in LevelBuilder.makeGroundCover(widthInTiles: Int(configuration.levelWidthInTiles)) {
-            addChild(tile)
+        for hazardDescriptor in configuration.hazards {
+            addChild(LevelBuilder.makeHazardFloor(from: hazardDescriptor,
+                                                  groundHeight: configuration.groundHeight))
         }
     }
 
@@ -199,6 +200,9 @@ final class GameScene: SKScene {
         for ladderDescriptor in configuration.ladders {
             addChild(LevelBuilder.makeLadder(from: ladderDescriptor))
         }
+        for hazardDescriptor in configuration.hazards {
+            addChild(LevelBuilder.makeHazard(from: hazardDescriptor))
+        }
         for decorationDescriptor in configuration.decorations {
             addChild(LevelBuilder.makeDecoration(from: decorationDescriptor))
         }
@@ -228,6 +232,7 @@ final class GameScene: SKScene {
         }
 
         updateShooters(at: currentTime)
+        updateHazards()
 
         let playerFeetY = player.position.y - player.size.height / 2
         applyLadderAction(ladderController.update(playerFeetY: playerFeetY))
@@ -374,22 +379,35 @@ final class GameScene: SKScene {
             // Маппинг «вид врага → очки» живёт в модели и покрыт тестами.
             handle(enemy.kind.defeatEvent)
         case .damage:
-            handleEnemyHit()
+            applyDamage(.enemyHit)
         }
     }
 
-    /// Обрабатывает урон от врага с учётом окна неуязвимости.
-    private func handleEnemyHit() {
-        // Пока действует неуязвимость — удары врага игнорируются.
+    /// Наносит игроку урон с учётом окна неуязвимости — общий путь для всех
+    /// источников (враг, снаряд, опасная зона). `recovery` — длина окна:
+    /// у озера она своя, чтобы стоящего в лаве жгло чаще, чем в воде.
+    private func applyDamage(
+        _ event: GameEvent,
+        recovery: TimeInterval = InvulnerabilityController.damageRecoveryDuration
+    ) {
+        // Пока действует неуязвимость — урон игнорируется.
         guard !invulnerabilityController.isInvulnerable(at: lastUpdateTime) else { return }
 
-        handle(.enemyHit)
+        handle(event)
 
         // Если удар не смертельный — даём окно неуязвимости и запускаем мерцание.
         // При смертельном ударе сцена перезапускается, индикация не нужна.
         guard !GameRules.isDead(playerState) else { return }
-        invulnerabilityController.trigger(at: lastUpdateTime)
-        player.startBlinking(for: InvulnerabilityController.damageRecoveryDuration)
+        invulnerabilityController.trigger(for: recovery, at: lastUpdateTime)
+        player.startBlinking(for: recovery)
+    }
+
+    /// Пока игрок в озере, оно бьёт его снова и снова — паузу между ударами
+    /// задаёт вид зоны. Проверяем каждый кадр, а не только по входу: важно
+    /// именно нахождение в зоне, а не момент пересечения границы.
+    private func updateHazards() {
+        guard let hazard = occupiedHazards.last else { return }
+        applyDamage(hazard.kind.event, recovery: hazard.kind.damageInterval)
     }
 
     private func handle(_ event: GameEvent) {
@@ -473,7 +491,7 @@ extension GameScene: SKPhysicsContactDelegate {
 
             let other = projectileBody === bodies.0 ? bodies.1 : bodies.0
             if other.categoryBitMask == PhysicsCategory.player {
-                handleEnemyHit()
+                applyDamage(.enemyHit)
             }
             projectile.hit()
             return
@@ -505,6 +523,14 @@ extension GameScene: SKPhysicsContactDelegate {
                 currentLadder = ladder
                 ladderController.didTouchLadder(bottomY: ladderBottomY(of: ladder))
             }
+            return
+        }
+
+        // Контакт игрока с опасной зоной — запоминаем, что он в ней. Сам урон
+        // наносится в игровом цикле, пока игрок не вышел (см. updateHazardDamage).
+        if let hazardBody = bodyOfCategory(PhysicsCategory.hazard, in: bodies),
+           let hazard = hazardBody.node as? Hazard {
+            occupiedHazards.append(hazard)
             return
         }
 
@@ -550,6 +576,14 @@ extension GameScene: SKPhysicsContactDelegate {
         if matchesPair(bodies, PhysicsCategory.player, PhysicsCategory.ladder) {
             currentLadder = nil
             ladderController.didLeaveLadder()
+            return
+        }
+
+        // Игрок выбрался из озера — снимаем ровно одно вхождение.
+        if let hazardBody = bodyOfCategory(PhysicsCategory.hazard, in: bodies),
+           let hazard = hazardBody.node as? Hazard,
+           let index = occupiedHazards.firstIndex(where: { $0 === hazard }) {
+            occupiedHazards.remove(at: index)
         }
     }
 

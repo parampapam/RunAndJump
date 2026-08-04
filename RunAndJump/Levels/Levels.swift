@@ -54,6 +54,12 @@ enum Levels {
         ladders: [
             LadderDescriptor(origin: TileCoordinate(x: 4.5, y: 1), height: 2.25),
         ],
+        // Озеро на ровном месте: два тайла — перепрыгивается с разбега.
+        hazards: [
+            HazardDescriptor(kind: .water,
+                             rect: TileRect(origin: TileCoordinate(x: 23, y: 0),
+                                            size: TileSize(width: 2, height: 1))),
+        ],
         enemies: [
             .stationary(.plant, at: TileCoordinate(x: 10, y: 1)),
             .patrolling(.crab, at: TileCoordinate(x: 15, y: 1),
@@ -127,6 +133,12 @@ enum Levels {
             LadderDescriptor(origin: TileCoordinate(x: 8.5, y: 1), height: 5),
             // Платформа y = 5 → платформа y = 7.
             LadderDescriptor(origin: TileCoordinate(x: 11.5, y: 5), height: 3)
+        ],
+        // Лава ровно под лифтом: можно перепрыгнуть, а можно переждать наверху.
+        hazards: [
+            HazardDescriptor(kind: .lava,
+                             rect: TileRect(origin: TileCoordinate(x: 28, y: 0),
+                                            size: TileSize(width: 2, height: 1))),
         ],
         enemies: [
             .patrolling(.crab, at: TileCoordinate(x: 5, y: 1),
@@ -204,6 +216,15 @@ enum Levels {
         ladders: [
             LadderDescriptor(origin: TileCoordinate(x: 13.5, y: 1), height: 7)
         ],
+        // Лужа под подвижной платформой в начале и озеро лавы в конце уровня.
+        hazards: [
+            HazardDescriptor(kind: .water,
+                             rect: TileRect(origin: TileCoordinate(x: 6, y: 0),
+                                            size: TileSize(width: 2, height: 1))),
+            HazardDescriptor(kind: .lava,
+                             rect: TileRect(origin: TileCoordinate(x: 20, y: 0),
+                                            size: TileSize(width: 2, height: 1))),
+        ],
         enemies: [
             .stationary(.plant, at: TileCoordinate(x: 5, y: 1)),
             .patrolling(.crab, at: TileCoordinate(x: 9, y: 1),
@@ -218,7 +239,8 @@ enum Levels {
             .stationary(.plant, at: TileCoordinate(x: 40, y: 1)),
         ],
         pickups: [
-            PickupDescriptor(origin: TileCoordinate(x: 7, y: 1.25), kind: .coin(.silver)),
+            // Не над озером (6…8), а перед ним — монета должна лежать на земле.
+            PickupDescriptor(origin: TileCoordinate(x: 3.5, y: 1.25), kind: .coin(.silver)),
             PickupDescriptor(origin: TileCoordinate(x: 12, y: 1.25), kind: .coin(.gold)),
             PickupDescriptor(origin: TileCoordinate(x: 17, y: 1.25), kind: .coin(.gold)),
             PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.25), kind: .coin(.gold)),

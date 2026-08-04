@@ -46,6 +46,18 @@ enum AnimationFrames {
         }
     }
 
+    enum Hazard {
+        /// Кадры поверхности озера (атлас `Hazards`).
+        static func frames(for kind: HazardKind) -> [String] {
+            switch kind {
+            case .water:
+                return [TextureName.Hazard.water0, TextureName.Hazard.water1]
+            case .lava:
+                return [TextureName.Hazard.lava0, TextureName.Hazard.lava1]
+            }
+        }
+    }
+
     enum Enemy {
         /// Кадры врага для его состояния (атлас `Enemies`). Живой цикл у ходячих —
         /// шаг, у неподвижных — покачивание; поверженный враг — один кадр.
@@ -104,6 +116,16 @@ enum AnimationDuration {
             switch kind {
             case .health: return 0.18
             case .coin:   return 0.1
+            }
+        }
+    }
+
+    enum Hazard {
+        /// Вода колышется лениво, лава кипит заметно живее.
+        static func timePerFrame(for kind: HazardKind) -> TimeInterval {
+            switch kind {
+            case .water: return 0.33
+            case .lava:  return 0.2
             }
         }
     }
