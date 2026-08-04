@@ -24,7 +24,6 @@ final class GameScene: SKScene {
     // MARK: - Узлы
 
     private var player: Player!
-    private var ground: SKSpriteNode!
     private var inputController: InputController!
     private let gamepadInput = GamepadInput()
     private var hud: HUDNode!
@@ -104,28 +103,26 @@ final class GameScene: SKScene {
         updateCameraZoom()
     }
 
+    /// Земля — не сплошная полоса, а куски между проёмами под озёрами: озеро
+    /// должно быть настоящей ямой, в которую игрок проваливается. Границы
+    /// кусков считает чистый `GroundLayout`, дно ям кладём отдельными опорами.
     private func setupGround() {
-        let groundSize = CGSize(width: configuration.levelWidth, height: configuration.groundHeight)
-        // Земля прозрачна: её внешний вид даёт травяное покрытие, а сам узел
-        // несёт только физическое тело для коллизий.
-        ground = SKSpriteNode(color: .clear, size: groundSize)
-        ground.position = CGPoint(x: configuration.levelWidth / 2, y: groundSize.height / 2)
+        let segments = GroundLayout.segments(
+            levelWidthInTiles: configuration.levelWidthInTiles,
+            gaps: configuration.hazards.map { $0.rect.xSpan }
+        )
 
-        let body = SKPhysicsBody(rectangleOf: groundSize)
-        body.isDynamic = false
-        // Без упругости: SpriteKit берёт max(restitution) двух тел, и дефолтные
-        // 0.2 у опоры подбрасывали бы стоящего игрока (микро-баунс).
-        body.restitution = 0
-        body.categoryBitMask = PhysicsCategory.ground
-        // Земля сама ни с кем не "ищет" контактов — её роль пассивная.
-        body.contactTestBitMask = PhysicsCategory.none
-        ground.physicsBody = body
+        for segment in segments {
+            addChild(LevelBuilder.makeGround(span: segment, height: configuration.groundHeight))
+            // Покрываем кусок травой — она же и есть видимая земля.
+            for tile in LevelBuilder.makeGroundCover(span: segment) {
+                addChild(tile)
+            }
+        }
 
-        addChild(ground)
-
-        // Покрываем землю травой — ряд тайлов по всей ширине уровня.
-        for tile in LevelBuilder.makeGroundCover(widthInTiles: Int(configuration.levelWidthInTiles)) {
-            addChild(tile)
+        for hazardDescriptor in configuration.hazards {
+            addChild(LevelBuilder.makeHazardFloor(from: hazardDescriptor,
+                                                  groundHeight: configuration.groundHeight))
         }
     }
 
@@ -409,27 +406,8 @@ final class GameScene: SKScene {
     /// задаёт вид зоны. Проверяем каждый кадр, а не только по входу: важно
     /// именно нахождение в зоне, а не момент пересечения границы.
     private func updateHazards() {
-        // В озере игрок утоплен по пояс — иначе кажется, что он идёт по воде.
-        // Глубина зависит от того, насколько он зашёл: шагая по кромке, он
-        // опускается и всплывает плавно, а не проваливается рывком.
-        player.setSubmersion(hazardImmersionDepth())
-
         guard let hazard = occupiedHazards.last else { return }
         applyDamage(hazard.kind.event, recovery: hazard.kind.damageInterval)
-    }
-
-    /// Погружение по самой «глубокой» из зон, которых игрок сейчас касается.
-    /// Геометрию считает модель, сцена лишь подставляет габариты узлов.
-    private func hazardImmersionDepth() -> CGFloat {
-        let playerSpan = span(of: player.position.x, width: player.size.width)
-        return occupiedHazards.reduce(0) { deepest, hazard in
-            let hazardSpan = span(of: hazard.position.x, width: hazard.size.width)
-            return max(deepest, HazardImmersion.depth(player: playerSpan, hazard: hazardSpan))
-        }
-    }
-
-    private func span(of centerX: CGFloat, width: CGFloat) -> ClosedRange<CGFloat> {
-        (centerX - width / 2)...(centerX + width / 2)
     }
 
     private func handle(_ event: GameEvent) {

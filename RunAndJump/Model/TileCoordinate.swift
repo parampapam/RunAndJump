@@ -28,4 +28,10 @@ struct TileSize: Equatable {
 struct TileRect: Equatable {
     var origin: TileCoordinate   // нижний-левый угол
     var size: TileSize
+
+    /// Габарит по X, тайлы. Нужен там, где важна только горизонтальная
+    /// протяжённость — например, чтобы вырезать проём в земле под озером.
+    var xSpan: ClosedRange<CGFloat> {
+        origin.x...(origin.x + max(0, size.width))
+    }
 }

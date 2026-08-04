@@ -19,19 +19,53 @@ enum LevelBuilder {
     /// Атлас врагов — из него же берётся спрайт снаряда.
     private static let enemiesAtlas = SKTextureAtlas(named: "Enemies")
 
-    /// Травяное покрытие земли: один ряд тайлов по всей ширине уровня.
-    /// Узлы чисто визуальные — коллизия остаётся на едином физическом теле
-    /// земли (создаётся в сцене).
-    static func makeGroundCover(widthInTiles: Int) -> [SKSpriteNode] {
+    /// Кусок земли: невидимый узел с телом-опорой. Вид земле дают плитки травы
+    /// (`makeGroundCover`), узел несёт только физику. Кусков несколько, потому
+    /// что под озёрами в земле проёмы — их границы считает `GroundLayout`.
+    static func makeGround(span: ClosedRange<CGFloat>, height: CGFloat) -> SKSpriteNode {
+        let width = Grid.size(TileSize(width: span.upperBound - span.lowerBound, height: 0)).width
+        let ground = SKSpriteNode(color: .clear, size: CGSize(width: width, height: height))
+        ground.position = CGPoint(x: Grid.point(TileCoordinate(x: span.lowerBound, y: 0)).x + width / 2,
+                                  y: height / 2)
+
+        let body = SKPhysicsBody(rectangleOf: ground.size)
+        body.isDynamic = false
+        // Без упругости: SpriteKit берёт max(restitution) двух тел, и дефолтные
+        // 0.2 у опоры подбрасывали бы стоящего игрока (микро-баунс).
+        body.restitution = 0
+        body.categoryBitMask = PhysicsCategory.ground
+        // Земля сама ни с кем не «ищет» контактов — её роль пассивная.
+        body.contactTestBitMask = PhysicsCategory.none
+        ground.physicsBody = body
+        return ground
+    }
+
+    /// Дно ямы под озером — опора на `HazardKind.depthInTiles` ниже поверхности
+    /// земли. Без неё шагнувший в озеро игрок провалился бы за нижний край
+    /// уровня: в земле там проём.
+    static func makeHazardFloor(from descriptor: HazardDescriptor,
+                                groundHeight: CGFloat) -> SKSpriteNode {
+        let depth = Grid.size(TileSize(width: 0, height: HazardKind.depthInTiles)).height
+        return makeGround(span: descriptor.rect.xSpan, height: max(0, groundHeight - depth))
+    }
+
+    /// Травяное покрытие: ряд тайлов вдоль куска земли. Узлы чисто визуальные —
+    /// коллизия на теле куска. Если кусок кончается посреди тайла, последняя
+    /// плитка обрезается по ширине, чтобы трава не нависала над ямой.
+    static func makeGroundCover(span: ClosedRange<CGFloat>) -> [SKSpriteNode] {
         let grass = grasslandAtlas.textureNamed(TextureName.Ground.grassland)
-        let tileSize = TileSize.one
-        return (0..<max(0, widthInTiles)).map { column in
-            let tile = SKSpriteNode(texture: grass, size: Grid.size(tileSize))
-            tile.position = Grid.center(origin: TileCoordinate(x: CGFloat(column), y: 0),
-                                        size: tileSize)
+        var tiles: [SKSpriteNode] = []
+        var x = span.lowerBound
+
+        while x < span.upperBound - .ulpOfOne {
+            let size = TileSize(width: min(1, span.upperBound - x), height: 1)
+            let tile = SKSpriteNode(texture: grass, size: Grid.size(size))
+            tile.position = Grid.center(origin: TileCoordinate(x: x, y: 0), size: size)
             tile.zPosition = ZPosition.ground
-            return tile
+            tiles.append(tile)
+            x += size.width
         }
+        return tiles
     }
 
     static func makeDecoration(from descriptor: DecorationDescriptor) -> Decoration {

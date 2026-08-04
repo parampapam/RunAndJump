@@ -13,6 +13,9 @@ import SpriteKit
 /// (сквозь озеро можно пройти, но контакт с игроком регистрируется). Сколько
 /// здоровья снимает попадание и как часто озеро может ударить снова — знает
 /// чистая модель `HazardKind`, применяет её сцена.
+///
+/// Озеро лежит в проёме земли (`GroundLayout`), поэтому под жидкостью нет
+/// грунта — сквозь полупрозрачные плитки видно небо и стоящего в яме игрока.
 final class Hazard: SKNode {
 
     let kind: HazardKind
@@ -23,7 +26,6 @@ final class Hazard: SKNode {
     // MARK: - Оформление поверхности
 
     private static let atlas = SKTextureAtlas(named: "Hazards")
-
 
     init(kind: HazardKind, size: CGSize) {
         self.kind = kind
@@ -57,21 +59,7 @@ final class Hazard: SKNode {
         let rows = max(1, Int((size.height / WorldMetrics.tileSize).rounded()))
         let cell = CGSize(width: size.width / CGFloat(columns),
                           height: size.height / CGFloat(rows))
-        addPit()
         addSurface(columns: columns, rows: rows, cell: cell)
-    }
-
-    /// Дно озера — заливка цветом неба во весь прямоугольник зоны.
-    ///
-    /// Жидкость полупрозрачна, и без дна сквозь неё просвечивал бы грунт с
-    /// травой. Дно «вырезает» землю под озером, но рисуется **позади игрока**
-    /// (`ZPosition.hazardPit`): у детей `zPosition` отсчитывается от родителя,
-    /// поэтому здесь и вычитание — глобально дно ложится между травой и
-    /// игровыми объектами, а плитки жидкости остаются поверх всех.
-    private func addPit() {
-        let pit = SKSpriteNode(color: ScenePalette.sky, size: size)
-        pit.zPosition = ZPosition.hazardPit - ZPosition.hazard
-        addChild(pit)
     }
 
     /// Плитки жидкости: два кадра со сдвинутыми волнами, поверхность
