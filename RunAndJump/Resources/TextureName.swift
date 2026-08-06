@@ -85,6 +85,12 @@ enum TextureName {
         static let bottom = "town tiles (57)"
     }
 
+    enum Platform {
+        static let left = "grass tiles (52)"
+        static let middle = "grass tiles (57)"
+        static let right = "grass tiles (6)"
+    }
+
     enum Ground {
         static let grassland = "grass tiles (24)"
     }
