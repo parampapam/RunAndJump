@@ -23,7 +23,11 @@ final class MovingPlatform: SKSpriteNode {
             pauseDuration: pauseDuration
         )
 
-        super.init(texture: nil, color: .systemOrange, size: size)
+        // Как и у неподвижной платформы, вид дают плитки-дети — узел невидим
+        // и несёт только физику (см. `PlatformSkin`).
+        super.init(texture: nil, color: .clear, size: size)
+
+        PlatformSkin.tiles(forSize: size).forEach(addChild)
 
         position = motion.position   // = startPosition
 
