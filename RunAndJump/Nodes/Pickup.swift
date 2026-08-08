@@ -11,13 +11,18 @@ final class Pickup: LevelObject {
 
     let kind: PickupKind
 
+    /// Индекс в `LevelConfiguration.pickups` — им сцена помечает награду
+    /// поднятой, чтобы после гибели монета не вернулась на уровень.
+    let index: Int
+
     /// Атлас с кадрами наград (монеты, сердце).
     private let atlas = SKTextureAtlas(named: "Pickups")
 
     private static let animationKey = "pickupAnimation"
 
-    init(kind: PickupKind, size: CGSize = Grid.size(ObjectSize.pickup)) {
+    init(kind: PickupKind, index: Int, size: CGSize = Grid.size(ObjectSize.pickup)) {
         self.kind = kind
+        self.index = index
         // Хитбокс — по видимой части спрайта, а не по прозрачным полям кадра.
         super.init(size: size, color: .clear, bodySize: Grid.size(ObjectSize.pickupHitbox))
 

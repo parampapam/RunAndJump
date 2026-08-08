@@ -115,7 +115,7 @@ enum LevelBuilder {
                    texture: enemiesAtlas.textureNamed(TextureName.Enemy.sniperProjectile))
     }
 
-    static func makePickup(from descriptor: PickupDescriptor) -> Pickup {
+    static func makePickup(from descriptor: PickupDescriptor, index: Int) -> Pickup {
         let kind: PickupKind
         switch descriptor.kind {
         case .health:
@@ -124,9 +124,20 @@ enum LevelBuilder {
             kind = .coin(tier)
         }
 
-        let pickup = Pickup(kind: kind)
+        let pickup = Pickup(kind: kind, index: index)
         pickup.position = Grid.center(origin: descriptor.origin, size: ObjectSize.pickup)
         return pickup
+    }
+
+    /// Флаг точки восстановления. Состояние (поднят / опущен) считает модель по
+    /// активной точке — билдер только ставит узел на сетку.
+    static func makeCheckpoint(from descriptor: CheckpointDescriptor,
+                               index: Int,
+                               state: CheckpointState) -> Checkpoint {
+        let checkpoint = Checkpoint(index: index, state: state)
+        checkpoint.position = Grid.center(origin: descriptor.origin, size: ObjectSize.checkpoint)
+        checkpoint.zPosition = ZPosition.checkpoint
+        return checkpoint
     }
 
     static func makePortal(from origin: TileCoordinate) -> Portal {
