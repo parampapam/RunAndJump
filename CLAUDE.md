@@ -47,6 +47,7 @@ The codebase is split into two clearly separated layers. **This separation is lo
 All game logic lives here as value types (structs/enums) with pure functions. This is what the unit tests cover.
 
 - **`GameRules`** — static functions that apply events to `PlayerState` and return outcomes. Events: `enemyHit`, `healthPickup`, `bonusPickup(points)`, `reachedPortal`.
+- **`HealthConfiguration` / `HealthRules`** — шкала здоровья в очках и все числа её баланса в одном месте: старт (100), потолок (200), урон касания врага (20), вес аптечки (10), пороги цвета шкалы. `GameRules.apply` и `GameProgressRules.initialPlayerState` принимают конфигурацию параметром со значением `.standard`, так что подкрутить сложность = поменять `HealthConfiguration.standard`. `HealthRules` — чистые производные для HUD: `clamp` (0...maximum), `fillFraction` (доля потолка) и `level` (`healthy` / `warning` / `critical`).
 - **`GameProgress` / `GameProgressRules`** — tracks current level index and accumulated bonus across levels.
 - **`JumpController`** — manages coyote time (0.1 s after leaving ground) and jump buffering (0.1 s input window before landing). Call `didTouchGround`, `didLeaveGround`, `didPressJump`, then `consumeJumpIfPossible`.
 - **`LevelConfiguration`** — declarative struct defining scene size, player start, ground, enemies, pickups, and portal positions for a level. No SpriteKit types here. **All object positions are in tiles, anchored to the bottom-left corner** (`TileCoordinate`, `TileSize`, `TileRect` — also defined here).
@@ -68,7 +69,7 @@ All game logic lives here as value types (structs/enums) with pure functions. Th
 - **`Enemy`** / `LevelObject` — SpriteKit node with an injected `EnemyMovement` strategy (`StationaryMovement`, `PatrollingMovement`). Carries an `EnemyKind` (crab / imp / sniper — patrolling; plant / wasp — stationary): the kind picks the frames from the `Enemies` atlas via `AnimationFrames.Enemy` and decides the movement style, so a level can't make a plant patrol. Facing comes from the per-frame position delta (`EnemyAnimation.facing`) and mirrors by `xScale`. Enemies and pickups are non-dynamic; their positions are updated manually each frame.
 - **`Pickup`** — green = health, yellow = bonus points.
 - **`Portal`** — level exit (purple).
-- **`HUDNode`** — overlays health and bonus points.
+- **`HUDNode`** — прогресс-бар здоровья с подписью «очки/потолок» и счётчик бонусов. Заполненность и цвет заливки считает модель (`HealthRules`), узел только рисует: раскладка и цвета — в приватных `Layout` / `HUDPalette` в том же файле.
 - **`InputController`** — on-screen draggable analog joystick (left) + jump button (right); analog deflection math lives in the pure `AnalogStick`. `GamepadInput` mirrors the same commands from a physical controller and hides the on-screen controls while connected.
 - **`LevelBuilder`** — factory that creates SpriteKit nodes from descriptor structs in `LevelConfiguration`. **The single place tile coordinates are converted to points** (via `Grid`): descriptors are authored in tiles / bottom-left, nodes get a centred point position here.
 
@@ -103,6 +104,7 @@ When adding new game logic, the test for it goes in the model layer too. If some
 - New level → add a `LevelConfiguration` to the `Levels` enum, don't create a new SKScene subclass.
 - New hazard type (кислота, шипы) → add a case to `HazardKind` with its damage / interval, its frames in `AnimationFrames.Hazard` / `AnimationDuration.Hazard`, и непрозрачность в приватном расширении в `Hazard.swift`; the scene and the builder already handle any kind. Place hazards with `HazardDescriptor(kind:rect:)` — прямоугольник задаёт сразу вид, зону урона и проём в земле, поэтому только целые тайлы по сетке: обычное озеро — это ряд земли целиком (`y: 0`, высота 1).
 - New pickup type → extend the existing `Pickup` mechanism rather than introducing a parallel node.
+- Баланс здоровья (старт, потолок, урон врага, вес аптечки, пороги цвета шкалы) → правится только в `HealthConfiguration.standard`; урон озёр живёт в `HazardKind.damage` и задаётся в тех же очках. Ни узлы, ни сцена числа здоровья не знают.
 
 **Level authoring (tiles)**
 - Author positions in **tiles, anchored to the bottom-left corner** — `TileCoordinate` for point objects (player/enemy/pickup/portal), `TileRect` (origin + size) for sized ones (platforms/ladders/moving platforms). Fractional tiles are allowed for off-grid offsets.

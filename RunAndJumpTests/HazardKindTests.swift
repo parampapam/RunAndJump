@@ -31,28 +31,36 @@ struct HazardKindTests {
         #expect(HazardKind.lava.damageInterval < HazardKind.water.damageInterval)
     }
 
+    @Test("Урон зоны соразмерен шкале здоровья: не больше половины запаса за удар")
+    func damageFitsHealthScale() {
+        let configuration = HealthConfiguration.standard
+        for kind in HazardKind.allCases {
+            #expect(kind.damage <= configuration.initial / 2)
+        }
+    }
+
     @Test("Попадание в зону снимает здоровье по номиналу события")
     func hazardHitReducesHealth() {
-        let state = PlayerState(health: 3, bonusPoints: 0)
+        let state = PlayerState(health: 100, bonusPoints: 0)
 
         let afterWater = GameRules.apply(HazardKind.water.event, to: state)
-        #expect(afterWater.health == 3 - HazardKind.water.damage)
+        #expect(afterWater.health == 100 - HazardKind.water.damage)
 
         let afterLava = GameRules.apply(HazardKind.lava.event, to: state)
-        #expect(afterLava.health == 3 - HazardKind.lava.damage)
+        #expect(afterLava.health == 100 - HazardKind.lava.damage)
     }
 
     @Test("Попадание в зону не трогает набранные очки")
     func hazardHitKeepsBonusPoints() {
-        let state = PlayerState(health: 3, bonusPoints: 25)
-        let after = GameRules.apply(.hazardHit(damage: 2), to: state)
+        let state = PlayerState(health: 100, bonusPoints: 25)
+        let after = GameRules.apply(.hazardHit(damage: 20), to: state)
         #expect(after.bonusPoints == 25)
     }
 
     @Test("Если здоровья не хватило — уровень проигран")
     func fatalHazardHitEndsLevel() {
-        let state = PlayerState(health: 1, bonusPoints: 0)
-        let event = GameEvent.hazardHit(damage: 2)
+        let state = PlayerState(health: 10, bonusPoints: 0)
+        let event = GameEvent.hazardHit(damage: 20)
         let after = GameRules.apply(event, to: state)
 
         #expect(GameRules.isDead(after))
@@ -61,8 +69,8 @@ struct HazardKindTests {
 
     @Test("Пережитое попадание оставляет уровень в игре")
     func survivedHazardHitKeepsPlaying() {
-        let state = PlayerState(health: 3, bonusPoints: 0)
-        let event = GameEvent.hazardHit(damage: 1)
+        let state = PlayerState(health: 100, bonusPoints: 0)
+        let event = GameEvent.hazardHit(damage: 20)
         let after = GameRules.apply(event, to: state)
 
         #expect(!GameRules.isDead(after))

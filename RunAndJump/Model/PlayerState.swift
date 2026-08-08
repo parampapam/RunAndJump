@@ -22,7 +22,7 @@ struct PlayerState: Equatable {
     var bonusPoints: Int
     var locomotionMode: LocomotionMode
 
-    static let initial = PlayerState(health: 5, bonusPoints: 0)
+    static let initial = PlayerState(health: HealthConfiguration.standard.initial, bonusPoints: 0)
 
     init(health: Int, bonusPoints: Int) {
         self.health = health

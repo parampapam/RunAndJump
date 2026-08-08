@@ -33,15 +33,22 @@ enum GameEvent: Equatable {
 enum GameRules {
     /// Применяет событие к состоянию и возвращает новое состояние.
     /// Чистая функция: одинаковый вход → одинаковый выход, никаких побочных эффектов.
-    static func apply(_ event: GameEvent, to state: PlayerState) -> PlayerState {
+    ///
+    /// Числа урона и лечения приходят из `HealthConfiguration` — правила знают
+    /// только «отнять урон врага», а сколько это в очках, решает конфигурация.
+    static func apply(
+        _ event: GameEvent,
+        to state: PlayerState,
+        health configuration: HealthConfiguration = .standard
+    ) -> PlayerState {
         var new = state
         switch event {
         case .enemyHit:
-            new.health -= 1
+            new.health -= configuration.enemyHitDamage
         case .hazardHit(let damage):
             new.health -= damage
         case .healthPickup:
-            new.health += 1
+            new.health += configuration.pickupHeal
         case .bonusPickup(let points), .enemyDefeated(let points):
             new.bonusPoints += points
         case .reachedPortal:
@@ -49,6 +56,9 @@ enum GameRules {
             // переход между сценами будет обрабатываться отдельно.
             break
         }
+        // Держим здоровье в диапазоне 0...maximum: аптечки сверх потолка
+        // пропадают, а смертельный удар не уводит шкалу в минус.
+        new.health = HealthRules.clamp(new.health, configuration: configuration)
         return new
     }
 

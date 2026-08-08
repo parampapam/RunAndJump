@@ -55,7 +55,7 @@ struct GameProgressTests {
     @Test func initialPlayerStateResetsHealthAndKeepsBonus() {
         let progress = GameProgress(currentLevelIndex: 2, carriedBonusPoints: 35)
         let initial = GameProgressRules.initialPlayerState(for: progress)
-        #expect(initial.health == 5)
+        #expect(initial.health == HealthConfiguration.standard.initial)
         #expect(initial.bonusPoints == 35)
     }
 }
