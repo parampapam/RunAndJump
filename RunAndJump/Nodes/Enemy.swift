@@ -12,6 +12,10 @@ final class Enemy: LevelObject {
     /// Вид врага: от него зависят кадры анимации и темп цикла.
     let kind: EnemyKind
 
+    /// Индекс в `LevelConfiguration.enemies` — им сцена помечает победу, чтобы
+    /// после флага враг на уровень не вернулся.
+    let index: Int
+
     private let movement: EnemyMovement
 
     /// Атлас с кадрами врагов (краб, бес, снайпер, растение, оса).
@@ -40,9 +44,11 @@ final class Enemy: LevelObject {
     private static let defeatKey = "enemyDefeat"
 
     init(kind: EnemyKind,
+         index: Int,
          size: CGSize = Grid.size(ObjectSize.enemy),
          movement: EnemyMovement = StationaryMovement()) {
         self.kind = kind
+        self.index = index
         self.movement = movement
         self.shooting = kind.weapon.map(ShootingController.init(weapon:))
         super.init(size: size, color: .clear)

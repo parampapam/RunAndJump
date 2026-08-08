@@ -28,6 +28,16 @@ struct GameProgress: Equatable {
     /// пересобирает уровень с нуля, и без этого списка монеты, за которые очки
     /// уже начислены, можно было бы собрать повторно.
     var collectedPickupIndices: Set<Int> = []
+    /// Индексы врагов в `LevelConfiguration.enemies`, победа над которыми уже
+    /// засчитана окончательно, — побеждённых **до** последнего поднятого флага.
+    /// Они на уровень не возвращаются.
+    ///
+    /// В отличие от наград, победа над врагом засчитывается не сразу, а флагом:
+    /// побеждённые после него возвращаются вместе с очками за них (см.
+    /// `EnemyRespawnRules`). Поэтому «побеждён с последнего флага» — состояние
+    /// текущей жизни, оно живёт в сцене и вместе с ней умирает; сюда попадает
+    /// только то, что флаг успел засчитать.
+    var defeatedEnemyIndices: Set<Int> = []
 
     static let initial = GameProgress(currentLevelIndex: 0, carriedBonusPoints: 0)
 }
@@ -42,8 +52,21 @@ enum GameProgressRules {
             currentLevelIndex: progress.currentLevelIndex + 1,
             carriedBonusPoints: finalState.bonusPoints,
             activeCheckpointIndex: nil,
-            collectedPickupIndices: []
+            collectedPickupIndices: [],
+            defeatedEnemyIndices: []
         )
+    }
+
+    /// Игрок поднял флаг: точка восстановления смещается сюда, а победы над
+    /// врагами с прошлого возрождения засчитываются окончательно — до этого
+    /// флага уровень уже не откатится, значит и враги не вернутся.
+    static func checkpointReached(progress: GameProgress,
+                                  index: Int,
+                                  defeatedSinceCheckpoint: Set<Int>) -> GameProgress {
+        var updated = progress
+        updated.activeCheckpointIndex = index
+        updated.defeatedEnemyIndices.formUnion(defeatedSinceCheckpoint)
+        return updated
     }
 
     /// После гибели: уровень начинается заново от точки восстановления, но
@@ -51,9 +74,18 @@ enum GameProgressRules {
     /// уровня. Здоровье при этом восстанавливается до стартового
     /// (`initialPlayerState`), а список поднятых монет не трогаем: очки за них
     /// уже сохранены, второй раз их подобрать нельзя.
-    static func playerDied(progress: GameProgress, finalState: PlayerState) -> GameProgress {
+    ///
+    /// Исключение — враги, которые вернутся на уровень (`restoredEnemies`,
+    /// побеждённые после последнего флага): за них очки снимаются, иначе счёт
+    /// разошёлся бы с уровнем. См. `EnemyRespawnRules`.
+    static func playerDied(progress: GameProgress,
+                           finalState: PlayerState,
+                           restoredEnemies: Set<Int> = [],
+                           enemies: [EnemyDescriptor] = []) -> GameProgress {
         var updated = progress
-        updated.carriedBonusPoints = finalState.bonusPoints
+        let refund = EnemyRespawnRules.refund(for: restoredEnemies, in: enemies)
+        // Снять можно только то, что было начислено: в минус счёт не уходит.
+        updated.carriedBonusPoints = max(0, finalState.bonusPoints - refund)
         return updated
     }
 

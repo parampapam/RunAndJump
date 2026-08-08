@@ -51,6 +51,11 @@ final class GameScene: SKScene {
     // Флаги точек восстановления уровня. Держим список, чтобы при подъёме
     // одного опустить остальные.
     private var checkpoints: [Checkpoint] = []
+    // Враги, побеждённые с последнего флага. Живёт в сцене и вместе с ней
+    // умирает — в этом и смысл: при гибели эти враги возвращаются на уровень,
+    // а очки за них снимаются. Флаг переносит их в `progress`, засчитывая
+    // победу окончательно.
+    private var defeatedSinceCheckpoint: Set<Int> = []
 
     // Длительность последнего кадра — нужна, чтобы ввод сдвигал игрока по платформе.
     private var previousUpdateTime: TimeInterval = 0
@@ -200,8 +205,11 @@ final class GameScene: SKScene {
             addChild(platform)
             movingPlatforms.append(platform)
         }
-        for enemyDescriptor in configuration.enemies {
-            let enemy = LevelBuilder.makeEnemy(from: enemyDescriptor)
+        // Враги, победа над которыми уже засчитана флагом, на уровень не
+        // возвращаются. Побеждённые после флага — возвращаются (см. restartLevel).
+        for (index, enemyDescriptor) in configuration.enemies.enumerated()
+        where !progress.defeatedEnemyIndices.contains(index) {
+            let enemy = LevelBuilder.makeEnemy(from: enemyDescriptor, index: index)
             addChild(enemy)
             if enemy.canShoot {
                 shooters.append(enemy)
@@ -403,6 +411,9 @@ final class GameScene: SKScene {
         case .stomp:
             enemy.defeat()
             player.bounceOffEnemy()
+            // Победа засчитывается «в долг» — до ближайшего флага. Погибнув
+            // раньше, игрок встретит этого врага снова, а очки за него потеряет.
+            defeatedSinceCheckpoint.insert(enemy.index)
             // Маппинг «вид врага → очки» живёт в модели и покрыт тестами.
             handle(enemy.kind.defeatEvent)
         case .damage:
@@ -445,7 +456,15 @@ final class GameScene: SKScene {
                                                     active: progress.activeCheckpointIndex)
         guard activation == .activate else { return }
 
-        progress.activeCheckpointIndex = checkpoint.index
+        // Флаг засчитывает победы окончательно — и список «в долг» обнуляется,
+        // иначе гибель сняла бы очки за врагов, которых уже не вернуть.
+        progress = GameProgressRules.checkpointReached(
+            progress: progress,
+            index: checkpoint.index,
+            defeatedSinceCheckpoint: defeatedSinceCheckpoint
+        )
+        defeatedSinceCheckpoint.removeAll()
+
         for flag in checkpoints {
             flag.setState(CheckpointRules.state(of: flag.index, active: checkpoint.index))
         }
@@ -468,8 +487,14 @@ final class GameScene: SKScene {
 
     private func restartLevel() {
         // Набранные очки уходят в перенос — новая сцена стартует с ними, а не
-        // с тем, что было на входе в уровень.
-        let newProgress = GameProgressRules.playerDied(progress: progress, finalState: playerState)
+        // с тем, что было на входе в уровень. Кроме очков за врагов, которые
+        // сейчас вернутся на уровень: их модель снимет.
+        let newProgress = GameProgressRules.playerDied(
+            progress: progress,
+            finalState: playerState,
+            restoredEnemies: defeatedSinceCheckpoint,
+            enemies: configuration.enemies
+        )
         let newScene = GameScene(configuration: configuration, progress: newProgress)
         newScene.scaleMode = scaleMode
         view?.presentScene(newScene, transition: .fade(withDuration: 0.5))

@@ -85,7 +85,7 @@ enum LevelBuilder {
         return decoration
     }
 
-    static func makeEnemy(from descriptor: EnemyDescriptor) -> Enemy {
+    static func makeEnemy(from descriptor: EnemyDescriptor, index: Int) -> Enemy {
         let tileSize = ObjectSize.enemy
         let movement: EnemyMovement
         switch descriptor.behavior {
@@ -102,7 +102,7 @@ enum LevelBuilder {
             )
         }
 
-        let enemy = Enemy(kind: descriptor.kind, movement: movement)
+        let enemy = Enemy(kind: descriptor.kind, index: index, movement: movement)
         enemy.position = Grid.center(origin: descriptor.origin, size: tileSize)
         return enemy
     }
