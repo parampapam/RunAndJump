@@ -33,6 +33,13 @@ enum TextureName {
         static let left = "grass tiles (16)"
     }
 
+    enum Flag {
+        enum Green {
+            static let raised = "flag_green_raised"
+            static let lowered = "flag_green_down"
+        }
+    }
+
     enum Grass {
         enum Short {
             static let dark = "grass tiles (10)"

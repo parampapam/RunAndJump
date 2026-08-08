@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "flag_green_raised.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
