@@ -76,6 +76,13 @@ enum Levels {
             PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.25), kind: .coin(.gold)),
             PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.25), kind: .health),
         ],
+        // Точки восстановления: перед растением, за крабом и после беса —
+        // каждая закрывает участок, на котором легко погибнуть.
+        checkpoints: [
+            CheckpointDescriptor(origin: TileCoordinate(x: 8, y: 1)),
+            CheckpointDescriptor(origin: TileCoordinate(x: 19, y: 1)),
+            CheckpointDescriptor(origin: TileCoordinate(x: 31, y: 1)),
+        ],
         // Цветы стоят на земле (нижний край на y = 1), разбросаны по уровню.
         decorations: [
             DecorationDescriptor(kind: .rightArrow, origin: TileCoordinate(x: 3, y: 1)),
@@ -157,6 +164,11 @@ enum Levels {
             PickupDescriptor(origin: TileCoordinate(x: 20, y: 1.25), kind: .health),
             PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.25), kind: .coin(.gold)),
             PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.25), kind: .health),
+        ],
+        // Точки восстановления: после беса и перед лифтом с лавой — до снайпера.
+        checkpoints: [
+            CheckpointDescriptor(origin: TileCoordinate(x: 21, y: 1)),
+            CheckpointDescriptor(origin: TileCoordinate(x: 31, y: 1)),
         ],
         decorations: [
             DecorationDescriptor(kind: .yellowFlower, origin: TileCoordinate(x: 3, y: 1)),
@@ -245,6 +257,12 @@ enum Levels {
             PickupDescriptor(origin: TileCoordinate(x: 17, y: 1.25), kind: .coin(.gold)),
             PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.25), kind: .coin(.gold)),
             PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.25), kind: .health),
+        ],
+        // Самый длинный уровень — три точки: перед осой, после лавы и после беса.
+        checkpoints: [
+            CheckpointDescriptor(origin: TileCoordinate(x: 18, y: 1)),
+            CheckpointDescriptor(origin: TileCoordinate(x: 25, y: 1)),
+            CheckpointDescriptor(origin: TileCoordinate(x: 39, y: 1)),
         ],
         decorations: [
             DecorationDescriptor(kind: .whiteFlower, origin: TileCoordinate(x: 2, y: 1)),

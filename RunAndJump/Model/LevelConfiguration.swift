@@ -22,6 +22,7 @@ struct LevelConfiguration: Equatable {
     let hazards: [HazardDescriptor]
     let enemies: [EnemyDescriptor]
     let pickups: [PickupDescriptor]
+    let checkpoints: [CheckpointDescriptor]
     let decorations: [DecorationDescriptor]
     let portal: TileCoordinate        // нижний-левый угол портала
 
@@ -140,6 +141,17 @@ enum DecorationKind: Equatable {
     case tallLightTree
     case leftArrow
     case rightArrow
+}
+
+/// Декларативное описание точки восстановления — флага, мимо которого проходит
+/// игрок. Порядок в `LevelConfiguration.checkpoints` — это и есть идентификатор
+/// точки: активная запоминается индексом в этом массиве (см. `CheckpointRules`).
+///
+/// Координата — нижний-левый угол флага, и она же место появления игрока, так
+/// что флаг ставится там, где игрок может стоять: на земле (`y: 1`) или на
+/// платформе.
+struct CheckpointDescriptor: Equatable {
+    let origin: TileCoordinate
 }
 
 /// Декларативное описание награды.
