@@ -24,11 +24,12 @@ enum HazardKind: CaseIterable, Equatable {
     /// Глубина одна на все виды: это про геометрию ямы, а не про жидкость.
     static let depthInTiles: CGFloat = 0.5
 
-    /// Урон за одно попадание.
+    /// Урон за одно попадание — в тех же очках, что и шкала здоровья
+    /// (`HealthConfiguration`): вода стоит одного касания врага, лава — двух.
     var damage: Int {
         switch self {
-        case .water: return 1
-        case .lava:  return 2
+        case .water: return 20
+        case .lava:  return 40
         }
     }
 

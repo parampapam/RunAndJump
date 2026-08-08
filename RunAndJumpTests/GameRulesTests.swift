@@ -10,28 +10,28 @@ import Testing
 
 struct GameRulesTests {
 
-    @Test func enemyHitReducesHealthByOne() {
-        let state = PlayerState(health: 5, bonusPoints: 10)
+    @Test func enemyHitReducesHealthByConfiguredDamage() {
+        let state = PlayerState(health: 100, bonusPoints: 10)
         let new = GameRules.apply(.enemyHit, to: state)
-        #expect(new.health == 4)
+        #expect(new.health == 100 - HealthConfiguration.standard.enemyHitDamage)
         #expect(new.bonusPoints == 10) // бонус не меняется
     }
 
     @Test func healthPickupIncreasesHealth() {
-        let state = PlayerState(health: 3, bonusPoints: 0)
+        let state = PlayerState(health: 60, bonusPoints: 0)
         let new = GameRules.apply(.healthPickup, to: state)
-        #expect(new.health == 4)
+        #expect(new.health == 60 + HealthConfiguration.standard.pickupHeal)
     }
 
     @Test func bonusPickupAddsPoints() {
-        let state = PlayerState(health: 5, bonusPoints: 10)
+        let state = PlayerState(health: 100, bonusPoints: 10)
         let new = GameRules.apply(.bonusPickup(points: 5), to: state)
         #expect(new.bonusPoints == 15)
-        #expect(new.health == 5) // здоровье не меняется
+        #expect(new.health == 100) // здоровье не меняется
     }
 
     @Test func reachedPortalDoesNotChangeState() {
-        let state = PlayerState(health: 3, bonusPoints: 7)
+        let state = PlayerState(health: 60, bonusPoints: 7)
         let new = GameRules.apply(.reachedPortal, to: state)
         #expect(new == state)
     }
@@ -43,9 +43,11 @@ struct GameRulesTests {
     }
 
     @Test(arguments: [
-        (5, GameEvent.enemyHit, 4),
-        (1, GameEvent.enemyHit, 0),
-        (3, GameEvent.healthPickup, 4),
+        (100, GameEvent.enemyHit, 80),
+        (20, GameEvent.enemyHit, 0),
+        (10, GameEvent.enemyHit, 0), // ниже нуля шкала не уходит
+        (60, GameEvent.healthPickup, 70),
+        (200, GameEvent.healthPickup, 200), // выше потолка — тоже
     ])
     func healthChangesParametrized(initialHealth: Int, event: GameEvent, expectedHealth: Int) {
         let state = PlayerState(health: initialHealth, bonusPoints: 0)
@@ -54,7 +56,7 @@ struct GameRulesTests {
     }
 
     @Test func outcomePlayingAfterRegularEvent() {
-        let state = PlayerState(health: 4, bonusPoints: 0)
+        let state = PlayerState(health: 80, bonusPoints: 0)
         let outcome = GameRules.outcome(after: .enemyHit, in: state)
         #expect(outcome == .playing)
     }
@@ -66,13 +68,13 @@ struct GameRulesTests {
     }
 
     @Test func outcomeCompletedAtPortal() {
-        let state = PlayerState(health: 3, bonusPoints: 10)
+        let state = PlayerState(health: 60, bonusPoints: 10)
         let outcome = GameRules.outcome(after: .reachedPortal, in: state)
         #expect(outcome == .completed)
     }
 
     @Test func portalCompletesEvenWithLowHealth() {
-        let state = PlayerState(health: 1, bonusPoints: 0)
+        let state = PlayerState(health: 10, bonusPoints: 0)
         let outcome = GameRules.outcome(after: .reachedPortal, in: state)
         #expect(outcome == .completed)
     }
