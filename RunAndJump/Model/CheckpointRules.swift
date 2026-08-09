@@ -7,11 +7,11 @@
 
 import CoreGraphics
 
-/// Состояние флага точки восстановления. Поднятый флаг — текущая точка,
-/// в ней игрок появится после гибели; все остальные на уровне опущены.
+/// Состояние точки восстановления. Активная — текущая точка,
+/// в ней игрок появится после гибели; все остальные на уровне неактивные.
 enum CheckpointState: Equatable {
-    case raised
-    case lowered
+    case active
+    case inactive
 }
 
 /// Что делать, когда игрок прошёл мимо флага.
@@ -47,6 +47,6 @@ enum CheckpointRules {
 
     /// Состояние флага при активной точке `active`: поднят ровно один — текущий.
     static func state(of index: Int, active: Int?) -> CheckpointState {
-        index == active ? .raised : .lowered
+        index == active ? .active : .inactive
     }
 }

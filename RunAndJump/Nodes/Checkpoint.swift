@@ -47,7 +47,7 @@ final class Checkpoint: LevelObject {
         state = newState
         texture = atlas.textureNamed(AnimationFrames.Checkpoint.frame(for: newState))
 
-        guard newState == .raised else { return }
+        guard newState == .active else { return }
         removeAction(forKey: Self.raiseActionKey)
         setScale(1)
         run(.sequence([

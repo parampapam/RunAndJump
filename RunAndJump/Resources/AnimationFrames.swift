@@ -51,8 +51,8 @@ enum AnimationFrames {
         /// у флага два статичных состояния, поднят и опущен.
         static func frame(for state: CheckpointState) -> String {
             switch state {
-            case .raised:  return TextureName.Flag.Green.raised
-            case .lowered: return TextureName.Flag.Green.lowered
+            case .active:  return TextureName.Checkpoint.active
+            case .inactive: return TextureName.Checkpoint.inactive
             }
         }
     }
