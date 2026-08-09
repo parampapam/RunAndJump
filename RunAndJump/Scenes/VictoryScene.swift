@@ -11,9 +11,13 @@ import SpriteKit
 final class VictoryScene: SKScene {
 
     private let totalBonusPoints: Int
+    // Экран победы сам новую игру не сохраняет, но обязан передать хранилище
+    // дальше: следующая партия начнётся отсюда и должна снова сохраняться.
+    private let progressStore: any GameProgressStore
 
-    init(size: CGSize, totalBonusPoints: Int) {
+    init(size: CGSize, totalBonusPoints: Int, store: any GameProgressStore) {
         self.totalBonusPoints = totalBonusPoints
+        self.progressStore = store
         super.init(size: size)
     }
 
@@ -48,7 +52,9 @@ final class VictoryScene: SKScene {
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         let firstLevel = Levels.all[0]
-        let scene = GameScene(configuration: firstLevel, progress: .initial)
+        let scene = GameScene(configuration: firstLevel,
+                              progress: .initial,
+                              store: progressStore)
         scene.scaleMode = scaleMode
         view?.presentScene(scene, transition: .fade(withDuration: 0.5))
     }

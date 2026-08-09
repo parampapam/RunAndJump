@@ -16,6 +16,9 @@ final class GameScene: SKScene {
     // единственное состояние, которое переживает гибель — сцена пересоздаётся
     // с тем же `progress`.
     private var progress: GameProgress
+    // Куда прогресс уходит, чтобы пережить выгрузку приложения из памяти.
+    // Инжектируется и передаётся дальше при пересоздании сцены.
+    private let progressStore: any GameProgressStore
 
     private var playerState: PlayerState
     private var jumpController = JumpController()
@@ -58,15 +61,21 @@ final class GameScene: SKScene {
     private var defeatedSinceCheckpoint: Set<Int> = []
 
     // Длительность последнего кадра — нужна, чтобы ввод сдвигал игрока по платформе.
-    private var previousUpdateTime: TimeInterval = 0
+    // Через FrameClock, а не вычитанием вручную: он же ограничивает дельту
+    // сверху, и первый кадр после разворачивания приложения не швыряет игрока
+    // через полуровня (см. FrameClock).
+    private var frameClock = FrameClock()
     private var frameDuration: TimeInterval = 0
 
 
     // MARK: - Init
 
-    init(configuration: LevelConfiguration, progress: GameProgress) {
+    init(configuration: LevelConfiguration,
+         progress: GameProgress,
+         store: any GameProgressStore) {
         self.configuration = configuration
         self.progress = progress
+        self.progressStore = store
         self.playerState = GameProgressRules.initialPlayerState(for: progress)
         super.init(size: configuration.sceneSize)
     }
@@ -247,8 +256,7 @@ final class GameScene: SKScene {
     // MARK: - Игровой цикл
 
     override func update(_ currentTime: TimeInterval) {
-        frameDuration = previousUpdateTime == 0 ? 0 : currentTime - previousUpdateTime
-        previousUpdateTime = currentTime
+        frameDuration = frameClock.tick(at: currentTime) ?? 0
         lastUpdateTime = currentTime
 
         // Двигаем платформы до физического шага, чтобы их рёбра были на новом месте.
@@ -465,9 +473,21 @@ final class GameScene: SKScene {
         )
         defeatedSinceCheckpoint.removeAll()
 
+        // Флаг — единственный момент внутри уровня, когда состояние
+        // непротиворечиво: враги засчитаны, точка возрождения известна.
+        // Поэтому сохраняемся именно здесь, а не по уходу в фон: свёрнутое
+        // приложение выгружают без предупреждения.
+        saveProgress()
+
         for flag in checkpoints {
             flag.setState(CheckpointRules.state(of: flag.index, active: checkpoint.index))
         }
+    }
+
+    /// Кладёт текущий прогресс в хранилище — вместе с очками, набранными прямо
+    /// сейчас (склейку делает модель, см. `GameProgressRules.snapshot`).
+    private func saveProgress() {
+        progressStore.save(GameProgressRules.snapshot(progress: progress, state: playerState))
     }
 
     private func handle(_ event: GameEvent) {
@@ -495,7 +515,12 @@ final class GameScene: SKScene {
             restoredEnemies: defeatedSinceCheckpoint,
             enemies: configuration.enemies
         )
-        let newScene = GameScene(configuration: configuration, progress: newProgress)
+        // Гибель уже свела очки с вернувшимися врагами — сохраняем результат,
+        // иначе перезапуск игры вернул бы состояние до смерти.
+        progressStore.save(newProgress)
+        let newScene = GameScene(configuration: configuration,
+                                 progress: newProgress,
+                                 store: progressStore)
         newScene.scaleMode = scaleMode
         view?.presentScene(newScene, transition: .fade(withDuration: 0.5))
     }
@@ -507,17 +532,25 @@ final class GameScene: SKScene {
         )
 
         if GameProgressRules.isGameCompleted(progress: newProgress, totalLevels: Levels.all.count) {
+            // Игра пройдена — сохранение больше не нужно: следующий запуск
+            // должен начать новую игру, а не воскрешать экран победы.
+            progressStore.clear()
             presentVictory(progress: newProgress)
         } else {
+            progressStore.save(newProgress)
             let nextLevel = Levels.all[newProgress.currentLevelIndex]
-            let newScene = GameScene(configuration: nextLevel, progress: newProgress)
+            let newScene = GameScene(configuration: nextLevel,
+                                     progress: newProgress,
+                                     store: progressStore)
             newScene.scaleMode = scaleMode
             view?.presentScene(newScene, transition: .fade(withDuration: 0.5))
         }
     }
 
     private func presentVictory(progress: GameProgress) {
-        let victoryScene = VictoryScene(size: size, totalBonusPoints: progress.carriedBonusPoints)
+        let victoryScene = VictoryScene(size: size,
+                                        totalBonusPoints: progress.carriedBonusPoints,
+                                        store: progressStore)
         victoryScene.scaleMode = scaleMode
         view?.presentScene(victoryScene, transition: .fade(withDuration: 0.5))
     }
