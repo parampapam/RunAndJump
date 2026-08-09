@@ -71,14 +71,14 @@ struct CheckpointRulesTests {
     // MARK: - Состояние флагов
 
     @Test func onlyActiveFlagIsRaised() {
-        #expect(CheckpointRules.state(of: 1, active: 1) == .raised)
-        #expect(CheckpointRules.state(of: 0, active: 1) == .lowered)
-        #expect(CheckpointRules.state(of: 2, active: 1) == .lowered)
+        #expect(CheckpointRules.state(of: 1, active: 1) == .active)
+        #expect(CheckpointRules.state(of: 0, active: 1) == .inactive)
+        #expect(CheckpointRules.state(of: 2, active: 1) == .inactive)
     }
 
     @Test func allFlagsLoweredBeforeFirstPass() {
         for index in checkpoints.indices {
-            #expect(CheckpointRules.state(of: index, active: nil) == .lowered)
+            #expect(CheckpointRules.state(of: index, active: nil) == .inactive)
         }
     }
 }
