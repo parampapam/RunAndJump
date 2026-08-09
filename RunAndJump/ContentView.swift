@@ -2,17 +2,21 @@ import SwiftUI
 import SpriteKit
 
 struct ContentView: View {
-    @MainActor
-    var scene: SKScene {
-        let firstLevel = Levels.all[0]
-        let scene = GameScene(configuration: firstLevel, progress: .initial)
-        scene.scaleMode = .resizeFill
-        return scene
+
+    // Сцена живёт в @StateObject, а не в вычисляемом свойстве: иначе каждый
+    // пересчёт body создавал бы новую GameScene и игра молча начиналась бы
+    // с первого уровня посреди партии. Подробности — в GameHost.
+    @StateObject private var game: GameHost
+
+    init(store: any GameProgressStore = UserDefaultsProgressStore()) {
+        // wrappedValue у StateObject — автозамыкание: хост и сцена создаются
+        // при первом показе экрана и переживают все последующие пересчёты body.
+        _game = StateObject(wrappedValue: GameHost(store: store))
     }
 
     var body: some View {
         SpriteView(
-            scene: scene,
+            scene: game.scene,
             debugOptions: [.showsPhysics, .showsFPS, .showsNodeCount]
         )
         .ignoresSafeArea()
@@ -20,5 +24,6 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    // Превью не трогает сохранение настоящей игры.
+    ContentView(store: NullProgressStore())
 }

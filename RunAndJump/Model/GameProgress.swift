@@ -9,7 +9,13 @@ import Foundation
 
 /// Состояние прогресса игрока через все уровни.
 /// Чистая модель — не зависит от SpriteKit.
-struct GameProgress: Equatable {
+///
+/// `Codable` — потому что это ровно то, что сохраняется между запусками
+/// приложения (см. `GameProgressStore`): iOS выгружает свёрнутую игру из
+/// памяти, и без записи на диск игрок вернулся бы на первый уровень.
+/// Совместимость версий отдельно не поддерживается: изменившаяся форма даст
+/// ошибку разбора, а она трактуется как «сохранения нет» — начинаем сначала.
+struct GameProgress: Equatable, Codable {
     var currentLevelIndex: Int
     var carriedBonusPoints: Int
     /// Индекс пройденной точки восстановления в `LevelConfiguration.checkpoints`
@@ -87,6 +93,38 @@ enum GameProgressRules {
         // Снять можно только то, что было начислено: в минус счёт не уходит.
         updated.carriedBonusPoints = max(0, finalState.bonusPoints - refund)
         return updated
+    }
+
+    /// Снимок прогресса для сохранения между запусками: то же состояние, но с
+    /// очками, набранными игроком **прямо сейчас**.
+    ///
+    /// Нужен потому, что `carriedBonusPoints` — это очки на *входе* в уровень;
+    /// набранное внутри живёт в `PlayerState` и попадает в прогресс только при
+    /// гибели или на выходе с уровня. Сохранение же случается ещё и на флаге,
+    /// посреди уровня, и без этой склейки монеты, собранные до флага,
+    /// пропадали бы при перезапуске игры — хотя сами монеты со сцены уже ушли
+    /// (`collectedPickupIndices`).
+    static func snapshot(progress: GameProgress, state: PlayerState) -> GameProgress {
+        var updated = progress
+        updated.carriedBonusPoints = state.bonusPoints
+        return updated
+    }
+
+    /// Прогресс, с которого начинается запуск: сохранённый — если он всё ещё
+    /// осмыслен для текущего набора уровней, иначе начальный.
+    ///
+    /// Проверяем только индекс уровня: по нему выбирается `LevelConfiguration`,
+    /// и выход за границы уронил бы игру. Индексы внутри уровня (точка
+    /// восстановления, награды, враги) переживают любое изменение описания
+    /// уровня сами: неизвестный флаг откатывается на старт
+    /// (`CheckpointRules.respawnOrigin`), а лишние индексы наград и врагов
+    /// просто никого не отфильтровывают.
+    static func resumable(_ saved: GameProgress?, totalLevels: Int) -> GameProgress {
+        guard let saved,
+              (0..<totalLevels).contains(saved.currentLevelIndex),
+              saved.carriedBonusPoints >= 0
+        else { return .initial }
+        return saved
     }
 
     /// Признак, что игрок прошёл все уровни.
