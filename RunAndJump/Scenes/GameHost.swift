@@ -28,11 +28,20 @@ final class GameHost: ObservableObject {
     init(store: any GameProgressStore = UserDefaultsProgressStore()) {
         // Сохранение может быть от сборки с другим набором уровней — что из
         // него годится, решает чистое правило, а не хранилище.
-        let progress = GameProgressRules.resumable(store.load(), totalLevels: Levels.all.count)
+        let saved = store.load()
+        let levelCount = Levels.all.count
+        let progress = GameProgressRules.resumable(saved, totalLevels: levelCount)
+        // Продолженная партия открывается окном паузы: положение игрока внутри
+        // уровня не сохраняется, и игрок должен увидеть, что продолжает с
+        // последней точки восстановления, а не с того места, где закрыл игру.
+        // Новая игра начинается сразу — предлагать в ней «продолжить» нечего.
+        let pauseReason: PauseReason? =
+            GameProgressRules.isResumable(saved, totalLevels: levelCount) ? .resumedSession : nil
         let scene = GameScene(
             configuration: Levels.all[progress.currentLevelIndex],
             progress: progress,
-            store: store
+            store: store,
+            pausedFor: pauseReason
         )
         scene.scaleMode = .resizeFill
         self.scene = scene

@@ -44,8 +44,22 @@ struct GameProgress: Equatable, Codable {
     /// текущей жизни, оно живёт в сцене и вместе с ней умирает; сюда попадает
     /// только то, что флаг успел засчитать.
     var defeatedEnemyIndices: Set<Int> = []
+    /// Счёт, с которым игрок вошёл на текущий уровень. Нужен ровно для одного
+    /// перехода — «начать уровень заново» (`levelRestarted`): тот возвращает на
+    /// уровень все награды, и без отката счёта перезапуск стал бы способом
+    /// собирать одни и те же монеты сколько угодно раз. `carriedBonusPoints`
+    /// для этого не годится: это очки на момент создания сцены, а после гибели
+    /// или флага они уже включают собранное внутри уровня.
+    ///
+    /// Необязательное поле сознательно: синтезированный `Codable` не подставляет
+    /// значение по умолчанию, и обязательный ключ сделал бы нечитаемыми
+    /// сохранения прошлых сборок. `nil` = «сохранение старое, значение
+    /// неизвестно», и перезапуск уровня откатывается к текущему счёту.
+    var bonusPointsAtLevelStart: Int? = nil
 
-    static let initial = GameProgress(currentLevelIndex: 0, carriedBonusPoints: 0)
+    static let initial = GameProgress(currentLevelIndex: 0,
+                                      carriedBonusPoints: 0,
+                                      bonusPointsAtLevelStart: 0)
 }
 
 enum GameProgressRules {
@@ -59,7 +73,30 @@ enum GameProgressRules {
             carriedBonusPoints: finalState.bonusPoints,
             activeCheckpointIndex: nil,
             collectedPickupIndices: [],
-            defeatedEnemyIndices: []
+            defeatedEnemyIndices: [],
+            // Очки на выходе с уровня — это и есть очки на входе в следующий.
+            bonusPointsAtLevelStart: finalState.bonusPoints
+        )
+    }
+
+    /// Игрок выбрал в паузе «начать уровень заново»: уровень собирается как при
+    /// первом входе — флаги опущены, награды и враги на местах, — а счёт
+    /// откатывается к тому, с которым игрок на уровень вошёл.
+    ///
+    /// Откат счёта обязателен: награды возвращаются на сцену, и без него
+    /// перезапуск уровня стал бы бесконечной фермой очков. Это то же правило,
+    /// что и у возвращаемых гибелью врагов (`EnemyRespawnRules`), только здесь
+    /// возвращается весь уровень целиком.
+    static func levelRestarted(progress: GameProgress) -> GameProgress {
+        GameProgress(
+            currentLevelIndex: progress.currentLevelIndex,
+            // Старое сохранение не знает очков на входе — откатывать не к чему,
+            // оставляем как есть.
+            carriedBonusPoints: progress.bonusPointsAtLevelStart ?? progress.carriedBonusPoints,
+            activeCheckpointIndex: nil,
+            collectedPickupIndices: [],
+            defeatedEnemyIndices: [],
+            bonusPointsAtLevelStart: progress.bonusPointsAtLevelStart
         )
     }
 
@@ -125,6 +162,20 @@ enum GameProgressRules {
               saved.carriedBonusPoints >= 0
         else { return .initial }
         return saved
+    }
+
+    /// Есть ли что продолжать: сохранение годится для текущего набора уровней
+    /// **и** описывает уже начатую партию.
+    ///
+    /// Нужно, чтобы запуск отличал возвращение в прерванную игру (открываем
+    /// окно паузы: «продолжить с последней точки восстановления») от начала
+    /// новой (окно ни к чему — сразу играем). Сохранение, совпадающее с началом
+    /// игры, продолжать нечего: игрок и так стоит на старте первого уровня.
+    static func isResumable(_ saved: GameProgress?, totalLevels: Int) -> Bool {
+        guard let saved, saved != .initial else { return false }
+        // Годность сохранения решает то же правило, что и выбор прогресса, —
+        // второй копии условий здесь быть не должно.
+        return resumable(saved, totalLevels: totalLevels) == saved
     }
 
     /// Признак, что игрок прошёл все уровни.

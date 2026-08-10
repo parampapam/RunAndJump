@@ -60,6 +60,17 @@ final class GameScene: SKScene {
     // победу окончательно.
     private var defeatedSinceCheckpoint: Set<Int> = []
 
+    // Открытое окно паузы; nil — игра идёт. Оно же и есть признак паузы:
+    // держать отдельный флаг рядом с узлом значило бы держать одно состояние
+    // в двух местах.
+    private var pauseMenu: PauseMenuNode?
+    private var isGamePaused: Bool { pauseMenu != nil }
+    /// Причина, по которой уровень должен открыться сразу на паузе, либо nil.
+    /// Ставится извне (`GameHost`) для партии, продолженной после выгрузки
+    /// приложения: игрок должен увидеть, что продолжает с точки восстановления,
+    /// а не свалиться сразу в игру.
+    private let initialPauseReason: PauseReason?
+
     // Длительность последнего кадра — нужна, чтобы ввод сдвигал игрока по платформе.
     // Через FrameClock, а не вычитанием вручную: он же ограничивает дельту
     // сверху, и первый кадр после разворачивания приложения не швыряет игрока
@@ -72,10 +83,12 @@ final class GameScene: SKScene {
 
     init(configuration: LevelConfiguration,
          progress: GameProgress,
-         store: any GameProgressStore) {
+         store: any GameProgressStore,
+         pausedFor pauseReason: PauseReason? = nil) {
         self.configuration = configuration
         self.progress = progress
         self.progressStore = store
+        self.initialPauseReason = pauseReason
         self.playerState = GameProgressRules.initialPlayerState(for: progress)
         super.init(size: configuration.sceneSize)
     }
@@ -102,6 +115,12 @@ final class GameScene: SKScene {
         setupGamepadInput()
         setupHUD()
         setupLevelObjects()
+
+        // Уровень уже собран (в том числе игрок — на точке восстановления),
+        // поэтому за окном паузы видно ровно то, что продолжится.
+        if let initialPauseReason {
+            presentPauseMenu(reason: initialPauseReason)
+        }
     }
 
     override func willMove(from view: SKView) {
@@ -186,16 +205,26 @@ final class GameScene: SKScene {
 
     private func setupGamepadInput() {
         gamepadInput.delegate = self
-        // Пока геймпад подключён — экранные кнопки лишние, прячем их.
-        gamepadInput.onConnectionChange = { [weak self] connected in
-            self?.inputController.setControlsHidden(connected)
+        gamepadInput.onConnectionChange = { [weak self] _ in
+            self?.updateControlsVisibility()
         }
         gamepadInput.startObserving()
+    }
+
+    /// Экранное управление видно, только когда игра идёт и физического геймпада
+    /// нет. Единая точка решения: подключение геймпада приходит уведомлением в
+    /// произвольный момент, и раздельные вызовы «спрятать/показать» затирали бы
+    /// друг друга — открытое окно паузы теряло бы скрытые кнопки.
+    private func updateControlsVisibility() {
+        inputController.setControlsHidden(isGamePaused || gamepadInput.isConnected)
     }
 
     private func setupHUD() {
         hud = HUDNode(sceneSize: size)
         hud.update(with: playerState)
+        hud.onPauseTapped = { [weak self] in
+            self?.presentPauseMenu(reason: .playerRequested)
+        }
         cameraNode.addChild(hud)
     }
 
@@ -256,6 +285,13 @@ final class GameScene: SKScene {
     // MARK: - Игровой цикл
 
     override func update(_ currentTime: TimeInterval) {
+        // На паузе игровой цикл не идёт. Проверка дублирует `isPaused`
+        // намеренно: SKView сбрасывает его сам, когда приложение возвращается
+        // в активное состояние, и без этой строки игра ожила бы под окном.
+        // Часы кадров не трогаем — первый кадр после паузы даст большую
+        // дельту, но FrameClock её ограничит.
+        guard !isGamePaused else { return }
+
         frameDuration = frameClock.tick(at: currentTime) ?? 0
         lastUpdateTime = currentTime
 
@@ -490,6 +526,67 @@ final class GameScene: SKScene {
         progressStore.save(GameProgressRules.snapshot(progress: progress, state: playerState))
     }
 
+    // MARK: - Пауза
+
+    /// Открывает окно паузы и останавливает игру. Повторный вызов при уже
+    /// открытом окне ничего не делает.
+    private func presentPauseMenu(reason: PauseReason) {
+        guard pauseMenu == nil else { return }
+
+        let menu = PauseMenuNode(sceneSize: size, reason: reason) { [weak self] action in
+            self?.handle(pauseAction: action)
+        }
+        cameraNode.addChild(menu)
+        pauseMenu = menu
+
+        // Экранное управление под окном только мешает. Прячем — заодно
+        // снимается удержание джойстика, иначе после снятия паузы игрок
+        // побежал бы сам.
+        updateControlsVisibility()
+        setGameplayPaused(true)
+    }
+
+    private func handle(pauseAction action: PauseMenuAction) {
+        switch action {
+        case .resume:
+            resumeGame()
+
+        case .restartLevel:
+            // Уровень собирается как при первом входе, а счёт откатывается
+            // к очкам на входе — иначе перезапуск был бы фермой очков
+            // (см. GameProgressRules.levelRestarted).
+            let newProgress = GameProgressRules.levelRestarted(progress: progress)
+            progressStore.save(newProgress)
+            present(GameScene(configuration: configuration,
+                              progress: newProgress,
+                              store: progressStore))
+
+        case .restartGame:
+            // Новая партия начинается с чистого листа: сохранение стираем, чтобы
+            // следующий запуск не предложил продолжить брошенную игру.
+            progressStore.clear()
+            present(GameScene(configuration: Levels.all[0],
+                              progress: .initial,
+                              store: progressStore))
+        }
+    }
+
+    private func resumeGame() {
+        pauseMenu?.removeFromParent()
+        pauseMenu = nil
+        setGameplayPaused(false)
+        // Возвращаем экранные кнопки — если только их не скрывает геймпад.
+        updateControlsVisibility()
+    }
+
+    /// Останавливает и возвращает к жизни всё, что идёт само: действия узлов
+    /// (`isPaused`) и физику. Скорость физики выставляем отдельно, потому что
+    /// `isPaused` сцены не наш — его сбрасывает SKView.
+    private func setGameplayPaused(_ paused: Bool) {
+        isPaused = paused
+        physicsWorld.speed = paused ? 0 : 1
+    }
+
     private func handle(_ event: GameEvent) {
         playerState = GameRules.apply(event, to: playerState)
         hud.update(with: playerState)
@@ -518,11 +615,9 @@ final class GameScene: SKScene {
         // Гибель уже свела очки с вернувшимися врагами — сохраняем результат,
         // иначе перезапуск игры вернул бы состояние до смерти.
         progressStore.save(newProgress)
-        let newScene = GameScene(configuration: configuration,
-                                 progress: newProgress,
-                                 store: progressStore)
-        newScene.scaleMode = scaleMode
-        view?.presentScene(newScene, transition: .fade(withDuration: 0.5))
+        present(GameScene(configuration: configuration,
+                          progress: newProgress,
+                          store: progressStore))
     }
 
     private func completeLevel() {
@@ -538,21 +633,27 @@ final class GameScene: SKScene {
             presentVictory(progress: newProgress)
         } else {
             progressStore.save(newProgress)
-            let nextLevel = Levels.all[newProgress.currentLevelIndex]
-            let newScene = GameScene(configuration: nextLevel,
-                                     progress: newProgress,
-                                     store: progressStore)
-            newScene.scaleMode = scaleMode
-            view?.presentScene(newScene, transition: .fade(withDuration: 0.5))
+            present(GameScene(configuration: Levels.all[newProgress.currentLevelIndex],
+                              progress: newProgress,
+                              store: progressStore))
         }
     }
 
     private func presentVictory(progress: GameProgress) {
-        let victoryScene = VictoryScene(size: size,
-                                        totalBonusPoints: progress.carriedBonusPoints,
-                                        store: progressStore)
-        victoryScene.scaleMode = scaleMode
-        view?.presentScene(victoryScene, transition: .fade(withDuration: 0.5))
+        present(VictoryScene(size: size,
+                             totalBonusPoints: progress.carriedBonusPoints,
+                             store: progressStore))
+    }
+
+    /// Заменяет текущую сцену следующей. Единственное место, где это делается:
+    /// смена сцены — не только `presentScene`, но и общий для всех переходов
+    /// масштаб и снятие паузы.
+    private func present(_ scene: SKScene) {
+        scene.scaleMode = scaleMode
+        // Уходящая сцена не должна остаться остановленной: на паузе не идёт и
+        // анимация перехода.
+        setGameplayPaused(false)
+        view?.presentScene(scene, transition: .fade(withDuration: 0.5))
     }
 }
 
@@ -561,12 +662,17 @@ final class GameScene: SKScene {
 extension GameScene: GameInputDelegate {
 
     func inputDidUpdateDirection(horizontal: CGFloat, vertical: CGFloat) {
+        // На паузе ввод игнорируем. Экранные кнопки в это время скрыты, но
+        // геймпад продолжает слать события, и они бы копились до снятия паузы.
+        guard !isGamePaused else { return }
         // Горизонталь — аналоговая скорость персонажа; вертикаль — лазание по лестнице.
         player.setHorizontalInput(horizontal)
         ladderController.setVerticalInput(vertical)
     }
 
     func inputDidPressJump() {
+        guard !isGamePaused else { return }
+
         if playerState.locomotionMode == .climbing {
             ladderController.didJumpOffLadder()
             jumpController.didReleaseLadder(at: lastUpdateTime)
