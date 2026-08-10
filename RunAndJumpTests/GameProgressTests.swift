@@ -213,6 +213,102 @@ struct GameProgressTests {
         #expect(newProgress.collectedPickupIndices.isEmpty)
     }
 
+    // MARK: - Перезапуск уровня из паузы
+
+    /// Уровень собирается как при первом входе: флаги опущены, награды и враги
+    /// на местах.
+    @Test func levelRestartResetsPerLevelState() {
+        let progress = GameProgress(currentLevelIndex: 1,
+                                    carriedBonusPoints: 60,
+                                    activeCheckpointIndex: 2,
+                                    collectedPickupIndices: [0, 4],
+                                    defeatedEnemyIndices: [1],
+                                    bonusPointsAtLevelStart: 40)
+
+        let restarted = GameProgressRules.levelRestarted(progress: progress)
+
+        #expect(restarted.currentLevelIndex == 1)
+        #expect(restarted.activeCheckpointIndex == nil)
+        #expect(restarted.collectedPickupIndices.isEmpty)
+        #expect(restarted.defeatedEnemyIndices.isEmpty)
+    }
+
+    /// Награды возвращаются на уровень — значит и очки за них должны уйти,
+    /// иначе перезапуск уровня стал бы бесконечной фермой очков.
+    @Test func levelRestartRollsBonusBackToLevelStart() {
+        let progress = GameProgress(currentLevelIndex: 1,
+                                    carriedBonusPoints: 95,
+                                    bonusPointsAtLevelStart: 40)
+
+        let restarted = GameProgressRules.levelRestarted(progress: progress)
+
+        #expect(restarted.carriedBonusPoints == 40)
+        // Значение переживает перезапуск: перезапустить уровень можно и дважды.
+        #expect(restarted.bonusPointsAtLevelStart == 40)
+    }
+
+    /// Сохранение прошлой сборки не знает очков на входе в уровень — откатывать
+    /// не к чему, счёт остаётся как есть.
+    @Test func levelRestartKeepsBonusWhenLevelStartIsUnknown() {
+        let progress = GameProgress(currentLevelIndex: 1,
+                                    carriedBonusPoints: 95,
+                                    bonusPointsAtLevelStart: nil)
+
+        #expect(GameProgressRules.levelRestarted(progress: progress).carriedBonusPoints == 95)
+    }
+
+    /// Очки на выходе с уровня — это очки на входе в следующий.
+    @Test func levelCompletionRecordsBonusAtLevelStart() {
+        let newProgress = GameProgressRules.levelCompleted(
+            progress: GameProgress(currentLevelIndex: 0, carriedBonusPoints: 0),
+            finalState: PlayerState(health: 100, bonusPoints: 15)
+        )
+
+        #expect(newProgress.bonusPointsAtLevelStart == 15)
+    }
+
+    /// Гибель и флаг счёт на входе в уровень не трогают — уровень тот же.
+    @Test func deathAndCheckpointKeepBonusAtLevelStart() {
+        let progress = GameProgress(currentLevelIndex: 1,
+                                    carriedBonusPoints: 40,
+                                    bonusPointsAtLevelStart: 40)
+
+        let afterCheckpoint = GameProgressRules.checkpointReached(
+            progress: progress, index: 0, defeatedSinceCheckpoint: []
+        )
+        let afterDeath = GameProgressRules.playerDied(
+            progress: afterCheckpoint,
+            finalState: PlayerState(health: 0, bonusPoints: 75)
+        )
+
+        #expect(afterDeath.bonusPointsAtLevelStart == 40)
+    }
+
+    // MARK: - Есть ли что продолжать
+
+    @Test func nothingToResumeWithoutASave() {
+        #expect(GameProgressRules.isResumable(nil, totalLevels: 3) == false)
+    }
+
+    /// Сохранение, совпадающее с началом игры, продолжать нечего.
+    @Test func nothingToResumeAtTheVeryBeginning() {
+        #expect(GameProgressRules.isResumable(.initial, totalLevels: 3) == false)
+    }
+
+    @Test func startedGameIsResumable() {
+        let saved = GameProgress(currentLevelIndex: 1,
+                                 carriedBonusPoints: 40,
+                                 activeCheckpointIndex: 0)
+        #expect(GameProgressRules.isResumable(saved, totalLevels: 3) == true)
+    }
+
+    /// Негодное сохранение (уровня больше нет) продолжать нельзя — запуск
+    /// начнёт новую игру, и окно паузы было бы враньём.
+    @Test func unusableSaveIsNotResumable() {
+        let saved = GameProgress(currentLevelIndex: 7, carriedBonusPoints: 40)
+        #expect(GameProgressRules.isResumable(saved, totalLevels: 3) == false)
+    }
+
     @Test func initialPlayerStateResetsHealthAndKeepsBonus() {
         let progress = GameProgress(currentLevelIndex: 2, carriedBonusPoints: 35)
         let initial = GameProgressRules.initialPlayerState(for: progress)

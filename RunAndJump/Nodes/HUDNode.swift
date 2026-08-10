@@ -17,7 +17,14 @@ final class HUDNode: SKSpriteNode {
     private let healthFill: SKSpriteNode
     private let healthLabel: SKLabelNode
     private let bonusLabel: SKLabelNode
-    private let menuButton: SKSpriteNode
+    private let pauseButton: PauseButton
+
+    /// Нажатие кнопки паузы. Сцена подставляет сюда открытие окна паузы: HUD
+    /// не знает ни про окно, ни про то, что значит «пауза».
+    var onPauseTapped: (() -> Void)? {
+        get { pauseButton.onTap }
+        set { pauseButton.onTap = newValue }
+    }
 
     init(sceneSize: CGSize, healthConfiguration: HealthConfiguration = .standard) {
         let barSize = CGSize(width: sceneSize.width * 0.85, height: 32)
@@ -54,9 +61,10 @@ final class HUDNode: SKSpriteNode {
         bonusLabel.verticalAlignmentMode = .center
         bonusLabel.position = CGPoint(x: healthLabel.position.x + Layout.healthLabelWidth, y: 0)
 
-        menuButton = SKSpriteNode(imageNamed: "menu_button")
-        menuButton.size = CGSize(width: 18, height: 18)
-        menuButton.position = CGPoint(x: barSize.width - 18, y: 0)
+        pauseButton = PauseButton()
+        pauseButton.position = CGPoint(x: barSize.width - Layout.pauseButtonInset, y: 0)
+        // Поверх подложки HUD: иначе касание достанется бару, а он не кнопка.
+        pauseButton.zPosition = 3
 
         super.init(texture: nil, color: UIColor(red: 138, green: 138, blue: 138, alpha: 1), size: barSize)
 
@@ -69,7 +77,7 @@ final class HUDNode: SKSpriteNode {
         addChild(healthFill)
         addChild(healthLabel)
         addChild(bonusLabel)
-        addChild(menuButton)
+        addChild(pauseButton)
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -104,6 +112,8 @@ private enum Layout {
     static let healthLabelWidth: CGFloat = 92
     /// Короткая анимация: заметно, что здоровье убыло, но HUD не «плывёт».
     static let fillDuration: TimeInterval = 0.15
+    /// Отступ кнопки паузы от правого края бара.
+    static let pauseButtonInset: CGFloat = 18
 }
 
 /// Цвета HUD. Заливка шкалы зависит от `HealthLevel` — границы уровней
