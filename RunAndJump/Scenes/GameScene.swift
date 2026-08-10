@@ -6,6 +6,9 @@
 //
 
 import SpriteKit
+// UIKit — явно: в проекте включён MEMBER_IMPORT_VISIBILITY, и уведомления
+// жизненного цикла приложения не видны через реэкспорт из SpriteKit.
+import UIKit
 
 final class GameScene: SKScene {
 
@@ -70,6 +73,8 @@ final class GameScene: SKScene {
     /// приложения: игрок должен увидеть, что продолжает с точки восстановления,
     /// а не свалиться сразу в игру.
     private let initialPauseReason: PauseReason?
+    /// Подписки на сворачивание приложения; снимаются вместе со сценой.
+    private var lifecycleObservers: [NSObjectProtocol] = []
 
     // Длительность последнего кадра — нужна, чтобы ввод сдвигал игрока по платформе.
     // Через FrameClock, а не вычитанием вручную: он же ограничивает дельту
@@ -116,6 +121,8 @@ final class GameScene: SKScene {
         setupHUD()
         setupLevelObjects()
 
+        startObservingAppLifecycle()
+
         // Уровень уже собран (в том числе игрок — на точке восстановления),
         // поэтому за окном паузы видно ровно то, что продолжится.
         if let initialPauseReason {
@@ -125,6 +132,33 @@ final class GameScene: SKScene {
 
     override func willMove(from view: SKView) {
         gamepadInput.stopObserving()
+        stopObservingAppLifecycle()
+    }
+
+    /// Свёрнутое приложение ставит игру на паузу само.
+    ///
+    /// Подписываемся здесь, а не в SwiftUI: `GameHost` держит только **первую**
+    /// сцену, дальше `GameScene` пересоздаёт себя сама через `presentScene`, и
+    /// ссылка снаружи указывала бы на давно выброшенную сцену. Каждая сцена
+    /// живёт со своей подпиской ровно столько, сколько показана.
+    ///
+    /// `willResignActive`, а не `didEnterBackground`: шторка уведомлений,
+    /// переключатель приложений и входящий звонок оставляют игру видимой и
+    /// живой, хотя управлять ею уже нельзя, — а это потерянная жизнь.
+    private func startObservingAppLifecycle() {
+        let observer = NotificationCenter.default.addObserver(
+            forName: UIApplication.willResignActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.presentPauseMenu(reason: .interrupted)
+            }
+        }
+        lifecycleObservers.append(observer)
+    }
+
+    private func stopObservingAppLifecycle() {
+        lifecycleObservers.forEach(NotificationCenter.default.removeObserver)
+        lifecycleObservers.removeAll()
     }
 
     override func didChangeSize(_ oldSize: CGSize) {
@@ -223,7 +257,7 @@ final class GameScene: SKScene {
         hud = HUDNode(sceneSize: size)
         hud.update(with: playerState)
         hud.onPauseTapped = { [weak self] in
-            self?.presentPauseMenu(reason: .playerRequested)
+            self?.presentPauseMenu(reason: .interrupted)
         }
         cameraNode.addChild(hud)
     }
@@ -285,12 +319,17 @@ final class GameScene: SKScene {
     // MARK: - Игровой цикл
 
     override func update(_ currentTime: TimeInterval) {
-        // На паузе игровой цикл не идёт. Проверка дублирует `isPaused`
-        // намеренно: SKView сбрасывает его сам, когда приложение возвращается
-        // в активное состояние, и без этой строки игра ожила бы под окном.
-        // Часы кадров не трогаем — первый кадр после паузы даст большую
-        // дельту, но FrameClock её ограничит.
-        guard !isGamePaused else { return }
+        // На паузе игровой цикл не идёт. Часы кадров не трогаем — первый кадр
+        // после паузы даст большую дельту, но FrameClock её ограничит.
+        guard !isGamePaused else {
+            // Сюда мы вообще попадаем, только если `isPaused` кто-то снял
+            // снаружи: SKView делает это сам, когда приложение возвращается в
+            // активное состояние. Игровой цикл это переживает (мы уже вышли),
+            // а вот действия узлов — нет: враги под окном паузы снова замахали
+            // бы лапами. Возвращаем паузу на место.
+            setGameplayPaused(true)
+            return
+        }
 
         frameDuration = frameClock.tick(at: currentTime) ?? 0
         lastUpdateTime = currentTime

@@ -13,8 +13,10 @@ import Foundation
 /// вернувшийся в игру через день, должен понимать, что «продолжить» вернёт его
 /// не туда, где он бросил игру, а на последнюю точку восстановления.
 enum PauseReason: Equatable {
-    /// Игрок сам нажал кнопку паузы — уровень продолжится с того же места.
-    case playerRequested
+    /// Уровень прерван посреди игры — кнопкой паузы или сворачиванием
+    /// приложения. Сцена цела, уровень продолжится ровно с того же места,
+    /// поэтому у обеих причин и слова одни и те же.
+    case interrupted
     /// Партия открыта заново после выгрузки приложения. Положение игрока внутри
     /// уровня не сохраняется (см. `GameProgressStore`), поэтому продолжение —
     /// это возрождение на последнем поднятом флаге.
@@ -46,8 +48,8 @@ enum PauseMenu {
 
     static func title(for reason: PauseReason) -> String {
         switch reason {
-        case .playerRequested: return "Paused"
-        case .resumedSession:  return "Welcome back"
+        case .interrupted: return "Paused"
+        case .resumedSession: return "Welcome back"
         }
     }
 
@@ -56,8 +58,8 @@ enum PauseMenu {
     /// самое, что при обычной паузе.
     static func message(for reason: PauseReason) -> String? {
         switch reason {
-        case .playerRequested: return nil
-        case .resumedSession:  return "You will continue from the last checkpoint"
+        case .interrupted: return nil
+        case .resumedSession: return "You will continue from the last checkpoint"
         }
     }
 
@@ -73,8 +75,8 @@ enum PauseMenu {
 
     private static func resumeTitle(for reason: PauseReason) -> String {
         switch reason {
-        case .playerRequested: return "Resume"
-        case .resumedSession:  return "Continue"
+        case .interrupted: return "Resume"
+        case .resumedSession: return "Continue"
         }
     }
 }
