@@ -7,33 +7,24 @@
 
 import Foundation
 
-/// Почему открыто окно паузы.
-///
-/// Действия в окне от причины не зависят — меняются только слова: игрок,
-/// вернувшийся в игру через день, должен понимать, что «продолжить» вернёт его
-/// не туда, где он бросил игру, а на последнюю точку восстановления.
-enum PauseReason: Equatable {
-    /// Уровень прерван посреди игры — кнопкой паузы или сворачиванием
-    /// приложения. Сцена цела, уровень продолжится ровно с того же места,
-    /// поэтому у обеих причин и слова одни и те же.
-    case interrupted
-    /// Партия открыта заново после выгрузки приложения. Положение игрока внутри
-    /// уровня не сохраняется (см. `GameProgressStore`), поэтому продолжение —
-    /// это возрождение на последнем поднятом флаге.
-    case resumedSession
-}
-
 /// Что делает пункт окна паузы. Сама сцена решает, *как* это выполнить, но
 /// набор возможных исходов задан здесь и покрыт тестами.
 enum PauseMenuAction: Equatable, CaseIterable {
-    /// Снять паузу и продолжить с текущего места (или с точки восстановления,
-    /// если уровень только что собран из сохранения).
+    /// Снять паузу и продолжить с того же места.
     case resume
     /// Начать текущий уровень с начала: флаги, награды и враги — как при первом
     /// входе на уровень (см. `GameProgressRules.levelRestarted`).
     case restartLevel
-    /// Начать игру сначала: первый уровень, нулевой счёт, сохранение стирается.
-    case restartGame
+    /// Выйти в главное меню, бросив текущий уровень.
+    ///
+    /// Именно выйти, а не начать заново: сохранение остаётся нетронутым, и
+    /// «продолжить» в меню вернёт игрока на последний поднятый флаг — ровно
+    /// туда же, куда возвращает гибель. Всё, что случилось на уровне после
+    /// флага, теряется, как теряется оно и при выгрузке приложения из памяти
+    /// (см. `GameProgressStore`): сохранять здесь значило бы оставить игроку
+    /// способ набивать очки за врагов, которые после «продолжить» вернутся на
+    /// уровень живыми.
+    case mainMenu
 }
 
 /// Пункт окна паузы: действие и подпись на кнопке.
@@ -42,41 +33,23 @@ struct PauseMenuItem: Equatable {
     let title: String
 }
 
-/// Содержимое окна паузы — чистое сопоставление «причина → тексты и пункты».
-/// Узел (`PauseMenuNode`) только рисует то, что здесь описано.
+/// Содержимое окна паузы. Узел (`PauseMenuNode`) только рисует то, что здесь
+/// описано.
+///
+/// Причин для паузы больше не различаем: кнопка паузы и сворачивание приложения
+/// прерывают живой уровень одинаково, и продолжение в обоих случаях значит одно
+/// и то же — вернуться туда же, где стоял. Возвращение в партию после выгрузки
+/// приложения сюда не относится: его встречает главное меню (`MainMenu`), и
+/// объяснять что-то в окне паузы больше некому.
 enum PauseMenu {
 
-    static func title(for reason: PauseReason) -> String {
-        switch reason {
-        case .interrupted: return "Paused"
-        case .resumedSession: return "Welcome back"
-        }
-    }
+    static let title = "Paused"
 
-    /// Пояснение под заголовком; `nil` — пояснять нечего.
-    /// Есть только у возобновлённой партии: там «продолжить» значит не то же
-    /// самое, что при обычной паузе.
-    static func message(for reason: PauseReason) -> String? {
-        switch reason {
-        case .interrupted: return nil
-        case .resumedSession: return "You will continue from the last checkpoint"
-        }
-    }
-
-    /// Пункты сверху вниз. Порядок один и тот же в обоих случаях: место кнопки
-    /// не должно «переезжать» между запусками.
-    static func items(for reason: PauseReason) -> [PauseMenuItem] {
-        [
-            PauseMenuItem(action: .resume, title: resumeTitle(for: reason)),
-            PauseMenuItem(action: .restartLevel, title: "Restart level"),
-            PauseMenuItem(action: .restartGame, title: "New game"),
-        ]
-    }
-
-    private static func resumeTitle(for reason: PauseReason) -> String {
-        switch reason {
-        case .interrupted: return "Resume"
-        case .resumedSession: return "Continue"
-        }
-    }
+    /// Пункты сверху вниз. Порядок постоянный: место кнопки не должно
+    /// «переезжать» между открытиями окна.
+    static let items: [PauseMenuItem] = [
+        PauseMenuItem(action: .resume, title: "Resume"),
+        PauseMenuItem(action: .restartLevel, title: "Restart level"),
+        PauseMenuItem(action: .mainMenu, title: "Main menu"),
+    ]
 }

@@ -9,7 +9,7 @@ import Combine
 import SpriteKit
 import SwiftUI
 
-/// Владелец игровой сцены — шов между SwiftUI и SpriteKit.
+/// Владелец первой сцены — шов между SwiftUI и SpriteKit.
 ///
 /// Существует ради времени жизни. `body` во SwiftUI пересчитывается когда
 /// угодно и сколько угодно раз, а сцена создаётся ровно один раз за жизнь
@@ -17,32 +17,24 @@ import SwiftUI
 /// посреди игры. `@StateObject` — единственная обёртка, которая гарантирует
 /// однократное создание, поэтому сцена лежит здесь, а не в `@State`.
 ///
-/// Сцену дальше по игре пересоздаёт сама `GameScene` (гибель, следующий
-/// уровень) — через `view.presentScene`, минуя SwiftUI. Здесь только самая
-/// первая.
+/// Дальше сцены сменяют друг друга сами — через `view.presentScene`, минуя
+/// SwiftUI: меню открывает уровень, уровень пересоздаёт себя при гибели и на
+/// следующем уровне. Здесь только самая первая.
+///
+/// Тип свойства — `SKScene`, а не `GameScene`: с точки зрения SwiftUI это
+/// просто «то, что показывает `SpriteView`», и знать, какой именно экран сейчас
+/// открыт, ему незачем.
 @MainActor
 final class GameHost: ObservableObject {
 
-    let scene: GameScene
+    let scene: SKScene
 
     init(store: any GameProgressStore = UserDefaultsProgressStore()) {
-        // Сохранение может быть от сборки с другим набором уровней — что из
-        // него годится, решает чистое правило, а не хранилище.
-        let saved = store.load()
-        let levelCount = Levels.all.count
-        let progress = GameProgressRules.resumable(saved, totalLevels: levelCount)
-        // Продолженная партия открывается окном паузы: положение игрока внутри
-        // уровня не сохраняется, и игрок должен увидеть, что продолжает с
-        // последней точки восстановления, а не с того места, где закрыл игру.
-        // Новая игра начинается сразу — предлагать в ней «продолжить» нечего.
-        let pauseReason: PauseReason? =
-            GameProgressRules.isResumable(saved, totalLevels: levelCount) ? .resumedSession : nil
-        let scene = GameScene(
-            configuration: Levels.all[progress.currentLevelIndex],
-            progress: progress,
-            store: store,
-            pausedFor: pauseReason
-        )
+        // Запуск всегда открывает главное меню — и после первой установки, и с
+        // сохранённой партией. Решение «начать заново или продолжить» принимает
+        // игрок, а не код на старте; сохранение меню читает само, чтобы понять,
+        // предлагать ли «продолжить».
+        let scene = MainMenuScene(store: store)
         scene.scaleMode = .resizeFill
         self.scene = scene
     }

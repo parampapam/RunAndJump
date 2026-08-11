@@ -4,8 +4,8 @@ import SpriteKit
 struct ContentView: View {
 
     // Сцена живёт в @StateObject, а не в вычисляемом свойстве: иначе каждый
-    // пересчёт body создавал бы новую GameScene и игра молча начиналась бы
-    // с первого уровня посреди партии. Подробности — в GameHost.
+    // пересчёт body создавал бы её заново и игра молча возвращалась бы в главное
+    // меню посреди партии. Подробности — в GameHost.
     @StateObject private var game: GameHost
 
     init(store: any GameProgressStore = UserDefaultsProgressStore()) {

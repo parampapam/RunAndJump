@@ -9,8 +9,8 @@ import SpriteKit
 
 /// Окно паузы: затемнение на весь экран, заголовок и кнопки.
 ///
-/// Узел ничего не решает: заголовок, пояснение и набор кнопок приходят из
-/// чистой модели `PauseMenu`, а выбор он отдаёт наружу через `onSelect`. Все
+/// Узел ничего не решает: заголовок и набор кнопок приходят из чистой модели
+/// `PauseMenu`, а выбор он отдаёт наружу через `onSelect`. Все
 /// последствия (снять паузу, пересобрать уровень, начать игру заново) —
 /// за сценой: сцена владеет прогрессом и иерархией.
 ///
@@ -25,7 +25,6 @@ final class PauseMenuNode: SKNode {
     private var buttons: [(action: PauseMenuAction, frame: CGRect)] = []
 
     init(sceneSize: CGSize,
-         reason: PauseReason,
          onSelect: @escaping (PauseMenuAction) -> Void) {
         self.onSelect = onSelect
         super.init()
@@ -36,7 +35,7 @@ final class PauseMenuNode: SKNode {
         isUserInteractionEnabled = true
 
         addBackdrop(sceneSize: sceneSize)
-        addPanel(reason: reason)
+        addPanel()
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -54,11 +53,10 @@ final class PauseMenuNode: SKNode {
         addChild(SKSpriteNode(color: Palette.backdrop, size: size))
     }
 
-    private func addPanel(reason: PauseReason) {
-        let items = PauseMenu.items(for: reason)
-        let message = PauseMenu.message(for: reason)
+    private func addPanel() {
+        let items = PauseMenu.items
 
-        let panelHeight = Layout.panelHeight(itemCount: items.count, hasMessage: message != nil)
+        let panelHeight = Layout.panelHeight(itemCount: items.count)
         let panelRect = CGRect(x: -Layout.panelWidth / 2, y: -panelHeight / 2,
                                width: Layout.panelWidth, height: panelHeight)
 
@@ -71,24 +69,13 @@ final class PauseMenuNode: SKNode {
         // Раскладываем сверху вниз: курсор — центр очередной строки.
         var cursorY = panelRect.maxY - Layout.panelPadding - Layout.titleHeight / 2
 
-        let title = label(PauseMenu.title(for: reason),
+        let title = label(PauseMenu.title,
                           fontNamed: "Helvetica-Bold",
                           size: Layout.titleFontSize,
                           color: Palette.title)
         title.position = CGPoint(x: 0, y: cursorY)
         addChild(title)
         cursorY -= Layout.titleHeight / 2
-
-        if let message {
-            cursorY -= Layout.messageHeight / 2
-            let hint = label(message,
-                             fontNamed: "Helvetica",
-                             size: Layout.messageFontSize,
-                             color: Palette.message)
-            hint.position = CGPoint(x: 0, y: cursorY)
-            addChild(hint)
-            cursorY -= Layout.messageHeight / 2
-        }
 
         for item in items {
             cursorY -= Layout.buttonSpacing + Layout.buttonSize.height / 2
@@ -153,18 +140,15 @@ private enum Layout {
 
     static let titleHeight: CGFloat = 34
     static let titleFontSize: CGFloat = 28
-    static let messageHeight: CGFloat = 22
-    static let messageFontSize: CGFloat = 13
 
     static let buttonSize = CGSize(width: 240, height: 44)
     static let buttonCornerRadius: CGFloat = 10
     static let buttonFontSize: CGFloat = 18
     static let buttonSpacing: CGFloat = 12
 
-    static func panelHeight(itemCount: Int, hasMessage: Bool) -> CGFloat {
+    static func panelHeight(itemCount: Int) -> CGFloat {
         panelPadding * 2
             + titleHeight
-            + (hasMessage ? messageHeight : 0)
             + CGFloat(itemCount) * (buttonSize.height + buttonSpacing)
     }
 }
@@ -175,7 +159,6 @@ private enum Palette {
     static let panelBorder = SKColor(white: 1, alpha: 0.25)
 
     static let title = SKColor.white
-    static let message = SKColor(white: 0.75, alpha: 1)
     static let buttonText = SKColor.white
     static let buttonBorder = SKColor(white: 1, alpha: 0.35)
 
@@ -185,7 +168,7 @@ private enum Palette {
         switch action {
         case .resume:
             return SKColor(red: 0.20, green: 0.55, blue: 0.30, alpha: 1)
-        case .restartLevel, .restartGame:
+        case .restartLevel, .mainMenu:
             return SKColor(white: 0.25, alpha: 1)
         }
     }
