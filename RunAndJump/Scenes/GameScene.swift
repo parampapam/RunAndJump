@@ -68,11 +68,6 @@ final class GameScene: SKScene {
     // в двух местах.
     private var pauseMenu: PauseMenuNode?
     private var isGamePaused: Bool { pauseMenu != nil }
-    /// Причина, по которой уровень должен открыться сразу на паузе, либо nil.
-    /// Ставится извне (`GameHost`) для партии, продолженной после выгрузки
-    /// приложения: игрок должен увидеть, что продолжает с точки восстановления,
-    /// а не свалиться сразу в игру.
-    private let initialPauseReason: PauseReason?
     /// Подписки на сворачивание приложения; снимаются вместе со сценой.
     private var lifecycleObservers: [NSObjectProtocol] = []
 
@@ -88,12 +83,10 @@ final class GameScene: SKScene {
 
     init(configuration: LevelConfiguration,
          progress: GameProgress,
-         store: any GameProgressStore,
-         pausedFor pauseReason: PauseReason? = nil) {
+         store: any GameProgressStore) {
         self.configuration = configuration
         self.progress = progress
         self.progressStore = store
-        self.initialPauseReason = pauseReason
         self.playerState = GameProgressRules.initialPlayerState(for: progress)
         super.init(size: configuration.sceneSize)
     }
@@ -122,12 +115,6 @@ final class GameScene: SKScene {
         setupLevelObjects()
 
         startObservingAppLifecycle()
-
-        // Уровень уже собран (в том числе игрок — на точке восстановления),
-        // поэтому за окном паузы видно ровно то, что продолжится.
-        if let initialPauseReason {
-            presentPauseMenu(reason: initialPauseReason)
-        }
     }
 
     override func willMove(from view: SKView) {
@@ -150,7 +137,7 @@ final class GameScene: SKScene {
             forName: UIApplication.willResignActiveNotification, object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated {
-                self?.presentPauseMenu(reason: .interrupted)
+                self?.presentPauseMenu()
             }
         }
         lifecycleObservers.append(observer)
@@ -257,7 +244,7 @@ final class GameScene: SKScene {
         hud = HUDNode(sceneSize: size)
         hud.update(with: playerState)
         hud.onPauseTapped = { [weak self] in
-            self?.presentPauseMenu(reason: .interrupted)
+            self?.presentPauseMenu()
         }
         cameraNode.addChild(hud)
     }
@@ -569,10 +556,10 @@ final class GameScene: SKScene {
 
     /// Открывает окно паузы и останавливает игру. Повторный вызов при уже
     /// открытом окне ничего не делает.
-    private func presentPauseMenu(reason: PauseReason) {
+    private func presentPauseMenu() {
         guard pauseMenu == nil else { return }
 
-        let menu = PauseMenuNode(sceneSize: size, reason: reason) { [weak self] action in
+        let menu = PauseMenuNode(sceneSize: size) { [weak self] action in
             self?.handle(pauseAction: action)
         }
         cameraNode.addChild(menu)
@@ -600,13 +587,12 @@ final class GameScene: SKScene {
                               progress: newProgress,
                               store: progressStore))
 
-        case .restartGame:
-            // Новая партия начинается с чистого листа: сохранение стираем, чтобы
-            // следующий запуск не предложил продолжить брошенную игру.
-            progressStore.clear()
-            present(GameScene(configuration: Levels.all[0],
-                              progress: .initial,
-                              store: progressStore))
+        case .mainMenu:
+            // Сохранение НЕ трогаем: выход в меню — это навигация, а не сброс
+            // игры. Стереть его здесь значило бы уничтожить партию игрока за то,
+            // что он открыл меню; начать партию заново он оттуда и так может.
+            // Не сохраняем тоже: см. `PauseMenuAction.mainMenu`.
+            present(MainMenuScene(store: progressStore))
         }
     }
 
