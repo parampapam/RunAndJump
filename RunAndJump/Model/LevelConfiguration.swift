@@ -16,6 +16,7 @@ struct LevelConfiguration: Equatable {
     let levelHeightInTiles: CGFloat
     let playerStart: TileCoordinate   // нижний-левый угол игрока
     let groundHeight: CGFloat
+    let background: BackgroundDescriptor
     let platforms: [PlatformDescriptor]
     let movingPlatforms: [MovingPlatformDescriptor]
     let ladders: [LadderDescriptor]

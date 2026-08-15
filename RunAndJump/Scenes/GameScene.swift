@@ -37,6 +37,7 @@ final class GameScene: SKScene {
     private let gamepadInput = GamepadInput()
     private var hud: HUDNode!
     private var cameraNode: SKCameraNode!
+    private var background: Background!
     private var movingPlatforms: [MovingPlatform] = []
     // Враги, умеющие стрелять. Держим отдельным списком, чтобы каждый кадр
     // не перебирать всех детей сцены ради нескольких стрелков.
@@ -106,6 +107,7 @@ final class GameScene: SKScene {
         view.isMultipleTouchEnabled = true
 
         setupCamera()
+        setupBackground()
         setupGround()
         setupBoundaries()
         setupPlayer()
@@ -161,6 +163,14 @@ final class GameScene: SKScene {
         cameraNode.position = CGPoint(x: size.width / 2, y: size.height / 2)
         // Зум во время init пропускается (камеры ещё нет) — выставляем его здесь.
         updateCameraZoom()
+    }
+
+    /// Фон ставится сразу после камеры: его полосы едут за ней, и первый кадр
+    /// должен застать их уже на месте.
+    private func setupBackground() {
+        background = LevelBuilder.makeBackground(from: configuration)
+        addChild(background)
+        updateBackground()
     }
 
     /// Земля — не сплошная полоса, а куски между проёмами под озёрами: озеро
@@ -450,6 +460,20 @@ final class GameScene: SKScene {
         let viewportSize = CGSize(width: size.width * scale, height: size.height * scale)
         let levelSize = CGSize(width: configuration.levelWidth, height: configuration.levelHeight)
         cameraNode.position = CameraMath.clampedPosition(target: player.position, viewportSize: viewportSize, levelSize: levelSize)
+        updateBackground()
+    }
+
+    /// Фон едет следом за камерой, поэтому обновляется **после** неё —
+    /// иначе полосы отставали бы на кадр и заметно дёргались.
+    private func updateBackground() {
+        let tile = WorldMetrics.tileSize
+        let scale = cameraNode.yScale
+        background.update(
+            viewportSizeInTiles: TileSize(width: size.width * scale / tile,
+                                          height: size.height * scale / tile),
+            cameraCenterInTiles: CGPoint(x: cameraNode.position.x / tile,
+                                         y: cameraNode.position.y / tile)
+        )
     }
 
     private func updateCameraZoom() {

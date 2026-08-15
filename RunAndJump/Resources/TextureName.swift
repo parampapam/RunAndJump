@@ -8,6 +8,16 @@
 import Foundation
 
 enum TextureName {
+    /// Фон сцены. Каждый слой — отдельный Image Set, а не кадр в атласе:
+    /// слои рисуются по одному, каждый со своим `zPosition`, и упаковывать их
+    /// вместе незачем.
+    enum Background {
+        static let daySky = "bg_fill_day"
+        static let hills = "bg_hills"
+        static let mountains = "bg_mountains"
+        static let clouds = "bg_clouds"
+    }
+
     enum Player {
         static let idle0 = "player_idle_0"
         static let idle1 = "player_idle_1"

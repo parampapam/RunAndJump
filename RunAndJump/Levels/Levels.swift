@@ -30,6 +30,14 @@ enum Levels {
         levelHeightInTiles: levelHeight,
         playerStart: TileCoordinate(x: 1, y: 1),
         groundHeight: groundHeight,
+        // Вводный уровень: пологие холмы, горы лишь мелькают вдалеке.
+        background: BackgroundDescriptor(
+            fill: .daySky,
+            horizon: BackgroundStrip(segments: [.hills, .fill, .mountains, .fill],
+                                     widthInTiles: 8),
+            sky: BackgroundStrip(segments: [.clouds], widthInTiles: 12),
+            horizonLineInTiles: 5
+        ),
         platforms: [
             PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 5, y: 2.75),
                                               size: TileSize(width: 3, height: 0.25))),
@@ -111,6 +119,14 @@ enum Levels {
         levelHeightInTiles: levelHeight,
         playerStart: TileCoordinate(x: 1, y: 1),
         groundHeight: groundHeight,
+        // Горный уровень: гряда выше и плотнее, разрывы реже.
+        background: BackgroundDescriptor(
+            fill: .daySky,
+            horizon: BackgroundStrip(segments: [.mountains, .fill, .mountains, .hills],
+                                     widthInTiles: 8),
+            sky: BackgroundStrip(segments: [.clouds], widthInTiles: 14),
+            horizonLineInTiles: 6
+        ),
         platforms: [
             PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 4, y: 2.75),
                                               size: TileSize(width: 3, height: 0.25))),
@@ -190,6 +206,14 @@ enum Levels {
         levelHeightInTiles: levelHeight,
         playerStart: TileCoordinate(x: 1, y: 1),
         groundHeight: groundHeight,
+        // Открытое место: линия горизонта ниже, гряда реже — больше неба.
+        background: BackgroundDescriptor(
+            fill: .daySky,
+            horizon: BackgroundStrip(segments: [.mountains, .fill, .hills, .fill],
+                                     widthInTiles: 8),
+            sky: BackgroundStrip(segments: [.clouds], widthInTiles: 10),
+            horizonLineInTiles: 4
+        ),
         platforms: [
             PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 4, y: 2.75),
                                               size: TileSize(width: 2, height: 0.25))),
