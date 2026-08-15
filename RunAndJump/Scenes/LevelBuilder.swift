@@ -19,6 +19,15 @@ enum LevelBuilder {
     /// Атлас врагов — из него же берётся спрайт снаряда.
     private static let enemiesAtlas = SKTextureAtlas(named: "Enemies")
 
+    /// Фон уровня. Единственный узел, который продолжает переводить тайлы в
+    /// пункты и после сборки: полосы едут за камерой каждый кадр, поэтому
+    /// `Grid` живёт и внутри `Background` (см. его комментарий).
+    static func makeBackground(from configuration: LevelConfiguration) -> Background {
+        Background(descriptor: configuration.background,
+                   levelSizeInTiles: TileSize(width: configuration.levelWidthInTiles,
+                                              height: configuration.levelHeightInTiles))
+    }
+
     /// Кусок земли: невидимый узел с телом-опорой. Вид земле дают плитки травы
     /// (`makeGroundCover`), узел несёт только физику. Кусков несколько, потому
     /// что под озёрами в земле проёмы — их границы считает `GroundLayout`.
