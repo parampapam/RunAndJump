@@ -1,4 +1,12 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__XcodeBuildMCP__screenshot",
+      "mcp__XcodeBuildMCP__session_show_defaults",
+      "mcp__XcodeBuildMCP__list_devices",
+      "Bash(graphify query *)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
