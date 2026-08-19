@@ -1,9 +1,20 @@
 {
   "permissions": {
     "allow": [
+      "Edit(**/*.swift)",
       "mcp__XcodeBuildMCP__screenshot",
       "mcp__XcodeBuildMCP__session_show_defaults",
       "mcp__XcodeBuildMCP__list_devices",
+      "mcp__XcodeBuildMCP__list_sims",
+      "mcp__XcodeBuildMCP__boot_sim",
+      "mcp__XcodeBuildMCP__build_sim",
+      "mcp__XcodeBuildMCP__build_run_sim",
+      "mcp__XcodeBuildMCP__install_app_sim",
+      "mcp__XcodeBuildMCP__launch_app_sim",
+      "mcp__XcodeBuildMCP__stop_app_sim",
+      "mcp__XcodeBuildMCP__test_sim",
+      "mcp__XcodeBuildMCP__build_run_device",
+      "mcp__XcodeBuildMCP__test_device",
       "Bash(graphify query *)"
     ]
   },
