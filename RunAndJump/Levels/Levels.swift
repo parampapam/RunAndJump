@@ -55,7 +55,7 @@ enum Levels {
                 start: TileCoordinate(x: 18, y: 3.75),
                 end: TileCoordinate(x: 22, y: 3.75),
                 speed: 90,
-                pauseDuration: 0.6
+                stops: MotionStop.atEnds(0.6)
             ),
         ],
         // Лестница от земли (y = 1) до первой платформы (верх y = 3).
@@ -148,7 +148,7 @@ enum Levels {
                 start: TileCoordinate(x: 27, y: 1.75),
                 end: TileCoordinate(x: 27, y: 5.75),
                 speed: 100,
-                pauseDuration: 1.0
+                stops: MotionStop.atEnds(1.0)
             ),
         ],
         ladders: [
@@ -237,7 +237,7 @@ enum Levels {
                 start: TileCoordinate(x: 6, y: 3.75),
                 end: TileCoordinate(x: 10, y: 3.75),
                 speed: 120,
-                pauseDuration: 0.5
+                stops: MotionStop.atEnds(0.5)
             ),
             // Вертикальная подвижная платформа во второй половине (верх y = 2…6).
             MovingPlatformDescriptor(
@@ -245,7 +245,7 @@ enum Levels {
                 start: TileCoordinate(x: 28, y: 1.75),
                 end: TileCoordinate(x: 28, y: 5.75),
                 speed: 110,
-                pauseDuration: 0.8
+                stops: MotionStop.atEnds(0.8)
             ),
         ],
         // Высокая лестница от земли до платформы на y = 7.

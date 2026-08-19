@@ -15,12 +15,12 @@ final class MovingPlatform: SKSpriteNode {
     /// Принимает уже переведённые в пункты центр и размер: преобразование из
     /// тайлов делает `LevelBuilder`.
     init(size: CGSize, startPosition: CGPoint, endPosition: CGPoint,
-         speed: CGFloat, pauseDuration: Double) {
+         speed: CGFloat, stops: [MotionStop]) {
         motion = OscillatingMotion(
             startPosition: startPosition,
             endPosition: endPosition,
             speed: speed,
-            pauseDuration: pauseDuration
+            stops: stops
         )
 
         // Как и у неподвижной платформы, вид дают плитки-дети — узел невидим
