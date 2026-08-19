@@ -167,7 +167,7 @@ enum LevelBuilder {
             startPosition: Grid.center(origin: descriptor.start, size: descriptor.size),
             endPosition: Grid.center(origin: descriptor.end, size: descriptor.size),
             speed: descriptor.speed,
-            pauseDuration: descriptor.pauseDuration
+            stops: descriptor.stops
         )
     }
 

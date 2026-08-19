@@ -48,7 +48,7 @@ final class PatrollingMovement: EnemyMovement {
             startPosition: CGPoint(x: leftX, y: y),
             endPosition: CGPoint(x: rightX, y: y),
             speed: speed,
-            pauseDuration: 0,
+            stops: [],
             initialProgress: progress
         )
     }
