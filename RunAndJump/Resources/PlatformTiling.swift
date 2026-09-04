@@ -11,6 +11,10 @@ import CoreGraphics
 /// средних плиток, правый край. Чистая логика, без SpriteKit: узлы (`Platform`,
 /// `MovingPlatform`) только строят по ней спрайты.
 ///
+/// Возвращает **части**, а не имена текстур: раскладка одинакова во всех стилях,
+/// а чем нарисован левый край — знание стиля (`TerrainNames`). Пока здесь стояли
+/// имена из `TextureName`, чистая логика была намертво привязана к одному стилю.
+///
 /// Толщина платформы (0.25 тайла) — это высота её физического ребра, а не
 /// картинки: у текстур своя нарисованная толщина, поэтому здесь участвует
 /// только ширина. Ширина может быть дробной — тогда колонок берётся столько,
@@ -18,18 +22,23 @@ import CoreGraphics
 /// обрезать колонку нельзя, у краёв скруглённые торцы.
 enum PlatformTiling {
 
-    /// Имена текстур колонок для платформы заданной ширины (в тайлах, > 0).
-    static func textureNames(forWidthInTiles width: CGFloat) -> [String] {
+    /// Роль колонки в платформе. Имя текстуры по ней даёт каталог стиля.
+    enum Part: Equatable, Sendable {
+        case left
+        case middle
+        case right
+    }
+
+    /// Колонки платформы заданной ширины (в тайлах, > 0), слева направо.
+    static func parts(forWidthInTiles width: CGFloat) -> [Part] {
         precondition(width > 0, "Ширина платформы должна быть положительной")
 
         switch columnCount(forWidthInTiles: width) {
         case 1:
             // Слишком узко для двух торцов — одна средняя плитка.
-            return [TextureName.Platform.middle]
+            return [.middle]
         case let count:
-            return [TextureName.Platform.left]
-                + Array(repeating: TextureName.Platform.middle, count: count - 2)
-                + [TextureName.Platform.right]
+            return [.left] + Array(repeating: .middle, count: count - 2) + [.right]
         }
     }
 

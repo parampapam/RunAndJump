@@ -32,6 +32,11 @@ final class GameScene: SKScene {
 
     // MARK: - Узлы
 
+    /// Сборщик узлов уровня вместе с темой — чем нарисован этот стиль.
+    /// Создаётся один раз в `init` по `configuration.style` и живёт со сценой:
+    /// пересоздание сцены (гибель, следующий уровень) собирает тему заново.
+    private let builder: LevelBuilder
+
     private var player: Player!
     private var inputController: InputController!
     private let gamepadInput = GamepadInput()
@@ -89,6 +94,9 @@ final class GameScene: SKScene {
         self.progress = progress
         self.progressStore = store
         self.playerState = GameProgressRules.initialPlayerState(for: progress)
+        self.builder = LevelBuilder(
+            textures: LevelTextures(catalog: StyleCatalogs.resolved(configuration.style))
+        )
         super.init(size: configuration.sceneSize)
     }
 
@@ -99,7 +107,9 @@ final class GameScene: SKScene {
     // MARK: - Жизненный цикл
 
     override func didMove(to view: SKView) {
-        backgroundColor = ScenePalette.sky
+        // Цвет неба берётся из стиля и совпадает с заливкой фона: он виден на
+        // дне ям под озёрами, где за жидкостью нет грунта.
+        backgroundColor = builder.textures.skyColor
 
         physicsWorld.gravity = CGVector(dx: 0, dy: -20)
         physicsWorld.contactDelegate = self
@@ -168,7 +178,7 @@ final class GameScene: SKScene {
     /// Фон ставится сразу после камеры: его полосы едут за ней, и первый кадр
     /// должен застать их уже на месте.
     private func setupBackground() {
-        background = LevelBuilder.makeBackground(from: configuration)
+        background = builder.makeBackground(from: configuration)
         addChild(background)
         updateBackground()
     }
@@ -183,15 +193,15 @@ final class GameScene: SKScene {
         )
 
         for segment in segments {
-            addChild(LevelBuilder.makeGround(span: segment, height: configuration.groundHeight))
+            addChild(builder.makeGround(span: segment, height: configuration.groundHeight))
             // Покрываем кусок травой — она же и есть видимая земля.
-            for tile in LevelBuilder.makeGroundCover(span: segment) {
+            for tile in builder.makeGroundCover(span: segment) {
                 addChild(tile)
             }
         }
 
         for hazardDescriptor in configuration.hazards {
-            addChild(LevelBuilder.makeHazardFloor(from: hazardDescriptor,
+            addChild(builder.makeHazardFloor(from: hazardDescriptor,
                                                   groundHeight: configuration.groundHeight))
         }
     }
@@ -261,7 +271,7 @@ final class GameScene: SKScene {
 
     private func setupLevelObjects() {
         for platformDescriptor in configuration.platforms {
-            addChild(LevelBuilder.makePlatform(from: platformDescriptor))
+            addChild(builder.makePlatform(from: platformDescriptor))
             // Запоминаем сплошные рамки — об них упирается игрок при езде на подвижной платформе.
             // Нижний-левый угол прямоугольника на сетке прямо ложится в origin CGRect.
             platformRideController.obstacles.append(CGRect(
@@ -270,7 +280,7 @@ final class GameScene: SKScene {
             ))
         }
         for descriptor in configuration.movingPlatforms {
-            let platform = LevelBuilder.makeMovingPlatform(from: descriptor)
+            let platform = builder.makeMovingPlatform(from: descriptor)
             addChild(platform)
             movingPlatforms.append(platform)
         }
@@ -278,7 +288,7 @@ final class GameScene: SKScene {
         // возвращаются. Побеждённые после флага — возвращаются (см. restartLevel).
         for (index, enemyDescriptor) in configuration.enemies.enumerated()
         where !progress.defeatedEnemyIndices.contains(index) {
-            let enemy = LevelBuilder.makeEnemy(from: enemyDescriptor, index: index)
+            let enemy = builder.makeEnemy(from: enemyDescriptor, index: index)
             addChild(enemy)
             if enemy.canShoot {
                 shooters.append(enemy)
@@ -288,12 +298,12 @@ final class GameScene: SKScene {
         // сохранены. Аптечки в этот список не попадают и появляются снова.
         for (index, pickupDescriptor) in configuration.pickups.enumerated()
         where !progress.collectedPickupIndices.contains(index) {
-            addChild(LevelBuilder.makePickup(from: pickupDescriptor, index: index))
+            addChild(builder.makePickup(from: pickupDescriptor, index: index))
         }
         // Флаг активной точки восстановления поднят с самого начала — после
         // гибели игрок должен видеть, где именно он появился.
         for (index, checkpointDescriptor) in configuration.checkpoints.enumerated() {
-            let checkpoint = LevelBuilder.makeCheckpoint(
+            let checkpoint = builder.makeCheckpoint(
                 from: checkpointDescriptor,
                 index: index,
                 state: CheckpointRules.state(of: index, active: progress.activeCheckpointIndex)
@@ -302,15 +312,18 @@ final class GameScene: SKScene {
             checkpoints.append(checkpoint)
         }
         for ladderDescriptor in configuration.ladders {
-            addChild(LevelBuilder.makeLadder(from: ladderDescriptor))
+            addChild(builder.makeLadder(from: ladderDescriptor))
         }
         for hazardDescriptor in configuration.hazards {
-            addChild(LevelBuilder.makeHazard(from: hazardDescriptor))
+            addChild(builder.makeHazard(from: hazardDescriptor))
         }
         for decorationDescriptor in configuration.decorations {
-            addChild(LevelBuilder.makeDecoration(from: decorationDescriptor))
+            // nil — декорации нет в каталоге стиля: пропускаем, уровень от
+            // лишнего цветочка терять нельзя (см. `LevelBuilder.makeDecoration`).
+            guard let decoration = builder.makeDecoration(from: decorationDescriptor) else { continue }
+            addChild(decoration)
         }
-        addChild(LevelBuilder.makePortal(from: configuration.portal))
+        addChild(builder.makePortal(from: configuration.portal))
     }
 
     // MARK: - Игровой цикл
@@ -447,7 +460,7 @@ final class GameScene: SKScene {
         for shooter in shooters {
             guard let spawn = shooter.updateShooting(at: time,
                                                      targetPosition: player.position) else { continue }
-            addChild(LevelBuilder.makeProjectile(from: spawn))
+            addChild(builder.makeProjectile(from: spawn))
         }
     }
 

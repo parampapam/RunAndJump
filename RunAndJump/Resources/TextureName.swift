@@ -7,16 +7,13 @@
 
 import Foundation
 
+/// Имена текстур, **не зависящих от стиля**: игрок, враги, снаряд, награды,
+/// флаг точки восстановления и поверхность озёр. Их атласы общие на всю игру.
+///
+/// Всё, что стиль вправе перерисовать — ландшафт, фон и декорации, — живёт не
+/// здесь, а в каталоге стиля (`StyleCatalog`). Граница проведена намеренно:
+/// иначе к третьему стилю пришлось бы рисовать своего игрока каждому.
 enum TextureName {
-    /// Фон сцены. Каждый слой — отдельный Image Set, а не кадр в атласе:
-    /// слои рисуются по одному, каждый со своим `zPosition`, и упаковывать их
-    /// вместе незачем.
-    enum Background {
-        static let daySky = "bg_fill_day"
-        static let hills = "bg_hills"
-        static let mountains = "bg_mountains"
-        static let clouds = "bg_clouds"
-    }
 
     enum Player {
         static let idle0 = "player_idle_0"
@@ -26,88 +23,9 @@ enum TextureName {
         static let jump  = "player_jump"
     }
 
-    enum Flower {
-        static let purple = "grass tiles (14)"
-        static let yellow = "grass tiles (34)"
-        static let white = "grass tiles (49)"
-        static let pink = "grass tiles (63)"
-    }
-
-    enum Mushroom {
-        static let wide = "grass tiles (8)"
-        static let tall = "grass tiles (55)"
-    }
-
-    enum Arrow {
-        static let right = "grass tiles (23)"
-        static let left = "grass tiles (16)"
-    }
-
     enum Checkpoint {
         static let active = "flag_green_raised"
         static let inactive = "flag_green_down"
-    }
-
-    enum Grass {
-        enum Short {
-            static let dark = "grass tiles (10)"
-            static let light = "grass tiles (53)"
-        }
-        enum Tall {
-            static let dark = "grass tiles (56)"
-            static let light = "grass tiles (35)"
-        }
-    }
-
-    enum Bush {
-        enum Small {
-            static let dark = "grass tiles (41)"
-            static let light = "grass tiles (25)"
-        }
-        enum Big {
-            enum Dark {
-                static let left = "grass tiles (54)"
-                static let middle = "grass tiles (29)"
-                static let right = "grass tiles (40)"
-            }
-            enum Light {
-                static let left = "grass tiles (13)"
-                static let middle = "grass tiles (30)"
-                static let right = "grass tiles (4)"
-            }
-        }
-    }
-
-    enum Tree {
-        enum Dark {
-            static let top = "grass tiles (62)"
-            static let bottom = "grass tiles (61)"
-            static let trunk = "grass tiles (18)"
-        }
-        enum Light {
-            static let top = "grass tiles (38)"
-            static let bottom = "grass tiles (39)"
-            static let trunk = "grass tiles (18)"
-        }
-    }
-
-    enum Ladder {
-        static let up = "town tiles (53)"
-        static let up_75pct = "town tiles (53) 90px"
-        static let up_50pct = "town tiles (53) 60px"
-        static let up_25pct = "town tiles (53) 30px"
-        static let middle = "town tiles (44)"
-        static let bottom = "town tiles (57)"
-    }
-
-    enum Platform {
-        static let left = "grass tiles (52)"
-        static let middle = "grass tiles (57)"
-        static let right = "grass tiles (6)"
-    }
-
-    enum Ground {
-        static let grassland = "grass tiles (24)"
     }
 
     /// Поверхность опасных зон (атлас `Hazards`): два кадра на каждую жидкость,

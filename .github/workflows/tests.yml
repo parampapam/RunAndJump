@@ -1,0 +1,79 @@
+name: Tests
+
+# Юнит-тесты на каждый PR и на каждый пуш в main. Больше ничего: сборка
+# приложения происходит внутри `xcodebuild test`, отдельным шагом её гонять
+# незачем.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Новый пуш в ветку отменяет предыдущий прогон: раннер macOS дорогой и
+# медленный, а результат устаревшего коммита всё равно никому не нужен.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: RunAndJumpTests
+    # `macos-latest`, а не прибитая версия: проекту нужен свежий Xcode
+    # (`objectVersion = 77`, iOS 18, Swift 6), и отстающий образ сломает сборку
+    # раньше, чем плавающий.
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # В образе стоит несколько Xcode, и выбранный по умолчанию не обязательно
+      # самый новый. Берём старший из установленных.
+      - name: Выбрать Xcode
+        run: |
+          sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+          xcodebuild -version
+
+      # Набор симуляторов в образах раннера меняется, поэтому прибитое
+      # `name=iPhone 17` однажды сломает сборку на ровном месте. Предпочитаем
+      # его (на нём проект собирают локально), но соглашаемся на любой iPhone.
+      - name: Выбрать симулятор
+        id: simulator
+        run: |
+          udid=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+
+          runtimes = json.load(sys.stdin)["devices"]
+          phones = [device
+                    for runtime, devices in runtimes.items() if "iOS" in runtime
+                    for device in devices
+                    if device.get("isAvailable") and device["name"].startswith("iPhone")]
+          if not phones:
+              raise SystemExit("в образе раннера нет ни одного доступного iPhone")
+
+          preferred = [device for device in phones if device["name"] == "iPhone 17"]
+          print((preferred or phones)[0]["udid"])
+          ')
+          echo "Симулятор: $(xcrun simctl list devices | grep "$udid")"
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+
+      # Только `RunAndJumpTests`. UI-тесты не запускаем намеренно: там лежат
+      # две шаблонные заглушки Xcode, и `testLaunchPerformance` регулярно падает
+      # на сборе метрики запуска — красный CI, ничего не говорящий о коде.
+      - name: Юнит-тесты
+        run: |
+          xcodebuild test \
+            -project RunAndJump.xcodeproj \
+            -scheme RunAndJump \
+            -destination "id=${{ steps.simulator.outputs.udid }}" \
+            -only-testing:RunAndJumpTests \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO
+
+      # Разбирать падение, которое воспроизводится только на раннере, без этого
+      # свёртка мучительно: в ней и логи, и упавшие проверки.
+      - name: Сохранить результаты прогона
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults
+          path: TestResults.xcresult
+          retention-days: 7

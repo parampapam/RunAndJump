@@ -14,7 +14,8 @@ final class MovingPlatform: SKSpriteNode {
 
     /// Принимает уже переведённые в пункты центр и размер: преобразование из
     /// тайлов делает `LevelBuilder`.
-    init(size: CGSize, startPosition: CGPoint, endPosition: CGPoint,
+    init(size: CGSize, textures: LevelTextures,
+         startPosition: CGPoint, endPosition: CGPoint,
          speed: CGFloat, stops: [MotionStop]) {
         motion = OscillatingMotion(
             startPosition: startPosition,
@@ -27,7 +28,7 @@ final class MovingPlatform: SKSpriteNode {
         // и несёт только физику (см. `PlatformSkin`).
         super.init(texture: nil, color: .clear, size: size)
 
-        PlatformSkin.tiles(forSize: size).forEach(addChild)
+        PlatformSkin.tiles(forSize: size, textures: textures).forEach(addChild)
 
         position = motion.position   // = startPosition
 

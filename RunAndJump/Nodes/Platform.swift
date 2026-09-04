@@ -9,12 +9,12 @@ import SpriteKit
 
 final class Platform: SKSpriteNode {
 
-    init(size: CGSize) {
+    init(size: CGSize, textures: LevelTextures) {
         // Сам узел невидим: вид дают плитки-дети (`PlatformSkin`), узел несёт
         // только физику. Размер — габарит платформы, по нему же строится ребро.
         super.init(texture: nil, color: .clear, size: size)
 
-        PlatformSkin.tiles(forSize: size).forEach(addChild)
+        PlatformSkin.tiles(forSize: size, textures: textures).forEach(addChild)
 
         // Только верхнее ребро — это даёт одностороннюю коллизию:
         // приземлиться сверху можно, прыгнуть снизу сквозь — тоже можно.
