@@ -4,6 +4,7 @@
 //
 
 import Testing
+import CoreGraphics
 import SpriteKit
 import UIKit
 @testable import RunAndJump

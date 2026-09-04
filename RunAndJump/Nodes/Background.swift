@@ -102,11 +102,11 @@ final class Background: SKNode {
 
     private func fill(strip: SKNode,
                       with placements: [BackgroundLayout.Placement],
-                      texture: (Int) -> SKTexture?) {
+                      textureForSegment: (Int) -> SKTexture?) {
         strip.removeAllChildren()
         for placement in placements {
             // nil — сегмент ничего не рисует, и на его месте видна заливка.
-            guard let texture = texture(placement.segmentIndex) else { continue }
+            guard let texture = textureForSegment(placement.segmentIndex) else { continue }
             let sprite = SKSpriteNode(texture: texture)
             sprite.size = Grid.size(placement.rect.size)
             sprite.position = Grid.center(of: placement.rect)
