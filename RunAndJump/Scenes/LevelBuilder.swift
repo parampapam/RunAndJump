@@ -90,7 +90,11 @@ struct LevelBuilder {
     /// Опечатка в идентификаторе не должна стоить игроку уровня, поэтому
     /// неизвестная декорация просто не рисуется (ловит её `LevelValidation`).
     func makeDecoration(from descriptor: DecorationDescriptor) -> Decoration? {
-        guard let entry = textures.decoration(descriptor.id) else { return nil }
+        guard let entry = textures.decoration(descriptor.id) else {
+            // Опечатку автор должен увидеть сразу, а игрок — не заметить вовсе.
+            assertionFailure("Стиль \(textures.catalog.id.rawValue) не знает декорации \(descriptor.id.rawValue)")
+            return nil
+        }
 
         let oneTile = TileSize.one
         let sprites = entry.tiles.compactMap { tile -> SKSpriteNode? in
