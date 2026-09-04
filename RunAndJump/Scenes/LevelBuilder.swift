@@ -10,28 +10,37 @@ import SpriteKit
 /// Создаёт игровые объекты по декларативному описанию уровня.
 /// Здесь — единственное место, где тайловые координаты (нижний-левый угол)
 /// переводятся в пункты и центр узла через `Grid`.
+///
+/// Структура с темой, а не `enum` со статическими атласами: чем нарисован
+/// ландшафт, билдер получает снаружи (`LevelTextures`), поэтому два уровня в
+/// разных стилях собираются одним и тем же кодом.
+///
+/// Тема нужна не всем: игрок, враги, награды и снаряды стиля не имеют — их
+/// атласы общие на всю игру, и это осознанная граница.
 @MainActor
-enum LevelBuilder {
+struct LevelBuilder {
 
-    /// Атлас травяных тайлов и декораций (земля, цветы и пр.).
-    private static let grasslandAtlas = SKTextureAtlas(named: "Grassland")
+    /// Чем нарисован ландшафт, фон и декорации этого уровня.
+    let textures: LevelTextures
 
-    /// Атлас врагов — из него же берётся спрайт снаряда.
+    /// Атлас врагов — из него же берётся спрайт снаряда. Статический: у врагов
+    /// стиля нет, и подменять его снаружи нечему.
     private static let enemiesAtlas = SKTextureAtlas(named: "Enemies")
 
     /// Фон уровня. Единственный узел, который продолжает переводить тайлы в
     /// пункты и после сборки: полосы едут за камерой каждый кадр, поэтому
     /// `Grid` живёт и внутри `Background` (см. его комментарий).
-    static func makeBackground(from configuration: LevelConfiguration) -> Background {
+    func makeBackground(from configuration: LevelConfiguration) -> Background {
         Background(descriptor: configuration.background,
                    levelSizeInTiles: TileSize(width: configuration.levelWidthInTiles,
-                                              height: configuration.levelHeightInTiles))
+                                              height: configuration.levelHeightInTiles),
+                   textures: textures)
     }
 
     /// Кусок земли: невидимый узел с телом-опорой. Вид земле дают плитки травы
     /// (`makeGroundCover`), узел несёт только физику. Кусков несколько, потому
     /// что под озёрами в земле проёмы — их границы считает `GroundLayout`.
-    static func makeGround(span: ClosedRange<CGFloat>, height: CGFloat) -> SKSpriteNode {
+    func makeGround(span: ClosedRange<CGFloat>, height: CGFloat) -> SKSpriteNode {
         let width = Grid.size(TileSize(width: span.upperBound - span.lowerBound, height: 0)).width
         let ground = SKSpriteNode(color: .clear, size: CGSize(width: width, height: height))
         ground.position = CGPoint(x: Grid.point(TileCoordinate(x: span.lowerBound, y: 0)).x + width / 2,
@@ -52,7 +61,7 @@ enum LevelBuilder {
     /// Дно ямы под озером — опора на `HazardKind.depthInTiles` ниже поверхности
     /// земли. Без неё шагнувший в озеро игрок провалился бы за нижний край
     /// уровня: в земле там проём.
-    static func makeHazardFloor(from descriptor: HazardDescriptor,
+    func makeHazardFloor(from descriptor: HazardDescriptor,
                                 groundHeight: CGFloat) -> SKSpriteNode {
         let depth = Grid.size(TileSize(width: 0, height: HazardKind.depthInTiles)).height
         return makeGround(span: descriptor.rect.xSpan, height: max(0, groundHeight - depth))
@@ -61,8 +70,8 @@ enum LevelBuilder {
     /// Травяное покрытие: ряд тайлов вдоль куска земли. Узлы чисто визуальные —
     /// коллизия на теле куска. Если кусок кончается посреди тайла, последняя
     /// плитка обрезается по ширине, чтобы трава не нависала над ямой.
-    static func makeGroundCover(span: ClosedRange<CGFloat>) -> [SKSpriteNode] {
-        let grass = grasslandAtlas.textureNamed(TextureName.Ground.grassland)
+    func makeGroundCover(span: ClosedRange<CGFloat>) -> [SKSpriteNode] {
+        let grass = textures.groundTop()
         var tiles: [SKSpriteNode] = []
         var x = span.lowerBound
 
@@ -80,13 +89,12 @@ enum LevelBuilder {
     /// Декорация по описанию; `nil` — такой декорации у стиля нет.
     /// Опечатка в идентификаторе не должна стоить игроку уровня, поэтому
     /// неизвестная декорация просто не рисуется (ловит её `LevelValidation`).
-    static func makeDecoration(from descriptor: DecorationDescriptor) -> Decoration? {
-        // TODO (шаг 3): каталог приходит снаружи вместе с темой.
-        guard let entry = GrasslandCatalog.catalog.decorations[descriptor.id] else { return nil }
+    func makeDecoration(from descriptor: DecorationDescriptor) -> Decoration? {
+        guard let entry = textures.decoration(descriptor.id) else { return nil }
 
         let oneTile = TileSize.one
         let sprites = entry.tiles.compactMap { tile -> SKSpriteNode? in
-            let frames = tile.frames.map(grasslandAtlas.textureNamed)
+            let frames = tile.frames.map { textures.texture(named: $0) }
             guard let first = frames.first else { return nil }
 
             let sprite = SKSpriteNode(texture: first, size: Grid.size(oneTile))
@@ -112,7 +120,7 @@ enum LevelBuilder {
     /// одной скоростью, но в разных местах петли, и потому не мигают в унисон.
     /// Плитки одной декорации фазу не получают по отдельности — длительность
     /// кадра одна на запись именно затем, чтобы костёр 1×2 шёл в такт.
-    private static func animate(_ sprite: SKSpriteNode,
+    private func animate(_ sprite: SKSpriteNode,
                                 frames: [SKTexture],
                                 frameDuration: TimeInterval,
                                 randomizePhase: Bool) {
@@ -131,7 +139,7 @@ enum LevelBuilder {
         sprite.run(.sequence([.wait(forDuration: .random(in: 0..<period)), loop]))
     }
 
-    static func makeEnemy(from descriptor: EnemyDescriptor, index: Int) -> Enemy {
+    func makeEnemy(from descriptor: EnemyDescriptor, index: Int) -> Enemy {
         let tileSize = ObjectSize.enemy
         let movement: EnemyMovement
         switch descriptor.behavior {
@@ -156,12 +164,12 @@ enum LevelBuilder {
     /// Снаряд по описанию выстрела. В отличие от прочих объектов, он рождается
     /// не из конфигурации уровня, а по ходу игры — позиция уже в пунктах,
     /// её посчитала модель (`ProjectileRules`).
-    static func makeProjectile(from spawn: ProjectileSpawn) -> Projectile {
+    func makeProjectile(from spawn: ProjectileSpawn) -> Projectile {
         Projectile(spawn: spawn,
-                   texture: enemiesAtlas.textureNamed(TextureName.Enemy.sniperProjectile))
+                   texture: Self.enemiesAtlas.textureNamed(TextureName.Enemy.sniperProjectile))
     }
 
-    static func makePickup(from descriptor: PickupDescriptor, index: Int) -> Pickup {
+    func makePickup(from descriptor: PickupDescriptor, index: Int) -> Pickup {
         let kind: PickupKind
         switch descriptor.kind {
         case .health:
@@ -177,7 +185,7 @@ enum LevelBuilder {
 
     /// Флаг точки восстановления. Состояние (поднят / опущен) считает модель по
     /// активной точке — билдер только ставит узел на сетку.
-    static func makeCheckpoint(from descriptor: CheckpointDescriptor,
+    func makeCheckpoint(from descriptor: CheckpointDescriptor,
                                index: Int,
                                state: CheckpointState) -> Checkpoint {
         let checkpoint = Checkpoint(index: index, state: state)
@@ -186,21 +194,22 @@ enum LevelBuilder {
         return checkpoint
     }
 
-    static func makePortal(from origin: TileCoordinate) -> Portal {
+    func makePortal(from origin: TileCoordinate) -> Portal {
         let portal = Portal()
         portal.position = Grid.center(origin: origin, size: ObjectSize.portal)
         return portal
     }
 
-    static func makePlatform(from descriptor: PlatformDescriptor) -> Platform {
-        let platform = Platform(size: Grid.size(descriptor.rect.size))
+    func makePlatform(from descriptor: PlatformDescriptor) -> Platform {
+        let platform = Platform(size: Grid.size(descriptor.rect.size), textures: textures)
         platform.position = Grid.center(of: descriptor.rect)
         return platform
     }
 
-    static func makeMovingPlatform(from descriptor: MovingPlatformDescriptor) -> MovingPlatform {
+    func makeMovingPlatform(from descriptor: MovingPlatformDescriptor) -> MovingPlatform {
         MovingPlatform(
             size: Grid.size(descriptor.size),
+            textures: textures,
             startPosition: Grid.center(origin: descriptor.start, size: descriptor.size),
             endPosition: Grid.center(origin: descriptor.end, size: descriptor.size),
             speed: descriptor.speed,
@@ -208,14 +217,14 @@ enum LevelBuilder {
         )
     }
 
-    static func makeHazard(from descriptor: HazardDescriptor) -> Hazard {
+    func makeHazard(from descriptor: HazardDescriptor) -> Hazard {
         let hazard = Hazard(kind: descriptor.kind, size: Grid.size(descriptor.rect.size))
         hazard.position = Grid.center(of: descriptor.rect)
         return hazard
     }
 
-    static func makeLadder(from descriptor: LadderDescriptor) -> Ladder {
-        let ladder = Ladder(heightInTiles: descriptor.height)
+    func makeLadder(from descriptor: LadderDescriptor) -> Ladder {
+        let ladder = Ladder(heightInTiles: descriptor.height, textures: textures)
         // Низ фиксирован в `descriptor.origin`; высота узла может быть чуть
         // больше запрошенной (см. `LadderTiling`), поэтому центр считаем от
         // уже нормализованного `ladder.size`, а не от исходных тайлов —

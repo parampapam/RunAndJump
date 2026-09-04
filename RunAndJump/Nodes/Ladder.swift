@@ -14,16 +14,16 @@ final class Ladder: SKNode {
     /// до опоры — земли или платформы.
     let size: CGSize
 
-    private static let ladderAtlas = SKTextureAtlas(named: "Ladder")
-
-    /// - Parameter heightInTiles: запрошенная высота лестницы в тайлах.
-    ///   Итоговый размер (`size`) может быть чуть больше — см. `LadderTiling`.
-    init(heightInTiles: CGFloat) {
+    /// - Parameters:
+    ///   - heightInTiles: запрошенная высота лестницы в тайлах.
+    ///     Итоговый размер (`size`) может быть чуть больше — см. `LadderTiling`.
+    ///   - textures: тема уровня; чем нарисованы плитки лестницы, решает стиль.
+    init(heightInTiles: CGFloat, textures: LevelTextures) {
         let (tiles, totalHeightInTiles) = LadderTiling.layout(forRequestedHeightInTiles: heightInTiles)
         self.size = Grid.size(TileSize(width: ObjectSize.ladder.width, height: totalHeightInTiles))
         super.init()
         setupPhysics()
-        setupVisual(tiles: tiles)
+        setupVisual(tiles: tiles, textures: textures)
     }
 
     required init?(coder aDecoder: NSCoder) {
@@ -46,13 +46,11 @@ final class Ladder: SKNode {
         physicsBody = body
     }
 
-    private func setupVisual(tiles: [LadderTiling.Tile]) {
-        // TODO (шаг 3): тема приходит снаружи, каталог здесь не упоминается.
-        let terrain = GrasslandCatalog.catalog.terrain
+    private func setupVisual(tiles: [LadderTiling.Tile], textures: LevelTextures) {
         var tileY = -size.height / 2
         for tile in tiles {
             let tileHeight = Grid.size(TileSize(width: ObjectSize.ladder.width, height: tile.heightInTiles)).height
-            let texture = Ladder.ladderAtlas.textureNamed(terrain.name(for: tile.part))
+            let texture = textures.ladder(tile.part)
             let node = SKSpriteNode(texture: texture, size: CGSize(width: size.width, height: tileHeight))
             tileY += tileHeight / 2
             node.position = CGPoint(x: 0, y: tileY)

@@ -10,7 +10,7 @@ import SpriteKit
 /// Фон уровня: сплошная заливка и две полосы поверх неё, едущие с параллаксом.
 /// Узел ничего не решает — что из чего собрано, говорит `BackgroundDescriptor`,
 /// где что лежит, считает `BackgroundLayout`, а чем нарисован сегмент, знает
-/// `BackgroundTextures`.
+/// тема уровня (`LevelTextures`): у каждого стиля свои холмы и облака.
 ///
 /// Перевод тайлов в пункты здесь идёт через `Grid` — как и в `LevelBuilder`.
 /// Вынести его целиком в билдер нельзя: положение полос меняется каждый кадр
@@ -19,6 +19,7 @@ final class Background: SKNode {
 
     private let descriptor: BackgroundDescriptor
     private let levelSizeInTiles: TileSize
+    private let textures: LevelTextures
 
     private let horizonStrip = SKNode()
     private let skyStrip = SKNode()
@@ -26,9 +27,10 @@ final class Background: SKNode {
     /// повороте экрана — тогда количество сегментов пересчитывается заново.
     private var builtViewport: TileSize?
 
-    init(descriptor: BackgroundDescriptor, levelSizeInTiles: TileSize) {
+    init(descriptor: BackgroundDescriptor, levelSizeInTiles: TileSize, textures: LevelTextures) {
         self.descriptor = descriptor
         self.levelSizeInTiles = levelSizeInTiles
+        self.textures = textures
         super.init()
 
         addChild(makeFill())
@@ -69,8 +71,7 @@ final class Background: SKNode {
     /// это один спрайт с одноцветной текстурой, зато его не нужно двигать
     /// каждый кадр и негде промахнуться.
     private func makeFill() -> SKSpriteNode {
-        let texture = SKTexture(imageNamed: BackgroundTextures.name(for: descriptor.fill))
-        let fill = SKSpriteNode(texture: texture)
+        let fill = SKSpriteNode(texture: textures.background(descriptor.fill))
         fill.size = Grid.size(levelSizeInTiles)
         fill.position = Grid.center(origin: TileCoordinate(x: 0, y: 0), size: levelSizeInTiles)
         fill.zPosition = ZPosition.background
@@ -92,21 +93,21 @@ final class Background: SKNode {
                                        cameraCenterInTiles: camera)
 
         fill(strip: horizonStrip, with: horizon.placements) { index in
-            BackgroundTextures.name(for: descriptor.horizon.segments[index])
+            textures.background(descriptor.horizon.segments[index])
         }
         fill(strip: skyStrip, with: sky.placements) { index in
-            BackgroundTextures.name(for: descriptor.sky.segments[index])
+            textures.background(descriptor.sky.segments[index])
         }
     }
 
     private func fill(strip: SKNode,
                       with placements: [BackgroundLayout.Placement],
-                      textureName: (Int) -> String?) {
+                      texture: (Int) -> SKTexture?) {
         strip.removeAllChildren()
         for placement in placements {
             // nil — сегмент ничего не рисует, и на его месте видна заливка.
-            guard let name = textureName(placement.segmentIndex) else { continue }
-            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: name))
+            guard let texture = texture(placement.segmentIndex) else { continue }
+            let sprite = SKSpriteNode(texture: texture)
             sprite.size = Grid.size(placement.rect.size)
             sprite.position = Grid.center(of: placement.rect)
             strip.addChild(sprite)
