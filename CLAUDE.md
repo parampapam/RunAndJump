@@ -38,6 +38,13 @@ xcodebuild build -scheme RunAndJump -destination "platform=iOS Simulator,name=iP
 xcodebuild test  -scheme RunAndJump -destination "platform=iOS Simulator,name=iPhone 17"
 \`\`\`
 
+Это же и делает CI (`.github/workflows/tests.yml`) на каждый PR и пуш в `main`.
+Гоняются **только** `RunAndJumpTests`: в UI-таргете лежат шаблонные заглушки
+Xcode, и `testLaunchPerformance` регулярно падает на сборе метрики запуска —
+красный CI, ничего не говорящий о коде. Симулятор выбирается по факту (сначала
+`iPhone 17`, иначе любой доступный iPhone): набор симуляторов в образах раннера
+меняется, и прибитое имя однажды сломало бы сборку на ровном месте.
+
 ## Architecture
 
 The codebase is split into two clearly separated layers. **This separation is load-bearing — never blur it.**
