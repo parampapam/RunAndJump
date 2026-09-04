@@ -86,19 +86,49 @@ enum LevelBuilder {
 
         let oneTile = TileSize.one
         let sprites = entry.tiles.compactMap { tile -> SKSpriteNode? in
-            guard let first = tile.frames.first else { return nil }
-            let sprite = SKSpriteNode(texture: grasslandAtlas.textureNamed(first),
-                                      size: Grid.size(oneTile))
+            let frames = tile.frames.map(grasslandAtlas.textureNamed)
+            guard let first = frames.first else { return nil }
+
+            let sprite = SKSpriteNode(texture: first, size: Grid.size(oneTile))
             // Центр ячейки относительно нижнего-левого угла декорации.
             sprite.position = Grid.center(
                 origin: TileCoordinate(x: CGFloat(tile.column), y: CGFloat(tile.row)),
                 size: oneTile
             )
+            animate(sprite,
+                    frames: frames,
+                    frameDuration: entry.frameDuration,
+                    randomizePhase: entry.randomizePhase)
             return sprite
         }
-        let decoration = Decoration(tiles: sprites)
+        let decoration = Decoration(tiles: sprites, layer: entry.layer)
         decoration.position = Grid.point(descriptor.origin)
         return decoration
+    }
+
+    /// Зацикливает кадры плитки. Один кадр — плитка статична, действия не нужно.
+    ///
+    /// Фаза сдвигает **начало** цикла, а не его темп: два факела рядом идут с
+    /// одной скоростью, но в разных местах петли, и потому не мигают в унисон.
+    /// Плитки одной декорации фазу не получают по отдельности — длительность
+    /// кадра одна на запись именно затем, чтобы костёр 1×2 шёл в такт.
+    private static func animate(_ sprite: SKSpriteNode,
+                                frames: [SKTexture],
+                                frameDuration: TimeInterval,
+                                randomizePhase: Bool) {
+        guard frames.count > 1 else { return }
+
+        // resize/restore = false: размер плитки задан сеткой, а не кадром.
+        let loop = SKAction.repeatForever(
+            .animate(with: frames, timePerFrame: frameDuration, resize: false, restore: false)
+        )
+        guard randomizePhase else {
+            sprite.run(loop)
+            return
+        }
+
+        let period = frameDuration * Double(frames.count)
+        sprite.run(.sequence([.wait(forDuration: .random(in: 0..<period)), loop]))
     }
 
     static func makeEnemy(from descriptor: EnemyDescriptor, index: Int) -> Enemy {

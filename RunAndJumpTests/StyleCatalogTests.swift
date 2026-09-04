@@ -49,6 +49,29 @@ struct StyleCatalogTests {
         }
     }
 
+    @Test("Запись с одним кадром на плитку статична, с несколькими — анимирована")
+    func animationFollowsFrameCount() {
+        let still = DecorationEntry(tiles: [DecorationTile(column: 0, row: 0, frames: ["a"])])
+        #expect(!still.isAnimated)
+        // Слой по умолчанию — задний: декорация украшает сцену, а не заслоняет игрока.
+        #expect(still.layer == .back)
+
+        let torch = DecorationEntry(tiles: [DecorationTile(column: 0, row: 0, frames: ["a", "b"])],
+                                    frameDuration: 0.15,
+                                    randomizePhase: true,
+                                    layer: .front)
+        #expect(torch.isAnimated)
+        #expect(torch.layer == .front)
+    }
+
+    @Test("Все нынешние декорации луга статичны и лежат за игроком")
+    func grasslandDecorationsAreStillAndBehindThePlayer() {
+        for (id, entry) in GrasslandCatalog.catalog.decorations {
+            #expect(!entry.isAnimated, "\(id.rawValue): арт луга статичен")
+            #expect(entry.layer == .back, "\(id.rawValue): цветы и кусты — задний план")
+        }
+    }
+
     @Test("Части платформы и лестницы разрешаются в имена текстур")
     func terrainResolvesEveryPart() {
         let terrain = GrasslandCatalog.catalog.terrain
