@@ -4,6 +4,7 @@
 //
 
 import Testing
+import CoreGraphics
 @testable import RunAndJump
 
 @Suite("StyleCatalog — каталоги стилей как данные")
