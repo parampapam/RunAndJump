@@ -77,10 +77,17 @@ enum LevelBuilder {
         return tiles
     }
 
-    static func makeDecoration(from descriptor: DecorationDescriptor) -> Decoration {
+    /// Декорация по описанию; `nil` — такой декорации у стиля нет.
+    /// Опечатка в идентификаторе не должна стоить игроку уровня, поэтому
+    /// неизвестная декорация просто не рисуется (ловит её `LevelValidation`).
+    static func makeDecoration(from descriptor: DecorationDescriptor) -> Decoration? {
+        // TODO (шаг 3): каталог приходит снаружи вместе с темой.
+        guard let entry = GrasslandCatalog.catalog.decorations[descriptor.id] else { return nil }
+
         let oneTile = TileSize.one
-        let sprites = DecorationTiles.tiles(for: descriptor.kind).map { tile -> SKSpriteNode in
-            let sprite = SKSpriteNode(texture: grasslandAtlas.textureNamed(tile.textureName),
+        let sprites = entry.tiles.compactMap { tile -> SKSpriteNode? in
+            guard let first = tile.frames.first else { return nil }
+            let sprite = SKSpriteNode(texture: grasslandAtlas.textureNamed(first),
                                       size: Grid.size(oneTile))
             // Центр ячейки относительно нижнего-левого угла декорации.
             sprite.position = Grid.center(

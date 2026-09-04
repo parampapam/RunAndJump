@@ -25,6 +25,7 @@ enum Levels {
 
     static let level1 = LevelConfiguration(
         name: "Level 1",
+        style: .grassland,
         sceneSize: sceneSize,
         levelWidthInTiles: levelWidth,
         levelHeightInTiles: levelHeight,
@@ -93,19 +94,19 @@ enum Levels {
         ],
         // Цветы стоят на земле (нижний край на y = 1), разбросаны по уровню.
         decorations: [
-            DecorationDescriptor(kind: .rightArrow, origin: TileCoordinate(x: 3, y: 1)),
-            DecorationDescriptor(kind: .yellowFlower, origin: TileCoordinate(x: 7, y: 1)),
-            DecorationDescriptor(kind: .darkTree, origin: TileCoordinate(x: 12, y: 1)),
-            DecorationDescriptor(kind: .tallLightTree, origin: TileCoordinate(x: 13, y: 1)),
-            DecorationDescriptor(kind: .bigDarkBush, origin: TileCoordinate(x: 14, y: 1)),
-            DecorationDescriptor(kind: .whiteFlower, origin: TileCoordinate(x: 15, y: 5)),
-            DecorationDescriptor(kind: .pinkFlower, origin: TileCoordinate(x: 21, y: 1)),
-            DecorationDescriptor(kind: .shortDarkGrass, origin: TileCoordinate(x: 22, y: 1)),
-            DecorationDescriptor(kind: .purpleFlower, origin: TileCoordinate(x: 27, y: 1)),
-            DecorationDescriptor(kind: .tallLightTree, origin: TileCoordinate(x: 28, y: 1)),
-            DecorationDescriptor(kind: .tallDarkGrass, origin: TileCoordinate(x: 29, y: 1)),
-            DecorationDescriptor(kind: .yellowFlower, origin: TileCoordinate(x: 34, y: 1)),
-            DecorationDescriptor(kind: .whiteFlower, origin: TileCoordinate(x: 41, y: 1)),
+            DecorationDescriptor(id: .rightArrow, origin: TileCoordinate(x: 3, y: 1)),
+            DecorationDescriptor(id: .yellowFlower, origin: TileCoordinate(x: 7, y: 1)),
+            DecorationDescriptor(id: .darkTree, origin: TileCoordinate(x: 12, y: 1)),
+            DecorationDescriptor(id: .tallLightTree, origin: TileCoordinate(x: 13, y: 1)),
+            DecorationDescriptor(id: .bigDarkBush, origin: TileCoordinate(x: 14, y: 1)),
+            DecorationDescriptor(id: .whiteFlower, origin: TileCoordinate(x: 15, y: 5)),
+            DecorationDescriptor(id: .pinkFlower, origin: TileCoordinate(x: 21, y: 1)),
+            DecorationDescriptor(id: .shortDarkGrass, origin: TileCoordinate(x: 22, y: 1)),
+            DecorationDescriptor(id: .purpleFlower, origin: TileCoordinate(x: 27, y: 1)),
+            DecorationDescriptor(id: .tallLightTree, origin: TileCoordinate(x: 28, y: 1)),
+            DecorationDescriptor(id: .tallDarkGrass, origin: TileCoordinate(x: 29, y: 1)),
+            DecorationDescriptor(id: .yellowFlower, origin: TileCoordinate(x: 34, y: 1)),
+            DecorationDescriptor(id: .whiteFlower, origin: TileCoordinate(x: 41, y: 1)),
         ],
         portal: TileCoordinate(x: 42, y: 1)
     )
@@ -114,6 +115,7 @@ enum Levels {
 
     static let level2 = LevelConfiguration(
         name: "Level 2",
+        style: .grassland,
         sceneSize: sceneSize,
         levelWidthInTiles: levelWidth,
         levelHeightInTiles: levelHeight,
@@ -187,12 +189,12 @@ enum Levels {
             CheckpointDescriptor(origin: TileCoordinate(x: 31, y: 1)),
         ],
         decorations: [
-            DecorationDescriptor(kind: .yellowFlower, origin: TileCoordinate(x: 3, y: 1)),
-            DecorationDescriptor(kind: .whiteFlower, origin: TileCoordinate(x: 13, y: 1)),
-            DecorationDescriptor(kind: .pinkFlower, origin: TileCoordinate(x: 22, y: 1)),
-            DecorationDescriptor(kind: .purpleFlower, origin: TileCoordinate(x: 25, y: 1)),
-            DecorationDescriptor(kind: .yellowFlower, origin: TileCoordinate(x: 36, y: 1)),
-            DecorationDescriptor(kind: .pinkFlower, origin: TileCoordinate(x: 43, y: 1)),
+            DecorationDescriptor(id: .yellowFlower, origin: TileCoordinate(x: 3, y: 1)),
+            DecorationDescriptor(id: .whiteFlower, origin: TileCoordinate(x: 13, y: 1)),
+            DecorationDescriptor(id: .pinkFlower, origin: TileCoordinate(x: 22, y: 1)),
+            DecorationDescriptor(id: .purpleFlower, origin: TileCoordinate(x: 25, y: 1)),
+            DecorationDescriptor(id: .yellowFlower, origin: TileCoordinate(x: 36, y: 1)),
+            DecorationDescriptor(id: .pinkFlower, origin: TileCoordinate(x: 43, y: 1)),
         ],
         portal: TileCoordinate(x: 42, y: 1)
     )
@@ -201,6 +203,7 @@ enum Levels {
 
     static let level3 = LevelConfiguration(
         name: "Level 3",
+        style: .grassland,
         sceneSize: sceneSize,
         levelWidthInTiles: levelWidth,
         levelHeightInTiles: levelHeight,
@@ -289,13 +292,13 @@ enum Levels {
             CheckpointDescriptor(origin: TileCoordinate(x: 39, y: 1)),
         ],
         decorations: [
-            DecorationDescriptor(kind: .whiteFlower, origin: TileCoordinate(x: 2, y: 1)),
-            DecorationDescriptor(kind: .purpleFlower, origin: TileCoordinate(x: 11, y: 1)),
-            DecorationDescriptor(kind: .pinkFlower, origin: TileCoordinate(x: 16, y: 1)),
-            DecorationDescriptor(kind: .yellowFlower, origin: TileCoordinate(x: 23, y: 1)),
-            DecorationDescriptor(kind: .whiteFlower, origin: TileCoordinate(x: 32, y: 1)),
-            DecorationDescriptor(kind: .purpleFlower, origin: TileCoordinate(x: 38, y: 1)),
-            DecorationDescriptor(kind: .pinkFlower, origin: TileCoordinate(x: 43, y: 1)),
+            DecorationDescriptor(id: .whiteFlower, origin: TileCoordinate(x: 2, y: 1)),
+            DecorationDescriptor(id: .purpleFlower, origin: TileCoordinate(x: 11, y: 1)),
+            DecorationDescriptor(id: .pinkFlower, origin: TileCoordinate(x: 16, y: 1)),
+            DecorationDescriptor(id: .yellowFlower, origin: TileCoordinate(x: 23, y: 1)),
+            DecorationDescriptor(id: .whiteFlower, origin: TileCoordinate(x: 32, y: 1)),
+            DecorationDescriptor(id: .purpleFlower, origin: TileCoordinate(x: 38, y: 1)),
+            DecorationDescriptor(id: .pinkFlower, origin: TileCoordinate(x: 43, y: 1)),
         ],
         portal: TileCoordinate(x: 42, y: 1)
     )

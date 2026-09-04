@@ -47,10 +47,12 @@ final class Ladder: SKNode {
     }
 
     private func setupVisual(tiles: [LadderTiling.Tile]) {
+        // TODO (шаг 3): тема приходит снаружи, каталог здесь не упоминается.
+        let terrain = GrasslandCatalog.catalog.terrain
         var tileY = -size.height / 2
         for tile in tiles {
             let tileHeight = Grid.size(TileSize(width: ObjectSize.ladder.width, height: tile.heightInTiles)).height
-            let texture = Ladder.ladderAtlas.textureNamed(tile.textureName)
+            let texture = Ladder.ladderAtlas.textureNamed(terrain.name(for: tile.part))
             let node = SKSpriteNode(texture: texture, size: CGSize(width: size.width, height: tileHeight))
             tileY += tileHeight / 2
             node.position = CGPoint(x: 0, y: tileY)

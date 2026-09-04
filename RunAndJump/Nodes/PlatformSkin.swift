@@ -24,12 +24,14 @@ enum PlatformSkin {
     /// Плитки для платформы заданного размера (в пунктах), спозиционированные
     /// относительно центра узла.
     static func tiles(forSize size: CGSize) -> [SKSpriteNode] {
-        let names = PlatformTiling.textureNames(forWidthInTiles: size.width / WorldMetrics.tileSize)
-        let cellWidth = size.width / CGFloat(names.count)
+        let parts = PlatformTiling.parts(forWidthInTiles: size.width / WorldMetrics.tileSize)
+        // TODO (шаг 3): тема приходит снаружи, каталог здесь не упоминается.
+        let terrain = GrasslandCatalog.catalog.terrain
+        let cellWidth = size.width / CGFloat(parts.count)
         let tileSize = CGSize(width: cellWidth, height: WorldMetrics.tileSize)
 
-        return names.enumerated().map { column, name in
-            let tile = SKSpriteNode(texture: atlas.textureNamed(name), size: tileSize)
+        return parts.enumerated().map { column, part in
+            let tile = SKSpriteNode(texture: atlas.textureNamed(terrain.name(for: part)), size: tileSize)
             tile.position = CGPoint(
                 x: -size.width / 2 + cellWidth * (CGFloat(column) + 0.5),
                 y: size.height / 2 - tileSize.height / 2

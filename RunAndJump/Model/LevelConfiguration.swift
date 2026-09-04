@@ -11,6 +11,9 @@ import CoreGraphics
 /// Координаты объектов — в тайлах, привязка к нижнему-левому углу.
 struct LevelConfiguration: Equatable {
     let name: String
+    /// Стиль — чем нарисован уровень: ландшафт, фон и набор декораций.
+    /// Каталог по нему находит `StyleCatalogs`; модель знает только идентификатор.
+    let style: LevelStyleID
     let sceneSize: CGSize
     let levelWidthInTiles: CGFloat
     let levelHeightInTiles: CGFloat
@@ -121,33 +124,12 @@ struct MovingPlatformDescriptor: Equatable {
 /// Описывает, **какой** объект и **где** располагается. Декорации не участвуют
 /// в игровой механике — только украшают сцену.
 struct DecorationDescriptor: Equatable {
-    let kind: DecorationKind
+    /// Какая декорация — идентификатор из каталога стиля этого уровня.
+    /// Открытый (`DecorationID`), а не `enum`: набор украшений у каждого стиля
+    /// свой, и держать их общим списком значило бы запретить стилям различаться.
+    /// Опечатку ловит не компилятор, а `LevelValidation`.
+    let id: DecorationID
     let origin: TileCoordinate   // нижний-левый угол
-}
-
-/// Вид декорации. Пока это цветы и заготовки под куст/дерево.
-/// Декорация — составной объект из плиток: занимаемый габарит и текстуры
-/// каждой плитки задаёт раскладка `DecorationTiles` (в слое ресурсов), поэтому
-/// модель знает только *какой* объект, а не из чего он нарисован.
-enum DecorationKind: Equatable {
-    case purpleFlower
-    case yellowFlower
-    case whiteFlower
-    case pinkFlower
-    case bigLightBush
-    case bigDarkBush
-    case smallLightBush
-    case smallDarkBush
-    case darkTree
-    case tallDarkTree
-    case shortLightGrass
-    case shortDarkGrass
-    case tallLightGrass
-    case tallDarkGrass
-    case lightTree
-    case tallLightTree
-    case leftArrow
-    case rightArrow
 }
 
 /// Декларативное описание точки восстановления — флага, мимо которого проходит

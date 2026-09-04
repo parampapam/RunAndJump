@@ -308,7 +308,10 @@ final class GameScene: SKScene {
             addChild(LevelBuilder.makeHazard(from: hazardDescriptor))
         }
         for decorationDescriptor in configuration.decorations {
-            addChild(LevelBuilder.makeDecoration(from: decorationDescriptor))
+            // nil — декорации нет в каталоге стиля: пропускаем, уровень от
+            // лишнего цветочка терять нельзя (см. `LevelBuilder.makeDecoration`).
+            guard let decoration = LevelBuilder.makeDecoration(from: decorationDescriptor) else { continue }
+            addChild(decoration)
         }
         addChild(LevelBuilder.makePortal(from: configuration.portal))
     }

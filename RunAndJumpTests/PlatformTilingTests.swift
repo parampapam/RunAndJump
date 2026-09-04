@@ -12,33 +12,33 @@ struct PlatformTilingTests {
 
     @Test("Платформа шириной в тайл — одна средняя плитка, без торцов")
     func singleTileHasNoCaps() {
-        #expect(PlatformTiling.textureNames(forWidthInTiles: 1) == [TextureName.Platform.middle])
+        #expect(PlatformTiling.parts(forWidthInTiles: 1) == [.middle])
     }
 
     @Test("Платформа в два тайла — только левый и правый торец")
     func twoTilesAreCapsOnly() {
-        #expect(PlatformTiling.textureNames(forWidthInTiles: 2) == [
-            TextureName.Platform.left,
-            TextureName.Platform.right,
+        #expect(PlatformTiling.parts(forWidthInTiles: 2) == [
+            .left,
+            .right,
         ])
     }
 
     @Test("Платформа в три тайла — торцы и одна середина")
     func threeTilesHaveOneMiddle() {
-        #expect(PlatformTiling.textureNames(forWidthInTiles: 3) == [
-            TextureName.Platform.left,
-            TextureName.Platform.middle,
-            TextureName.Platform.right,
+        #expect(PlatformTiling.parts(forWidthInTiles: 3) == [
+            .left,
+            .middle,
+            .right,
         ])
     }
 
     @Test("Середина повторяется по ширине")
     func middleRepeats() {
-        let names = PlatformTiling.textureNames(forWidthInTiles: 6)
-        #expect(names.count == 6)
-        #expect(names.first == TextureName.Platform.left)
-        #expect(names.last == TextureName.Platform.right)
-        #expect(names.dropFirst().dropLast().allSatisfy { $0 == TextureName.Platform.middle })
+        let parts = PlatformTiling.parts(forWidthInTiles: 6)
+        #expect(parts.count == 6)
+        #expect(parts.first == .left)
+        #expect(parts.last == .right)
+        #expect(parts.dropFirst().dropLast().allSatisfy { $0 == .middle })
     }
 
     @Test("Дробная ширина округляется до ближайшего числа колонок")
@@ -50,6 +50,6 @@ struct PlatformTilingTests {
     @Test("Ширина меньше тайла всё равно даёт одну колонку")
     func narrowPlatformStillHasOneColumn() {
         #expect(PlatformTiling.columnCount(forWidthInTiles: 0.3) == 1)
-        #expect(PlatformTiling.textureNames(forWidthInTiles: 0.3) == [TextureName.Platform.middle])
+        #expect(PlatformTiling.parts(forWidthInTiles: 0.3) == [.middle])
     }
 }
