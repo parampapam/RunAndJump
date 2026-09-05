@@ -16,18 +16,18 @@ enum GrasslandCatalog {
         // Три атласа, а не один: земля и декорации в `Grassland`, планки
         // платформ и лестница — в своих. Перекладывать ассеты ради формы
         // каталога незачем, порядок поиска имени задаёт список.
-        atlases: ["Grassland", "Platforms", "Ladder"],
+        atlases: ["Grassland"],
         terrain: TerrainNames(
-            groundTop: "grass tiles (24)",
-            platformLeft: "grass tiles (52)",
-            platformMiddle: "grass tiles (57)",
-            platformRight: "grass tiles (6)",
-            ladderBottom: "town tiles (57)",
-            ladderMiddle: "town tiles (44)",
-            ladderTop: "town tiles (53)",
-            ladderTop75: "town tiles (53) 90px",
-            ladderTop50: "town tiles (53) 60px",
-            ladderTop25: "town tiles (53) 30px"
+            groundTop: "grassland_ground_top",
+            platformLeft: "grassland_platform_left",
+            platformMiddle: "grassland_platform_middle",
+            platformRight: "grassland_platform_right",
+            ladderBottom: "grassland_ladder_bottom",
+            ladderMiddle: "grassland_ladder_middle",
+            ladderTop: "grassland_ladder_top",
+            ladderTop75: "grassland_ladder_top_90px",
+            ladderTop50: "grassland_ladder_top_60px",
+            ladderTop25: "grassland_ladder_top_30px"
         ),
         background: BackgroundNames(
             fill: "bg_fill_day",
@@ -48,50 +48,53 @@ enum GrasslandCatalog {
     /// (деревья, большие кусты) собираются из ячеек сетки: `column` вправо,
     /// `row` вверх от нижнего-левого угла декорации.
     private static let decorations: [DecorationID: DecorationEntry] = [
-        .purpleFlower: DecorationEntry(tiles: [tile("grass tiles (14)")]),
-        .yellowFlower: DecorationEntry(tiles: [tile("grass tiles (34)")]),
-        .whiteFlower: DecorationEntry(tiles: [tile("grass tiles (49)")]),
-        .pinkFlower: DecorationEntry(tiles: [tile("grass tiles (63)")]),
+        .purpleFlower: DecorationEntry(tiles: [tile("grassland_flower_purple")]),
+        .yellowFlower: DecorationEntry(tiles: [tile("grassland_flower_yellow")]),
+        .whiteFlower: DecorationEntry(tiles: [tile("grassland_flower_white")]),
+        .pinkFlower: DecorationEntry(tiles: [tile("grassland_flower_pink")]),
+
+        .mushroom1: DecorationEntry(tiles: [tile("grassland_mushroom_1")]),
+        .mushroom2: DecorationEntry(tiles: [tile("grassland_mushroom_2")]),
 
         .darkTree: DecorationEntry(tiles: [
-            tile("grass tiles (61)"),
-            tile("grass tiles (62)", row: 1),
+            tile("grassland_tree_dark_bottom"),
+            tile("grassland_tree_dark_top", row: 1),
         ]),
         .tallDarkTree: DecorationEntry(tiles: [
-            tile("grass tiles (18)"),
-            tile("grass tiles (61)", row: 1),
-            tile("grass tiles (62)", row: 2),
+            tile("grassland_tree_trunk"),
+            tile("grassland_tree_dark_bottom", row: 1),
+            tile("grassland_tree_dark_top", row: 2),
         ]),
         .lightTree: DecorationEntry(tiles: [
-            tile("grass tiles (39)"),
-            tile("grass tiles (38)", row: 1),
+            tile("grassland_tree_light_bottom"),
+            tile("grassland_tree_light_top", row: 1),
         ]),
         .tallLightTree: DecorationEntry(tiles: [
-            tile("grass tiles (18)"),
-            tile("grass tiles (39)", row: 1),
-            tile("grass tiles (38)", row: 2),
+            tile("grassland_tree_trunk"),
+            tile("grassland_tree_light_bottom", row: 1),
+            tile("grassland_tree_light_top", row: 2),
         ]),
 
         .bigDarkBush: DecorationEntry(tiles: [
-            tile("grass tiles (54)"),
-            tile("grass tiles (29)", column: 1),
-            tile("grass tiles (40)", column: 2),
+            tile("grassland_brush_big_dark_left"),
+            tile("grassland_brush_big_dark_middle", column: 1),
+            tile("grassland_brush_big_dark_right", column: 2),
         ]),
         .bigLightBush: DecorationEntry(tiles: [
-            tile("grass tiles (13)"),
-            tile("grass tiles (30)", column: 1),
-            tile("grass tiles (4)", column: 2),
+            tile("grassland_brush_big_light_left"),
+            tile("grassland_brush_big_light_middle", column: 1),
+            tile("grassland_brush_big_light_right", column: 2),
         ]),
-        .smallDarkBush: DecorationEntry(tiles: [tile("grass tiles (41)")]),
-        .smallLightBush: DecorationEntry(tiles: [tile("grass tiles (25)")]),
+        .smallDarkBush: DecorationEntry(tiles: [tile("grassland_brush_small_dark")]),
+        .smallLightBush: DecorationEntry(tiles: [tile("grassland_brush_small_light")]),
 
-        .leftArrow: DecorationEntry(tiles: [tile("grass tiles (16)")]),
-        .rightArrow: DecorationEntry(tiles: [tile("grass tiles (23)")]),
+        .leftArrow: DecorationEntry(tiles: [tile("grassland_arrow_left")]),
+        .rightArrow: DecorationEntry(tiles: [tile("grassland_arrow_right")]),
 
-        .shortDarkGrass: DecorationEntry(tiles: [tile("grass tiles (10)")]),
-        .shortLightGrass: DecorationEntry(tiles: [tile("grass tiles (53)")]),
-        .tallDarkGrass: DecorationEntry(tiles: [tile("grass tiles (56)")]),
-        .tallLightGrass: DecorationEntry(tiles: [tile("grass tiles (35)")]),
+        .shortDarkGrass: DecorationEntry(tiles: [tile("grassland_grass_short_dark")]),
+        .shortLightGrass: DecorationEntry(tiles: [tile("grassland_grass_short_light")]),
+        .tallDarkGrass: DecorationEntry(tiles: [tile("grassland_grass_tall_dark")]),
+        .tallLightGrass: DecorationEntry(tiles: [tile("grassland_grass_tall_light")]),
     ]
 
     /// Статичная плитка: один кадр в ячейке сетки.
@@ -113,6 +116,9 @@ extension DecorationID {
     static let yellowFlower = DecorationID("flower_yellow")
     static let whiteFlower = DecorationID("flower_white")
     static let pinkFlower = DecorationID("flower_pink")
+
+    static let mushroom1 = DecorationID("mushroom_1")
+    static let mushroom2 = DecorationID("mushroom_2")
 
     static let darkTree = DecorationID("tree_dark")
     static let tallDarkTree = DecorationID("tree_dark_tall")
