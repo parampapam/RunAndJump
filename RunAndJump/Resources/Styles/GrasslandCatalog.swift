@@ -18,7 +18,7 @@ enum GrasslandCatalog {
         // каталога незачем, порядок поиска имени задаёт список.
         atlases: ["Grassland"],
         terrain: TerrainNames(
-            groundTop: "grassland_ground_top",
+            groundTop: "grassland_ground_top_middle",
             platformLeft: "grassland_platform_left",
             platformMiddle: "grassland_platform_middle",
             platformRight: "grassland_platform_right",
