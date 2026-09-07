@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "castle_platform_left.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
