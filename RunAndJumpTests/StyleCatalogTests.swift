@@ -39,15 +39,30 @@ struct StyleCatalogTests {
         #expect(StyleCatalogs.catalog(for: LevelStyleID("нет такого")) == nil)
     }
 
-    @Test("Стиль луга знает все декорации, расставленные в уровнях")
-    func grasslandKnowsEveryDecorationUsedByLevels() throws {
-        let catalog = try #require(StyleCatalogs.catalog(for: .grassland))
-        for level in Levels.all where level.style == .grassland {
+    @Test("Стиль каждого уровня знает все расставленные в нём декорации")
+    func everyLevelStyleKnowsItsDecorations() throws {
+        for level in Levels.all {
+            let catalog = try #require(StyleCatalogs.catalog(for: level.style),
+                                       "\(level.name): нет каталога стиля \(level.style.rawValue)")
             for decoration in level.decorations {
                 #expect(catalog.decorations[decoration.id] != nil,
-                        "\(level.name): нет декорации \(decoration.id.rawValue)")
+                        "\(level.name) (\(level.style.rawValue)): нет декорации \(decoration.id.rawValue)")
             }
         }
+    }
+
+    @Test("Наборы декораций у стилей не пересекаются")
+    func stylesDoNotShareDecorationIdentifiers() {
+        // Идентификаторы декораций локальны стилю: `"mushrooms_1"` у пещеры и
+        // `"mushroom_1"` у луга — разные записи в разных каталогах. Совпадение
+        // сырых имён само по себе не ошибка, но оно означает, что кто-то начал
+        // строить общий реестр декораций, — а его в этой конструкции быть не
+        // должно. Пересечение здесь ловится раньше, чем на нём что-то построят.
+        let grassland = Set(GrasslandCatalog.catalog.decorations.keys.map(\.rawValue))
+        let cave = Set(CaveCatalog.catalog.decorations.keys.map(\.rawValue))
+
+        #expect(grassland.intersection(cave).isEmpty,
+                "общие идентификаторы: \(grassland.intersection(cave).sorted())")
     }
 
     @Test("Запись с одним кадром на плитку статична, с несколькими — анимирована")
@@ -71,6 +86,25 @@ struct StyleCatalogTests {
             #expect(!entry.isAnimated, "\(id.rawValue): арт луга статичен")
             #expect(entry.layer == .back, "\(id.rawValue): цветы и кусты — задний план")
         }
+    }
+
+    @Test("У пещеры вместо неба стена, и наоборот")
+    func caveHasAnInteriorInsteadOfSky() {
+        let cave = CaveCatalog.catalog.background
+        #expect(cave.interior != nil, "пещере нечем нарисовать стену")
+        #expect(cave.hills == nil && cave.mountains == nil && cave.clouds == nil,
+                "под землёй не бывает ни гряды, ни облаков")
+
+        let grassland = GrasslandCatalog.catalog.background
+        #expect(grassland.interior == nil, "у луга нет стены интерьера")
+
+        // Сегмент разрешается в имя только у того стиля, который его умеет.
+        #expect(cave.name(for: HorizonSegment.interior) != nil)
+        #expect(cave.name(for: HorizonSegment.hills) == nil)
+        #expect(grassland.name(for: HorizonSegment.interior) == nil)
+        // Пустой сегмент не рисует ничего ни у кого — и это не пропажа слоя.
+        #expect(HorizonSegment.fill.isBlank)
+        #expect(!HorizonSegment.interior.isBlank)
     }
 
     @Test("Части платформы и лестницы разрешаются в имена текстур")

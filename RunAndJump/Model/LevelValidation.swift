@@ -33,6 +33,9 @@ enum LevelValidation {
         case objectOutsideLevel(role: String, at: TileCoordinate)
         /// Флаг стоит там, где игроку не на чем стоять: он же место возрождения.
         case checkpointWithoutFooting(index: Int)
+        /// Уровень выложил фон сегментом, картинки для которого у его стиля нет:
+        /// на этом месте молча окажется заливка.
+        case backgroundSegmentWithoutTexture(role: String)
     }
 
     // MARK: - Каталог
@@ -77,6 +80,7 @@ enum LevelValidation {
             issues.append(.unknownDecoration(decoration.id, at: decoration.origin))
         }
 
+        issues += backgroundWithoutTextures(level, catalog: catalog)
         issues += outsideLevel(level)
         issues += checkpointsWithoutFooting(level)
         return issues
@@ -84,10 +88,21 @@ enum LevelValidation {
 
     // MARK: - Частные проверки
 
-    /// Все обязательные имена каталога с человекочитаемой ролью.
+    /// Все имена каталога с человекочитаемой ролью.
+    ///
+    /// Необязательные слои фона (`nil` — «такого слоя у стиля нет») сюда не
+    /// попадают: отсутствие слоя это законный ответ, а вот **пустая строка**
+    /// вместо имени — опечатка, и её надо поймать.
     private static func namedRoles(of catalog: StyleCatalog) -> [(String, String)] {
         let terrain = catalog.terrain
         let background = catalog.background
+        let optionalLayers: [(String, String?)] = [
+            ("background.hills", background.hills),
+            ("background.mountains", background.mountains),
+            ("background.clouds", background.clouds),
+            ("background.interior", background.interior),
+        ]
+
         return [
             ("terrain.groundTop", terrain.groundTop),
             ("terrain.platformLeft", terrain.platformLeft),
@@ -100,10 +115,30 @@ enum LevelValidation {
             ("terrain.ladderTop50", terrain.ladderTop50),
             ("terrain.ladderTop25", terrain.ladderTop25),
             ("background.fill", background.fill),
-            ("background.hills", background.hills),
-            ("background.mountains", background.mountains),
-            ("background.clouds", background.clouds),
-        ]
+        ] + optionalLayers.compactMap { role, name in name.map { (role, $0) } }
+    }
+
+    /// Сегменты фона, которых стиль уровня не умеет рисовать.
+    ///
+    /// Слои фона необязательны, и это правильно: у пещеры нет холмов. Но
+    /// «стиль без холмов» и «уровень, выложивший фон холмами» вместе дают
+    /// молчаливую пустоту, а раньше такое ловил компилятор. Ловим здесь.
+    private static func backgroundWithoutTextures(_ level: LevelConfiguration,
+                                                  catalog: StyleCatalog) -> [Issue] {
+        let background = level.background
+        var issues: [Issue] = []
+
+        for (index, segment) in background.horizon.segments.enumerated()
+        where !segment.isBlank && catalog.background.name(for: segment) == nil {
+            issues.append(.backgroundSegmentWithoutTexture(role: "background.horizon[\(index)]"))
+        }
+
+        for (index, segment) in background.sky.segments.enumerated()
+        where catalog.background.name(for: segment) == nil {
+            issues.append(.backgroundSegmentWithoutTexture(role: "background.sky[\(index)]"))
+        }
+
+        return issues
     }
 
     /// Объекты, вышедшие за границы уровня. Проверяется нижний-левый угол:

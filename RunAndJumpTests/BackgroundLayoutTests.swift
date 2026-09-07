@@ -18,7 +18,7 @@ struct BackgroundLayoutTests {
     private let viewport = TileSize(width: 18, height: 10)
 
     private let background = BackgroundDescriptor(
-        fill: .daySky,
+        fill: .solid,
         horizon: BackgroundStrip(segments: [.hills, .fill, .mountains], widthInTiles: 8),
         sky: BackgroundStrip(segments: [.clouds], widthInTiles: 12),
         horizonLineInTiles: 5
@@ -135,7 +135,7 @@ struct BackgroundLayoutTests {
     @Test("Пустая полоса не даёт ни одного сегмента")
     func emptyStripHasNoPlacements() {
         let empty = BackgroundDescriptor(
-            fill: .daySky,
+            fill: .solid,
             horizon: BackgroundStrip(segments: [], widthInTiles: 8),
             sky: BackgroundStrip(segments: [.clouds], widthInTiles: 12),
             horizonLineInTiles: 5

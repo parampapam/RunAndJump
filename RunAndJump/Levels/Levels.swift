@@ -16,6 +16,11 @@ enum Levels {
     static let sceneSize = CGSize(width: 1334, height: 750)
     static let levelWidth: CGFloat = 45
     static let levelHeight: CGFloat = 16
+    /// Потолок пещерного уровня. Ниже обычной высоты, потому что под землёй
+    /// верх экрана — это стена, а не небо: её видно, и она должна кончаться
+    /// потолком со сталактитами. Запас над самой высокой площадкой (y = 7) —
+    /// чтобы камера успевала показать потолок, а игрок в него не упирался.
+    static let caveCeiling: CGFloat = 11
     /// Земля — ровно один тайл высотой, чтобы её верх лёг на линию сетки (y = 1).
     static let groundHeight: CGFloat = WorldMetrics.tileSize
 
@@ -33,7 +38,7 @@ enum Levels {
         groundHeight: groundHeight,
         // Вводный уровень: пологие холмы, горы лишь мелькают вдалеке.
         background: BackgroundDescriptor(
-            fill: .daySky,
+            fill: .solid,
             horizon: BackgroundStrip(segments: [.hills, .fill, .mountains, .fill],
                                      widthInTiles: 8),
             sky: BackgroundStrip(segments: [.clouds], widthInTiles: 12),
@@ -123,7 +128,7 @@ enum Levels {
         groundHeight: groundHeight,
         // Горный уровень: гряда выше и плотнее, разрывы реже.
         background: BackgroundDescriptor(
-            fill: .daySky,
+            fill: .solid,
             horizon: BackgroundStrip(segments: [.mountains, .fill, .mountains, .hills],
                                      widthInTiles: 8),
             sky: BackgroundStrip(segments: [.clouds], widthInTiles: 14),
@@ -203,19 +208,30 @@ enum Levels {
 
     static let level3 = LevelConfiguration(
         name: "Level 3",
-        style: .grassland,
+        style: .cave,
         sceneSize: sceneSize,
         levelWidthInTiles: levelWidth,
-        levelHeightInTiles: levelHeight,
+        // Ниже остальных уровней намеренно: пещера — замкнутое пространство, и
+        // потолок должен быть виден. У наземных уровней верхняя половина высоты
+        // уходит в небо, а здесь она уходила бы в стену, которую игрок всё
+        // равно не увидит: камера поднимается только до `высота − 5` (половина
+        // видимых 10 тайлов), поэтому при высоте 16 верхние пять тайлов не
+        // попадают в кадр никогда.
+        levelHeightInTiles: caveCeiling,
         playerStart: TileCoordinate(x: 1, y: 1),
         groundHeight: groundHeight,
-        // Открытое место: линия горизонта ниже, гряда реже — больше неба.
+        // Под землёй неба нет: линия горизонта поднята до потолка, поэтому
+        // нижняя полоса кроет экран целиком при любом положении камеры, а
+        // верхняя пустует — пустой **список сегментов**, а не пустой сегмент.
+        // Ширина держит пропорцию картинки (16:9 при высоте в потолок), чтобы
+        // кладку не сплющило; стена тайлится бесшовно, так что стык сегментов
+        // на широком экране не виден.
         background: BackgroundDescriptor(
-            fill: .daySky,
-            horizon: BackgroundStrip(segments: [.mountains, .fill, .hills, .fill],
-                                     widthInTiles: 8),
-            sky: BackgroundStrip(segments: [.clouds], widthInTiles: 10),
-            horizonLineInTiles: 4
+            fill: .solid,
+            horizon: BackgroundStrip(segments: [.interior],
+                                     widthInTiles: caveCeiling * 16 / 9),
+            sky: BackgroundStrip(segments: [], widthInTiles: 10),
+            horizonLineInTiles: caveCeiling
         ),
         platforms: [
             PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 4, y: 2.75),
@@ -291,14 +307,25 @@ enum Levels {
             CheckpointDescriptor(origin: TileCoordinate(x: 25, y: 1)),
             CheckpointDescriptor(origin: TileCoordinate(x: 39, y: 1)),
         ],
+        // Пещерный набор: кристаллы и грибы по полу, бугры для рельефа,
+        // сталагмиты на земле и сталактиты под потолком. Места те же, что были
+        // у цветов, — стиль сменился, геометрия уровня нет.
         decorations: [
-            DecorationDescriptor(id: .whiteFlower, origin: TileCoordinate(x: 2, y: 1)),
-            DecorationDescriptor(id: .purpleFlower, origin: TileCoordinate(x: 11, y: 1)),
-            DecorationDescriptor(id: .pinkFlower, origin: TileCoordinate(x: 16, y: 1)),
-            DecorationDescriptor(id: .yellowFlower, origin: TileCoordinate(x: 23, y: 1)),
-            DecorationDescriptor(id: .whiteFlower, origin: TileCoordinate(x: 32, y: 1)),
-            DecorationDescriptor(id: .purpleFlower, origin: TileCoordinate(x: 38, y: 1)),
-            DecorationDescriptor(id: .pinkFlower, origin: TileCoordinate(x: 43, y: 1)),
+            DecorationDescriptor(id: .caveSmallBlueCrystal, origin: TileCoordinate(x: 2, y: 1)),
+            DecorationDescriptor(id: .caveMushrooms1, origin: TileCoordinate(x: 11, y: 1)),
+            DecorationDescriptor(id: .caveBigPurpleCrystal, origin: TileCoordinate(x: 16, y: 1)),
+            DecorationDescriptor(id: .caveMediumHillock2, origin: TileCoordinate(x: 23, y: 1)),
+            DecorationDescriptor(id: .caveStalagmite, origin: TileCoordinate(x: 32, y: 1)),
+            DecorationDescriptor(id: .caveMushrooms3, origin: TileCoordinate(x: 38, y: 1)),
+            DecorationDescriptor(id: .caveSmallYellowCrystal, origin: TileCoordinate(x: 43, y: 1)),
+            // Сталактиты — единственные декорации уровня, которые ставятся не
+            // на землю. Не под самый потолок (`caveCeiling − 1`), а на тайл
+            // ниже: камера поднимается только до `caveCeiling − 5`, и верхний
+            // ряд тайлов уровня в кадр не попадает никогда. Считается от
+            // потолка, а не числом, — сдвинется он, сдвинутся и они.
+            DecorationDescriptor(id: .caveStalactite, origin: TileCoordinate(x: 8, y: caveCeiling - 2)),
+            DecorationDescriptor(id: .caveStalactite, origin: TileCoordinate(x: 21, y: caveCeiling - 2)),
+            DecorationDescriptor(id: .caveStalactite, origin: TileCoordinate(x: 35, y: caveCeiling - 2)),
         ],
         portal: TileCoordinate(x: 42, y: 1)
     )

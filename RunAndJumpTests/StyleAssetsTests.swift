@@ -47,12 +47,37 @@ struct StyleAssetsTests {
     func everyBackgroundLayerExists() {
         for catalog in StyleCatalogs.all {
             let background = catalog.background
-            for name in [background.fill, background.hills, background.mountains, background.clouds] {
+            // Необязательные слои проверяются только если стиль их назвал:
+            // у пещеры нет холмов и облаков, у луга — стены интерьера, и это
+            // законно. Что названный слой обязан существовать — проверяем.
+            let names = [background.fill]
+                + [background.hills, background.mountains,
+                   background.clouds, background.interior].compactMap { $0 }
+
+            for name in names {
                 // Слои фона — отдельные Image Set, а не кадры атласа, поэтому
                 // спрашиваем их у каталога ассетов напрямую.
                 #expect(UIImage(named: name) != nil,
                         "\(catalog.id.rawValue): нет картинки «\(name)»")
             }
+        }
+    }
+
+    @Test("Стена интерьера тайлится бесшовно по горизонтали")
+    @MainActor
+    func interiorLayersTileSeamlessly() throws {
+        // У гряды холмов края однотонные, поэтому стык сегментов не виден при
+        // любой картинке. У стены интерьера однотонных краёв нет: она кроет
+        // экран целиком, и несовпадение краёв дало бы вертикальный шов через
+        // весь уровень. Это единственный слой, к которому есть такое
+        // требование, — поэтому оно и проверяется отдельно.
+        for catalog in StyleCatalogs.all {
+            guard let name = catalog.background.interior else { continue }
+            let image = try #require(UIImage(named: name)?.cgImage,
+                                     "\(catalog.id.rawValue): нет картинки «\(name)»")
+
+            #expect(column(0, of: image) == column(image.width - 1, of: image),
+                    "\(catalog.id.rawValue)/\(name): левый и правый край не совпадают — будет виден шов")
         }
     }
 
@@ -90,6 +115,32 @@ struct StyleAssetsTests {
             ("ladderTop50", terrain.ladderTop50),
             ("ladderTop25", terrain.ladderTop25),
         ]
+    }
+
+    /// Пиксели одной колонки картинки — для сверки левого края с правым.
+    private func column(_ x: Int, of image: CGImage) -> [UInt8] {
+        let height = image.height
+        var pixels = [UInt8](repeating: 0, count: height * 4)
+
+        pixels.withUnsafeMutableBytes { buffer in
+            guard let base = buffer.baseAddress,
+                  let context = CGContext(
+                      data: base,
+                      width: 1,
+                      height: height,
+                      bitsPerComponent: 8,
+                      bytesPerRow: 4,
+                      space: CGColorSpaceCreateDeviceRGB(),
+                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+                  ) else { return }
+            // Сдвигаем картинку так, чтобы нужная колонка попала в контекст
+            // шириной в один пиксель.
+            context.draw(image, in: CGRect(x: -CGFloat(x), y: 0,
+                                           width: CGFloat(image.width),
+                                           height: CGFloat(height)))
+        }
+
+        return pixels
     }
 
     /// Средний цвет картинки. Заливка одноцветна, поэтому среднее — это и есть
