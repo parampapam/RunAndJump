@@ -117,6 +117,51 @@ struct LevelValidationTests {
         #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog())
                 == [.checkpointWithoutFooting(index: 0)])
     }
+
+    // MARK: - Фон
+
+    @Test("Сегмент, которого стиль не умеет рисовать, — находка")
+    func backgroundSegmentMissingFromTheCatalogIsReported() {
+        // У фикстуры есть холмы и облака, но нет стены интерьера: наземный
+        // стиль, выложивший фон пещерной стеной, получил бы молчаливую пустоту.
+        let level = Fixtures.level(background: BackgroundDescriptor(
+            fill: .solid,
+            horizon: BackgroundStrip(segments: [.hills, .interior], widthInTiles: 8),
+            sky: BackgroundStrip(segments: [.clouds], widthInTiles: 10),
+            horizonLineInTiles: 4
+        ))
+
+        #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog())
+                == [.backgroundSegmentWithoutTexture(role: "background.horizon[1]")])
+    }
+
+    @Test("Пустой сегмент гряды — это узор, а не находка")
+    func blankHorizonSegmentIsNotReported() {
+        // `.fill` не рисует ничего **по замыслу** — это разрыв в гряде. Тем он
+        // и отличается от слоя, которого у стиля просто нет.
+        let level = Fixtures.level(background: BackgroundDescriptor(
+            fill: .solid,
+            horizon: BackgroundStrip(segments: [.hills, .fill], widthInTiles: 8),
+            sky: BackgroundStrip(segments: [], widthInTiles: 10),
+            horizonLineInTiles: 4
+        ))
+
+        #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog()).isEmpty)
+    }
+
+    @Test("Подземный фон против подземного каталога находок не даёт")
+    func interiorBackgroundMatchesAnInteriorCatalog() {
+        let level = Fixtures.level(background: BackgroundDescriptor(
+            fill: .solid,
+            horizon: BackgroundStrip(segments: [.interior], widthInTiles: 28.5),
+            sky: BackgroundStrip(segments: [], widthInTiles: 10),
+            horizonLineInTiles: 10
+        ))
+        let underground = Fixtures.catalog(background: BackgroundNames(fill: "fill",
+                                                                       interior: "wall"))
+
+        #expect(LevelValidation.issues(in: level, catalog: underground).isEmpty)
+    }
 }
 
 // MARK: - Фикстуры
@@ -130,6 +175,10 @@ private extension DecorationID {
 private enum Fixtures {
 
     static func catalog(groundTop: String = "ground",
+                        background: BackgroundNames = BackgroundNames(fill: "fill",
+                                                                      hills: "hills",
+                                                                      mountains: "mountains",
+                                                                      clouds: "clouds"),
                         decorations: [DecorationID: DecorationEntry] = [:]) -> StyleCatalog {
         StyleCatalog(
             id: LevelStyleID("fixture"),
@@ -140,17 +189,26 @@ private enum Fixtures {
                 ladderBottom: "lb", ladderMiddle: "lm",
                 ladderTop: "lt", ladderTop75: "lt75", ladderTop50: "lt50", ladderTop25: "lt25"
             ),
-            background: BackgroundNames(fill: "fill", hills: "hills",
-                                        mountains: "mountains", clouds: "clouds"),
+            background: background,
             skyColor: RGBColor(red: 0, green: 0, blue: 0),
             decorations: decorations
         )
     }
 
+    /// Фон фикстуры — гряда холмов и облака, то есть ровно те слои, которые
+    /// `Fixtures.catalog()` умеет рисовать.
+    static let background = BackgroundDescriptor(
+        fill: .solid,
+        horizon: BackgroundStrip(segments: [.hills], widthInTiles: 8),
+        sky: BackgroundStrip(segments: [.clouds], widthInTiles: 10),
+        horizonLineInTiles: 4
+    )
+
     static func level(platforms: [PlatformDescriptor] = [],
                       hazards: [HazardDescriptor] = [],
                       checkpoints: [CheckpointDescriptor] = [],
                       decorations: [DecorationDescriptor] = [],
+                      background: BackgroundDescriptor = Fixtures.background,
                       portal: TileCoordinate = TileCoordinate(x: 10, y: 1)) -> LevelConfiguration {
         LevelConfiguration(
             name: "Fixture",
@@ -160,12 +218,7 @@ private enum Fixtures {
             levelHeightInTiles: 10,
             playerStart: TileCoordinate(x: 1, y: 1),
             groundHeight: WorldMetrics.tileSize,
-            background: BackgroundDescriptor(
-                fill: .daySky,
-                horizon: BackgroundStrip(segments: [.hills], widthInTiles: 8),
-                sky: BackgroundStrip(segments: [.clouds], widthInTiles: 10),
-                horizonLineInTiles: 4
-            ),
+            background: background,
             platforms: platforms,
             movingPlatforms: [],
             ladders: [],

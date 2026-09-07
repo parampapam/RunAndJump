@@ -24,10 +24,11 @@ struct StyleCatalog: Equatable, Sendable {
 
     /// Атласы, в которых лежат текстуры стиля, в порядке поиска имени.
     ///
-    /// Список, а не одно имя: нынешний арт луга разложен по трём атласам
-    /// (`Grassland` — земля и декорации, `Platforms`, `Ladder`), и сводить их в
-    /// один значило бы двигать ассеты ради формы каталога. Стиль вправе держать
-    /// всё в одном атласе — тогда в списке будет один элемент.
+    /// Сегодня у каждого стиля атлас один: весь его арт — ландшафт, платформы,
+    /// лестница, декорации — лежит в `Tiles/<Стиль>.spriteatlas`. Но тип
+    /// оставлен списком: он ничего не стоит и позволяет стилю разложить арт по
+    /// нескольким атласам, не меняя ни каталог, ни `LevelTextures`. Порядок в
+    /// списке — это и есть порядок поиска имени: первый атлас главнее.
     let atlases: [String]
 
     /// Обязательные роли ландшафта.
@@ -102,17 +103,39 @@ struct TerrainNames: Equatable, Sendable {
 /// Имена слоёв фона. Поля, а не словарь по сегментам: сегменты фона —
 /// закрытые `enum`, и новый сегмент **обязан** сломать сборку каждого каталога,
 /// а не тихо остаться ненарисованным.
+///
+/// Слои, кроме заливки, **необязательны**: у пещеры нет ни холмов, ни облаков,
+/// а у луга — стены интерьера. Необязательность не отменяет предыдущего
+/// абзаца: `switch` по сегментам исчерпывающий, поэтому новый вид фона всё так
+/// же ломает сборку каждого каталога — просто теперь каталог вправе ответить
+/// «такого слоя у меня нет» вместо того, чтобы придумывать имя картинки.
+/// `nil` рисуется как пустота, сквозь которую видна заливка.
 struct BackgroundNames: Equatable, Sendable {
 
     /// Сплошная заливка на весь уровень. Её цвет = `StyleCatalog.skyColor`.
+    /// Единственный обязательный слой: она видна везде, где нет остальных.
     let fill: String
-    let hills: String
-    let mountains: String
-    let clouds: String
+    let hills: String?
+    let mountains: String?
+    let clouds: String?
+    /// Сплошная стена интерьера — у наземных стилей её нет.
+    let interior: String?
+
+    init(fill: String,
+         hills: String? = nil,
+         mountains: String? = nil,
+         clouds: String? = nil,
+         interior: String? = nil) {
+        self.fill = fill
+        self.hills = hills
+        self.mountains = mountains
+        self.clouds = clouds
+        self.interior = interior
+    }
 
     func name(for fill: BackgroundFill) -> String {
         switch fill {
-        case .daySky: return self.fill
+        case .solid: return self.fill
         }
     }
 
@@ -121,11 +144,13 @@ struct BackgroundNames: Equatable, Sendable {
         switch segment {
         case .hills: return hills
         case .mountains: return mountains
+        case .interior: return interior
         case .fill: return nil
         }
     }
 
-    func name(for segment: SkySegment) -> String {
+    /// `nil` — сегмент ничего не рисует, и на его месте видна заливка.
+    func name(for segment: SkySegment) -> String? {
         switch segment {
         case .clouds: return clouds
         }

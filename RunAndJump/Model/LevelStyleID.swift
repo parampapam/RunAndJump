@@ -24,6 +24,9 @@ struct LevelStyleID: RawRepresentable, Hashable, Sendable {
         self.rawValue = rawValue
     }
 
-    /// Луг — стиль, в котором собраны все нынешние уровни.
+    /// Луг — наземный стиль: холмы, горы и облака за спиной.
     static let grassland = LevelStyleID("grassland")
+
+    /// Пещера — подземный стиль: вместо неба стена, вместо деревьев кристаллы.
+    static let cave = LevelStyleID("cave")
 }

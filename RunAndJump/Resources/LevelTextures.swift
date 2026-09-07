@@ -96,8 +96,10 @@ struct LevelTextures {
         return texture(named: name)
     }
 
-    func background(_ segment: SkySegment) -> SKTexture {
-        texture(named: catalog.background.name(for: segment))
+    /// `nil` — сегмент ничего не рисует, и на его месте видна заливка.
+    func background(_ segment: SkySegment) -> SKTexture? {
+        guard let name = catalog.background.name(for: segment) else { return nil }
+        return texture(named: name)
     }
 
     /// Цвет фона сцены. Виден на дне ям под озёрами — там, где за жидкостью
