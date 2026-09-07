@@ -155,9 +155,9 @@ enum Levels {
         ],
         ladders: [
             // Земля → платформа на y = 5.
-            LadderDescriptor(origin: TileCoordinate(x: 8.5, y: 1), height: 5),
+            LadderDescriptor(origin: TileCoordinate(x: 8.5, y: 1), height: 4.25),
             // Платформа y = 5 → платформа y = 7.
-            LadderDescriptor(origin: TileCoordinate(x: 11.5, y: 5), height: 3)
+            LadderDescriptor(origin: TileCoordinate(x: 11.5, y: 5), height: 2.25),
         ],
         // Лава ровно под лифтом: можно перепрыгнуть, а можно переждать наверху.
         hazards: [

@@ -31,10 +31,10 @@ enum TextureName {
     /// Поверхность опасных зон (атлас `Hazards`): два кадра на каждую жидкость,
     /// волны на них сдвинуты — по ним и «бежит» рябь.
     enum Hazard {
-        static let water0 = "grass tiles (12)-0"
-        static let water1 = "grass tiles (12)-1"
-        static let lava0 = "volcano tiles (9)-0"
-        static let lava1 = "volcano tiles (9)-1"
+        static let water0 = "water_0"
+        static let water1 = "water_1"
+        static let lava0 = "lava_0"
+        static let lava1 = "lava_1"
     }
 
     enum Coin {
