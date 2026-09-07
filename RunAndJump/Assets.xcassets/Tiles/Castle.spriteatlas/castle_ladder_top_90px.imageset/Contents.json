@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "castle_ladder_top_90px.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
