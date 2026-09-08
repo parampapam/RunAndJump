@@ -22,7 +22,7 @@ enum ObjectSize {
     /// правую часть, поэтому объект ровно в тайл. Зона срабатывания — весь тайл:
     /// «пройти мимо флага» не должно требовать точного попадания в древко.
     static let checkpoint = TileSize.one
-    static let ladder = TileSize(width: 0.75, height: 1)
+    static let ladder = TileSize(width: 0.85, height: 1)
     /// Снаряд снайпера. Спрайт, как и награды, нарисован в центре кадра с
     /// прозрачными полями: узел в полтайла даёт шарик примерно в четверть тайла.
     static let projectile = TileSize(width: 0.5, height: 0.5)
