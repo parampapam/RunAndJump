@@ -10,7 +10,11 @@ import Foundation
 /// а тесты проходят по `all` и проверяют каждый.
 enum StyleCatalogs {
 
-    static let all: [StyleCatalog] = [GrasslandCatalog.catalog, CaveCatalog.catalog]
+    static let all: [StyleCatalog] = [
+        GrasslandCatalog.catalog,
+        CaveCatalog.catalog,
+        CastleCatalog.catalog,
+    ]
 
     /// Каталог стиля; `nil` — такого стиля нет.
     static func catalog(for id: LevelStyleID) -> StyleCatalog? {

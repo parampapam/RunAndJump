@@ -58,11 +58,19 @@ struct StyleCatalogTests {
         // сырых имён само по себе не ошибка, но оно означает, что кто-то начал
         // строить общий реестр декораций, — а его в этой конструкции быть не
         // должно. Пересечение здесь ловится раньше, чем на нём что-то построят.
-        let grassland = Set(GrasslandCatalog.catalog.decorations.keys.map(\.rawValue))
-        let cave = Set(CaveCatalog.catalog.decorations.keys.map(\.rawValue))
+        //
+        // Проверяются все пары `StyleCatalogs.all`, а не два названных стиля:
+        // так новый каталог попадает под проверку сам, ничего здесь не правя.
+        let catalogs = StyleCatalogs.all
+        for (index, catalog) in catalogs.enumerated() {
+            let names = Set(catalog.decorations.keys.map(\.rawValue))
 
-        #expect(grassland.intersection(cave).isEmpty,
-                "общие идентификаторы: \(grassland.intersection(cave).sorted())")
+            for other in catalogs[(index + 1)...] {
+                let shared = names.intersection(other.decorations.keys.map(\.rawValue))
+                #expect(shared.isEmpty,
+                        "\(catalog.id.rawValue) и \(other.id.rawValue) делят идентификаторы: \(shared.sorted())")
+            }
+        }
     }
 
     @Test("Запись с одним кадром на плитку статична, с несколькими — анимирована")

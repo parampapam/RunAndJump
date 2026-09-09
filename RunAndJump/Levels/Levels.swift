@@ -16,11 +16,15 @@ enum Levels {
     static let sceneSize = CGSize(width: 1334, height: 750)
     static let levelWidth: CGFloat = 45
     static let levelHeight: CGFloat = 16
-    /// Потолок пещерного уровня. Ниже обычной высоты, потому что под землёй
-    /// верх экрана — это стена, а не небо: её видно, и она должна кончаться
-    /// потолком со сталактитами. Запас над самой высокой площадкой (y = 7) —
-    /// чтобы камера успевала показать потолок, а игрок в него не упирался.
-    static let caveCeiling: CGFloat = 11
+    /// Потолок интерьерного уровня. Ниже обычной высоты, потому что в
+    /// помещении верх экрана — это стена, а не небо: её видно, и она должна
+    /// кончаться потолком. Запас над самой высокой площадкой (y = 7) — чтобы
+    /// камера успевала показать потолок, а игрок в него не упирался.
+    ///
+    /// Названо по свойству уровня, а не по стилю: потолок нужен любому
+    /// интерьеру — и пещере, и замку, — а стиль у уровня меняется правкой
+    /// одного поля.
+    static let interiorCeiling: CGFloat = 11
     /// Земля — ровно один тайл высотой, чтобы её верх лёг на линию сетки (y = 1).
     static let groundHeight: CGFloat = WorldMetrics.tileSize
 
@@ -208,19 +212,19 @@ enum Levels {
 
     static let level3 = LevelConfiguration(
         name: "Level 3",
-        style: .cave,
+        style: .castle,
         sceneSize: sceneSize,
         levelWidthInTiles: levelWidth,
-        // Ниже остальных уровней намеренно: пещера — замкнутое пространство, и
-        // потолок должен быть виден. У наземных уровней верхняя половина высоты
-        // уходит в небо, а здесь она уходила бы в стену, которую игрок всё
-        // равно не увидит: камера поднимается только до `высота − 5` (половина
-        // видимых 10 тайлов), поэтому при высоте 16 верхние пять тайлов не
-        // попадают в кадр никогда.
-        levelHeightInTiles: caveCeiling,
+        // Ниже остальных уровней намеренно: интерьер — замкнутое пространство,
+        // и потолок должен быть виден. У наземных уровней верхняя половина
+        // высоты уходит в небо, а здесь она уходила бы в стену, которую игрок
+        // всё равно не увидит: камера поднимается только до `высота − 5`
+        // (половина видимых 10 тайлов), поэтому при высоте 16 верхние пять
+        // тайлов не попадают в кадр никогда.
+        levelHeightInTiles: interiorCeiling,
         playerStart: TileCoordinate(x: 1, y: 1),
         groundHeight: groundHeight,
-        // Под землёй неба нет: линия горизонта поднята до потолка, поэтому
+        // В помещении неба нет: линия горизонта поднята до потолка, поэтому
         // нижняя полоса кроет экран целиком при любом положении камеры, а
         // верхняя пустует — пустой **список сегментов**, а не пустой сегмент.
         // Ширина держит пропорцию картинки (16:9 при высоте в потолок), чтобы
@@ -229,9 +233,9 @@ enum Levels {
         background: BackgroundDescriptor(
             fill: .solid,
             horizon: BackgroundStrip(segments: [.interior],
-                                     widthInTiles: caveCeiling * 16 / 9),
+                                     widthInTiles: interiorCeiling * 16 / 9),
             sky: BackgroundStrip(segments: [], widthInTiles: 10),
-            horizonLineInTiles: caveCeiling
+            horizonLineInTiles: interiorCeiling
         ),
         platforms: [
             PlatformDescriptor(rect: TileRect(origin: TileCoordinate(x: 4, y: 2.75),
@@ -307,25 +311,33 @@ enum Levels {
             CheckpointDescriptor(origin: TileCoordinate(x: 25, y: 1)),
             CheckpointDescriptor(origin: TileCoordinate(x: 39, y: 1)),
         ],
-        // Пещерный набор: кристаллы и грибы по полу, бугры для рельефа,
-        // сталагмиты на земле и сталактиты под потолком. Места те же, что были
-        // у цветов, — стиль сменился, геометрия уровня нет.
+        // Замковый набор: утварь и статуи по полу, знамёна и факелы на стене.
+        // По горизонтали места те же, что были у кристаллов и сталактитов, —
+        // стиль сменился, геометрия уровня нет.
         decorations: [
-            DecorationDescriptor(id: .caveSmallBlueCrystal, origin: TileCoordinate(x: 2, y: 1)),
-            DecorationDescriptor(id: .caveMushrooms1, origin: TileCoordinate(x: 11, y: 1)),
-            DecorationDescriptor(id: .caveBigPurpleCrystal, origin: TileCoordinate(x: 16, y: 1)),
-            DecorationDescriptor(id: .caveMediumHillock2, origin: TileCoordinate(x: 23, y: 1)),
-            DecorationDescriptor(id: .caveStalagmite, origin: TileCoordinate(x: 32, y: 1)),
-            DecorationDescriptor(id: .caveMushrooms3, origin: TileCoordinate(x: 38, y: 1)),
-            DecorationDescriptor(id: .caveSmallYellowCrystal, origin: TileCoordinate(x: 43, y: 1)),
-            // Сталактиты — единственные декорации уровня, которые ставятся не
-            // на землю. Не под самый потолок (`caveCeiling − 1`), а на тайл
-            // ниже: камера поднимается только до `caveCeiling − 5`, и верхний
-            // ряд тайлов уровня в кадр не попадает никогда. Считается от
-            // потолка, а не числом, — сдвинется он, сдвинутся и они.
-            DecorationDescriptor(id: .caveStalactite, origin: TileCoordinate(x: 8, y: caveCeiling - 2)),
-            DecorationDescriptor(id: .caveStalactite, origin: TileCoordinate(x: 21, y: caveCeiling - 2)),
-            DecorationDescriptor(id: .caveStalactite, origin: TileCoordinate(x: 35, y: caveCeiling - 2)),
+            DecorationDescriptor(id: .castleVerticalBarrel, origin: TileCoordinate(x: 2, y: 1)),
+            DecorationDescriptor(id: .castleVase3, origin: TileCoordinate(x: 11, y: 1)),
+            DecorationDescriptor(id: .castleColumn, origin: TileCoordinate(x: 16, y: 1)),
+            DecorationDescriptor(id: .castleBox, origin: TileCoordinate(x: 23, y: 1)),
+            DecorationDescriptor(id: .castleBrokenColumn, origin: TileCoordinate(x: 32, y: 1)),
+            DecorationDescriptor(id: .castleChimera1, origin: TileCoordinate(x: 38, y: 1)),
+            DecorationDescriptor(id: .castleVase1, origin: TileCoordinate(x: 43, y: 1)),
+            // Знамёна занимают места сталактитов по горизонтали, но не по
+            // высоте: сталактит обязан расти с потолка, а знамя висит на стене,
+            // и под потолком его просто не видно. Камера идёт за игроком и
+            // поднимается только до `interiorCeiling − 5`, поэтому у самого
+            // потолка декорация попадает в кадр лишь на верхних площадках —
+            // отсюда y = 7, на уровне самых высоких из них.
+            DecorationDescriptor(id: .castleBlueGonfalon, origin: TileCoordinate(x: 8, y: 7)),
+            DecorationDescriptor(id: .castlePurpleGonfalon, origin: TileCoordinate(x: 21, y: 7)),
+            DecorationDescriptor(id: .castleRedGonfalon, origin: TileCoordinate(x: 35, y: 7)),
+            // Факелы — единственное, чего у пещеры не было вовсе: её арт
+            // статичен, а это анимация переднего слоя. Висят на стене между
+            // площадками, поэтому и по высоте отличаются от всего остального:
+            // на полу факел стоять не может.
+            DecorationDescriptor(id: .castleTorch, origin: TileCoordinate(x: 3, y: 5)),
+            DecorationDescriptor(id: .castleTorch, origin: TileCoordinate(x: 22, y: 6)),
+            DecorationDescriptor(id: .castleTorch, origin: TileCoordinate(x: 41, y: 5)),
         ],
         portal: TileCoordinate(x: 42, y: 1)
     )

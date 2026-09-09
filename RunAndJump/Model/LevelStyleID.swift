@@ -29,4 +29,8 @@ struct LevelStyleID: RawRepresentable, Hashable, Sendable {
 
     /// Пещера — подземный стиль: вместо неба стена, вместо деревьев кристаллы.
     static let cave = LevelStyleID("cave")
+
+    /// Замок — интерьерный стиль: кирпичная кладка вместо неба, колонны и
+    /// факелы вместо кустов.
+    static let castle = LevelStyleID("castle")
 }
