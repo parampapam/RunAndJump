@@ -27,12 +27,6 @@ enum TerrainLayout {
     ///
     /// Порядок в результате — снизу вверх, слева направо.
     static func bodies(of map: TerrainMap) -> [TileRect] {
-        /// Горизонтальный пробег: полуинтервал колонок `[start, end)`.
-        struct Run: Hashable {
-            let start: Int
-            let end: Int
-        }
-
         var result: [TileRect] = []
         /// Пробеги, начатые ниже и ещё не закрытые: пробег → ряд, где он начался.
         var open: [Run: Int] = [:]
@@ -46,17 +40,7 @@ enum TerrainLayout {
         }
 
         for y in 0..<map.height {
-            var runs: Set<Run> = []
-            var x = 0
-            while x < map.width {
-                guard map.isSolid(x: x, y: y) else {
-                    x += 1
-                    continue
-                }
-                let start = x
-                while x < map.width, map.isSolid(x: x, y: y) { x += 1 }
-                runs.insert(Run(start: start, end: x))
-            }
+            let runs = Set(self.runs(inRow: y, of: map, where: { $0.isSolid(x: $1, y: $2) }))
 
             // Пробег, не повторившийся в этом ряду, закончился на предыдущем.
             for (run, startY) in open where !runs.contains(run) {
@@ -76,4 +60,64 @@ enum TerrainLayout {
             $0.origin.y == $1.origin.y ? $0.origin.x < $1.origin.x : $0.origin.y < $1.origin.y
         }
     }
+
+    /// Односторонние опоры проходимого грунта: открытые сверху участки его
+    /// поверхности, слева направо и снизу вверх.
+    ///
+    /// Одна опора на участок, а не на клетку, — по той же причине, что и
+    /// склейка тел: на швах между соседними рёбрами игрок спотыкается.
+    ///
+    /// Ребро появляется только там, где над клеткой **пусто**. Проходимая
+    /// клетка под сплошной опоры не даёт: сверху её всё равно накрывает тело
+    /// сплошного грунта, а второе ребро внутри массива ловило бы игрока
+    /// изнутри.
+    static func surfaces(of map: TerrainMap) -> [TerrainSurface] {
+        var result: [TerrainSurface] = []
+
+        for y in 0..<map.height {
+            let exposed = runs(inRow: y, of: map) { map, x, y in
+                map.cell(x: x, y: y) == .passable && !map.isOccupied(x: x, y: y + 1)
+            }
+            for run in exposed {
+                result.append(
+                    TerrainSurface(y: CGFloat(y + 1),
+                                   xSpan: CGFloat(run.start)...CGFloat(run.end))
+                )
+            }
+        }
+        return result
+    }
+
+    /// Горизонтальный пробег клеток, отвечающих условию: полуинтервал
+    /// колонок `[start, end)`.
+    private struct Run: Hashable {
+        let start: Int
+        let end: Int
+    }
+
+    private static func runs(inRow y: Int,
+                             of map: TerrainMap,
+                             where matches: (TerrainMap, Int, Int) -> Bool) -> [Run] {
+        var runs: [Run] = []
+        var x = 0
+        while x < map.width {
+            guard matches(map, x, y) else {
+                x += 1
+                continue
+            }
+            let start = x
+            while x < map.width, matches(map, x, y) { x += 1 }
+            runs.append(Run(start: start, end: x))
+        }
+        return runs
+    }
+}
+
+/// Одностороннее ребро: верх участка проходимого грунта. На него встают
+/// сверху, сквозь него проходят снизу и сбоку.
+struct TerrainSurface: Equatable {
+    /// Высота поверхности в тайлах — линия, по которой идёт ребро.
+    let y: CGFloat
+    /// Протяжённость по X, тайлы.
+    let xSpan: ClosedRange<CGFloat>
 }

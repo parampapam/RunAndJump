@@ -77,6 +77,28 @@ struct LevelBuilder {
                                     size: TileSize(width: descriptor.rect.size.width, height: top)))
     }
 
+    /// Односторонняя опора проходимого грунта: невидимый узел с телом-ребром
+    /// по верху участка.
+    ///
+    /// Ребро, а не прямоугольник, — и в этом вся односторонность: снизу и
+    /// сбоку сквозь него проходят, сверху на него встают. Ровно так же
+    /// устроена площадка (`Platform`), поэтому и категория та же: сцена уже
+    /// умеет считать её опорой, а логика катания на подвижной платформе её не
+    /// заметит — та смотрит на тип узла, а не на категорию.
+    func makeTerrainSurface(_ surface: TerrainSurface) -> SKNode {
+        let left = Grid.point(TileCoordinate(x: surface.xSpan.lowerBound, y: surface.y))
+        let right = Grid.point(TileCoordinate(x: surface.xSpan.upperBound, y: surface.y))
+
+        let node = SKNode()
+        let body = SKPhysicsBody(edgeFrom: left, to: right)
+        body.isDynamic = false
+        body.restitution = 0
+        body.categoryBitMask = PhysicsCategory.platform
+        body.contactTestBitMask = PhysicsCategory.none
+        node.physicsBody = body
+        return node
+    }
+
     /// Плитки рельефа: по одной на каждую занятую клетку. Узлы чисто
     /// визуальные — коллизия на телах кусков (`makeTerrain`).
     ///
@@ -86,7 +108,8 @@ struct LevelBuilder {
     ///
     /// - Parameters:
     ///   - map: где лежит грунт — карта физики, с вырезанными под озёрами
-    ///     проёмами. По ней решается, каким клеткам достанется плитка.
+    ///     проёмами. По ней решается, каким клеткам достанется плитка и в
+    ///     каком слое: сплошной грунт перед игроком, проходимый — за ним.
     ///   - shape: чем считать **соседей**. Здесь жидкость — часть рельефа,
     ///     иначе грунт на берегу возьмёт торцевую плитку, а у торцов края
     ///     скруглены и прозрачны: между землёй и водой открылась бы щель.
@@ -95,12 +118,14 @@ struct LevelBuilder {
         var tiles: [SKSpriteNode] = []
 
         for y in 0..<map.height {
-            for x in 0..<map.width where map.isSolid(x: x, y: y) {
+            for x in 0..<map.width where map.isOccupied(x: x, y: y) {
                 let part = TerrainTiling.part(x: x, y: y, in: shape)
                 let tile = SKSpriteNode(texture: textures.terrain(part), size: Grid.size(size))
                 tile.position = Grid.center(origin: TileCoordinate(x: CGFloat(x), y: CGFloat(y)),
                                             size: size)
-                tile.zPosition = ZPosition.ground
+                // Проходимый грунт уезжает за игрока: внутри такого холма он
+                // оказывается постоянно, и закрывать его собой холм не должен.
+                tile.zPosition = map.isSolid(x: x, y: y) ? ZPosition.ground : ZPosition.terrainBack
                 tiles.append(tile)
             }
         }

@@ -206,6 +206,10 @@ final class GameScene: SKScene {
         for rect in TerrainLayout.bodies(of: map) {
             addChild(builder.makeTerrain(rect))
         }
+        // Проходимый грунт держит только сверху и только открытой поверхностью.
+        for surface in TerrainLayout.surfaces(of: map) {
+            addChild(builder.makeTerrainSurface(surface))
+        }
         // Плитки — это и есть видимая земля; тела невидимы.
         for tile in builder.makeTerrainTiles(of: map, shape: shape) {
             addChild(tile)

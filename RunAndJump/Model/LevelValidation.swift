@@ -192,9 +192,9 @@ enum LevelValidation {
     private static func unrenderableColumns(in terrain: TerrainMap) -> [Issue] {
         var issues: [Issue] = []
         for y in 0..<terrain.height {
-            for x in 0..<terrain.width where terrain.isSolid(x: x, y: y) {
-                guard terrain.isSolid(x: x, y: y + 1), terrain.isSolid(x: x, y: y - 1),
-                      !terrain.isSolid(x: x - 1, y: y), !terrain.isSolid(x: x + 1, y: y)
+            for x in 0..<terrain.width where terrain.isOccupied(x: x, y: y) {
+                guard terrain.isOccupied(x: x, y: y + 1), terrain.isOccupied(x: x, y: y - 1),
+                      !terrain.isOccupied(x: x - 1, y: y), !terrain.isOccupied(x: x + 1, y: y)
                 else { continue }
                 issues.append(.terrainColumnTooNarrow(at: TileCoordinate(x: CGFloat(x), y: CGFloat(y))))
             }
@@ -237,40 +237,27 @@ enum LevelValidation {
         level.enemies.enumerated().compactMap { index, enemy in
             guard case .patrolling(let leftX, let rightX, _) = enemy.behavior else { return nil }
 
-            let row = Int(enemy.origin.y.rounded(.down)) - 1
-            guard row >= 0 else { return .patrolLeavesGround(index: index) }
-
+            let row = Int(enemy.origin.y.rounded(.down))
             let from = Int(leftX.rounded(.down))
             let to = Int((rightX + ObjectSize.enemy.width).rounded(.up)) - 1
             guard from <= to else { return nil }
 
-            let grounded = (from...to).allSatisfy { terrain.isSolid(x: $0, y: row) }
+            let grounded = (from...to).allSatisfy { terrain.supportsStanding(x: $0, y: row) }
             return grounded ? nil : .patrolLeavesGround(index: index)
         }
     }
 
-    /// Можно ли стоять в этой точке: **своя клетка свободна**, а под ней
-    /// занятая клетка рельефа или верх платформы.
+    /// Можно ли стоять в этой точке: на рельефе (`TerrainMap.supportsStanding`)
+    /// или на верху площадки.
     ///
-    /// Про свою клетку — не придирка: объект, оставленный на прежней высоте
-    /// там, где поднялся холм, опору под собой имеет и всё же замурован в
-    /// грунте. Ровно та ошибка, которой на плоской земле не бывало.
-    ///
-    /// Нижний край уровня опорой не считается. Правило «ниже низа земля
-    /// сплошная» живёт в `TerrainMap` ради раскладки плиток, и распространять
-    /// его сюда значило бы разрешить объект, стоящий на самом краю уровня.
-    ///
-    /// Подвижные платформы опорой тоже не считаются: они уезжают, и объект,
+    /// Подвижные платформы опорой не считаются: они уезжают, и объект,
     /// поставленный «на» такую платформу, окажется в воздухе через секунду.
     private static func hasFooting(at origin: TileCoordinate,
                                    in level: LevelConfiguration,
                                    terrain: TerrainMap) -> Bool {
-        let column = Int(origin.x.rounded(.down))
-        let row = Int(origin.y.rounded(.down))
-
-        guard !terrain.isSolid(x: column, y: row) else { return false }
-
-        if row - 1 >= 0, terrain.isSolid(x: column, y: row - 1) { return true }
+        let standing = terrain.supportsStanding(x: Int(origin.x.rounded(.down)),
+                                                y: Int(origin.y.rounded(.down)))
+        if standing { return true }
 
         return level.platforms.contains { platform in
             origin.y == platform.rect.origin.y + platform.rect.size.height

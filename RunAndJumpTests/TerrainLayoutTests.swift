@@ -95,6 +95,59 @@ struct TerrainLayoutTests {
         #expect(floor == [rect(0, 0, 10, 1)])
     }
 
+    // MARK: - Проходимый грунт
+
+    @Test("Проходимый грунт тел не даёт")
+    func passableGroundHasNoBodies() {
+        #expect(TerrainLayout.bodies(of: TerrainMap("++++")).isEmpty)
+    }
+
+    @Test("Проходимый грунт даёт одностороннюю опору по верху участка")
+    func passableGroundGivesASurface() {
+        let map = TerrainMap("""
+        ..++..
+        ######
+        """)
+
+        #expect(TerrainLayout.surfaces(of: map)
+                == [TerrainSurface(y: 2, xSpan: 2...4)])
+        // Пол при этом остаётся обычным телом.
+        #expect(TerrainLayout.bodies(of: map) == [rect(0, 0, 6, 1)])
+    }
+
+    @Test("Опора одна на участок, а не на клетку")
+    func surfaceSpansTheWholeRun() {
+        // Иначе игрок спотыкался бы на швах между соседними рёбрами — та же
+        // причина, по которой склеиваются тела.
+        #expect(TerrainLayout.surfaces(of: TerrainMap("++++"))
+                == [TerrainSurface(y: 1, xSpan: 0...4)])
+    }
+
+    @Test("Разорванные участки дают разные опоры")
+    func separatePassableRunsGiveSeparateSurfaces() {
+        #expect(TerrainLayout.surfaces(of: TerrainMap("++.++"))
+                == [TerrainSurface(y: 1, xSpan: 0...2),
+                    TerrainSurface(y: 1, xSpan: 3...5)])
+    }
+
+    @Test("Опора есть только у открытого сверху ряда")
+    func onlyTheExposedRowGivesASurface() {
+        // У нижних рядов холма ребра нет: изнутри холм не держит.
+        let map = TerrainMap("""
+        ++
+        ++
+        ++
+        """)
+        #expect(TerrainLayout.surfaces(of: map) == [TerrainSurface(y: 3, xSpan: 0...2)])
+    }
+
+    @Test("Проходимая клетка под сплошной опоры не даёт")
+    func passableUnderSolidGivesNoSurface() {
+        // Сверху её накрывает тело сплошного грунта, а лишнее ребро внутри
+        // массива ловило бы игрока изнутри.
+        #expect(TerrainLayout.surfaces(of: TerrainMap("#\n+")).isEmpty)
+    }
+
     @Test("Тела покрывают ровно занятые клетки, без нахлёстов")
     func bodiesCoverExactlyTheSolidCells() {
         let map = TerrainMap("""

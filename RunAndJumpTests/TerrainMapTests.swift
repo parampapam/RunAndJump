@@ -142,4 +142,73 @@ struct TerrainMapTests {
         .##.
         """))
     }
+
+    // MARK: - Проходимый грунт
+
+    @Test("Проходимый грунт занимает клетку, но сплошным не считается")
+    func passableIsOccupiedButNotSolid() {
+        let map = TerrainMap("+#")
+
+        #expect(map.isOccupied(x: 0, y: 0))
+        #expect(!map.isSolid(x: 0, y: 0))
+        #expect(map.isSolid(x: 1, y: 0))
+    }
+
+    @Test("На сплошном грунте стоят")
+    func standingOnSolid() {
+        let map = TerrainMap("""
+        ..
+        ##
+        """)
+        #expect(map.supportsStanding(x: 0, y: 1))
+    }
+
+    @Test("Внутри сплошного грунта не стоят — там замуровано")
+    func standingInsideSolidIsImpossible() {
+        let map = TerrainMap("""
+        ##
+        ##
+        """)
+        #expect(!map.supportsStanding(x: 0, y: 1))
+    }
+
+    @Test("На верху проходимого холма стоят")
+    func standingOnTopOfPassable() {
+        let map = TerrainMap("""
+        ..
+        ++
+        ##
+        """)
+        #expect(map.supportsStanding(x: 0, y: 2))
+    }
+
+    @Test("Внутри проходимого холма стоят, если под ногами сплошной грунт")
+    func standingInsidePassableOnSolidGround() {
+        // Это и есть «пройти мимо холма»: игрок идёт по земле, а холм —
+        // вокруг него.
+        let map = TerrainMap("""
+        ++
+        ##
+        """)
+        #expect(map.supportsStanding(x: 0, y: 1))
+    }
+
+    @Test("Внутри проходимого холма не стоят, если под ногами он же")
+    func standingInsidePassableOnPassableIsImpossible() {
+        // Одностороннее ребро есть только у верхней клетки участка, поэтому
+        // изнутри холм не держит — игрок провалится к земле.
+        let map = TerrainMap("""
+        ++
+        ++
+        ##
+        """)
+        #expect(!map.supportsStanding(x: 0, y: 2))
+    }
+
+    @Test("Нижний край уровня опорой не считается")
+    func bottomEdgeIsNotFooting() {
+        // Правило «ниже низа земля сплошная» живёт ради раскладки плиток и на
+        // вопрос «можно ли тут стоять» не распространяется.
+        #expect(!TerrainMap("##").supportsStanding(x: 0, y: 0))
+    }
 }

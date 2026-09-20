@@ -32,6 +32,10 @@ enum TerrainTiling {
 
     /// Роль клетки. Клетка предполагается занятой: у пустой роли нет.
     ///
+    /// Вид грунта роли не меняет: проходимый холм выкладывается тем же
+    /// девятислайсом, что и сплошной, — они различаются физикой, а не
+    /// картинкой.
+    ///
     /// Порядок ветвления — часть правила, а не деталь реализации: у угловой
     /// клетки подходит сразу несколько условий. Верх важнее низа, низ важнее
     /// боков, бока важнее уступа.
@@ -40,10 +44,10 @@ enum TerrainTiling {
     /// и у него одновременно открыты верх и низ. Низ пола уходит за нижний край
     /// уровня и никому не виден, а верх — то, по чему ходят.
     static func part(x: Int, y: Int, in map: TerrainMap) -> Part {
-        let up = map.isSolid(x: x, y: y + 1)
-        let down = map.isSolid(x: x, y: y - 1)
-        let left = map.isSolid(x: x - 1, y: y)
-        let right = map.isSolid(x: x + 1, y: y)
+        let up = map.isOccupied(x: x, y: y + 1)
+        let down = map.isOccupied(x: x, y: y - 1)
+        let left = map.isOccupied(x: x - 1, y: y)
+        let right = map.isOccupied(x: x + 1, y: y)
 
         if !up {
             if !left, right { return .topLeft }
@@ -69,8 +73,8 @@ enum TerrainTiling {
         // Толща. Осталось отличить глухую от уступа: если сосед по горизонтали
         // ничем не накрыт, значит рядом кончается поверхность, и полоса
         // покрытия должна завернуться в угол этой клетки.
-        if !map.isSolid(x: x + 1, y: y + 1) { return .insideBeforeTop }
-        if !map.isSolid(x: x - 1, y: y + 1) { return .insideAfterTop }
+        if !map.isOccupied(x: x + 1, y: y + 1) { return .insideBeforeTop }
+        if !map.isOccupied(x: x - 1, y: y + 1) { return .insideAfterTop }
         return .inside
     }
 }
