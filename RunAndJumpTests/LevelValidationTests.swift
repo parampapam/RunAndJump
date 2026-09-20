@@ -103,7 +103,7 @@ struct LevelValidationTests {
     func checkpointInTheAirIsReported() {
         let level = Fixtures.level(checkpoints: [CheckpointDescriptor(origin: TileCoordinate(x: 5, y: 4))])
         #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog())
-                == [.checkpointWithoutFooting(index: 0)])
+                == [.objectWithoutFooting(role: "checkpoints[0]", at: TileCoordinate(x: 5, y: 4))])
     }
 
     @Test("Флаг над озером опоры не имеет — земля там вырезана")
@@ -115,7 +115,148 @@ struct LevelValidationTests {
             checkpoints: [CheckpointDescriptor(origin: TileCoordinate(x: 5, y: 1))]
         )
         #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog())
-                == [.checkpointWithoutFooting(index: 0)])
+                == [.objectWithoutFooting(role: "checkpoints[0]", at: TileCoordinate(x: 5, y: 1))])
+    }
+
+    // MARK: - Рельеф
+
+    @Test("Старт уровня в воздухе — находка")
+    func playerStartWithoutFootingIsReported() {
+        let level = Fixtures.level(playerStart: TileCoordinate(x: 5, y: 6))
+        #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog())
+                == [.objectWithoutFooting(role: "playerStart", at: TileCoordinate(x: 5, y: 6))])
+    }
+
+    @Test("Объект на вершине холма опору имеет")
+    func objectOnAHillHasFooting() {
+        // Холм в две клетки: поверхность колонки 5 поднята до y = 3.
+        let level = Fixtures.level(
+            terrain: TerrainMap("""
+            ....................
+            ....................
+            ....................
+            ....................
+            ....................
+            ....................
+            ....................
+            ....###.............
+            ....###.............
+            ####################
+            """),
+            checkpoints: [CheckpointDescriptor(origin: TileCoordinate(x: 5, y: 3))]
+        )
+        #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog()).isEmpty)
+    }
+
+    @Test("Объект, оставленный на прежней высоте под выросшим холмом, — находка")
+    func objectBuriedInTerrainIsReported() {
+        // Тот же холм: флаг на y = 2 стоит на занятой клетке, то есть замурован
+        // в грунте. Опора под ним есть, и без проверки своей клетки эта ошибка
+        // прошла бы молча — ровно та, которой на плоской земле не бывало.
+        let level = Fixtures.level(
+            terrain: TerrainMap("""
+            ....................
+            ....................
+            ....................
+            ....................
+            ....................
+            ....................
+            ....................
+            ....###.............
+            ....###.............
+            ####################
+            """),
+            checkpoints: [CheckpointDescriptor(origin: TileCoordinate(x: 5, y: 2))]
+        )
+        #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog())
+                == [.objectWithoutFooting(role: "checkpoints[0]", at: TileCoordinate(x: 5, y: 2))])
+    }
+
+    @Test("Карта у́же уровня — находка")
+    func narrowTerrainIsReported() {
+        let level = Fixtures.level(terrain: TerrainMap.floor(width: 19, height: 10))
+        #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog())
+                .contains(.terrainSizeMismatch(width: 19, height: 10)))
+    }
+
+    @Test("Карта ниже уровня — это норма, а не находка")
+    func shortTerrainIsFine() {
+        let level = Fixtures.level(terrain: TerrainMap.floor(width: 20, height: 2))
+        #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog()).isEmpty)
+    }
+
+    @Test("Колонка грунта в один тайл — находка")
+    func narrowColumnIsReported() {
+        // Средняя клетка колонки: сверху и снизу грунт, по бокам пусто —
+        // нарисовать её нечем.
+        let level = Fixtures.level(
+            terrain: TerrainMap("""
+            ....................
+            ....................
+            ....................
+            ....................
+            ....................
+            ....#...............
+            ....#...............
+            ....#...............
+            ....#...............
+            ####################
+            """)
+        )
+        #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog())
+                .contains(.terrainColumnTooNarrow(at: TileCoordinate(x: 4, y: 1))))
+    }
+
+    @Test("Полка в одну клетку находкой не считается")
+    func oneTileLedgeIsNotReported() {
+        let level = Fixtures.level(
+            terrain: TerrainMap("""
+            ....................
+            ....................
+            ....................
+            ....................
+            ....................
+            ....................
+            ....................
+            ....#...............
+            ....................
+            ####################
+            """)
+        )
+        #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog()).isEmpty)
+    }
+
+    @Test("Патруль над проёмом под озером — находка")
+    func patrolOverAHazardIsReported() {
+        let level = Fixtures.level(
+            hazards: [HazardDescriptor(kind: .water,
+                                       rect: TileRect(origin: TileCoordinate(x: 6, y: 0),
+                                                      size: TileSize(width: 2, height: 1)))],
+            enemies: [.patrolling(.crab, at: TileCoordinate(x: 4, y: 1),
+                                  leftX: 4, rightX: 9, speed: 100)]
+        )
+        #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog())
+                == [.patrolLeavesGround(index: 0)])
+    }
+
+    @Test("Патруль, не доходящий до обрыва, находкой не считается")
+    func patrolStayingOnTheLedgeIsFine() {
+        let level = Fixtures.level(
+            hazards: [HazardDescriptor(kind: .water,
+                                       rect: TileRect(origin: TileCoordinate(x: 6, y: 0),
+                                                      size: TileSize(width: 2, height: 1)))],
+            enemies: [.patrolling(.crab, at: TileCoordinate(x: 2, y: 1),
+                                  leftX: 1, rightX: 5, speed: 100)]
+        )
+        #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog()).isEmpty)
+    }
+
+    @Test("Неподвижный враг в воздухе находкой не считается: оса умеет летать")
+    func stationaryEnemyInTheAirIsFine() {
+        let level = Fixtures.level(
+            enemies: [.stationary(.wasp, at: TileCoordinate(x: 5, y: 4))]
+        )
+        #expect(LevelValidation.issues(in: level, catalog: Fixtures.catalog()).isEmpty)
     }
 
     // MARK: - Фон
@@ -207,11 +348,14 @@ private enum Fixtures {
         horizonLineInTiles: 4
     )
 
-    static func level(platforms: [PlatformDescriptor] = [],
+    static func level(terrain: TerrainMap = TerrainMap.floor(width: 20, height: 10),
+                      platforms: [PlatformDescriptor] = [],
                       hazards: [HazardDescriptor] = [],
+                      enemies: [EnemyDescriptor] = [],
                       checkpoints: [CheckpointDescriptor] = [],
                       decorations: [DecorationDescriptor] = [],
                       background: BackgroundDescriptor = Fixtures.background,
+                      playerStart: TileCoordinate = TileCoordinate(x: 1, y: 1),
                       portal: TileCoordinate = TileCoordinate(x: 10, y: 1)) -> LevelConfiguration {
         LevelConfiguration(
             name: "Fixture",
@@ -219,14 +363,14 @@ private enum Fixtures {
             sceneSize: CGSize(width: 1334, height: 750),
             levelWidthInTiles: 20,
             levelHeightInTiles: 10,
-            playerStart: TileCoordinate(x: 1, y: 1),
-            terrain: TerrainMap.floor(width: 20, height: 10),
+            playerStart: playerStart,
+            terrain: terrain,
             background: background,
             platforms: platforms,
             movingPlatforms: [],
             ladders: [],
             hazards: hazards,
-            enemies: [],
+            enemies: enemies,
             pickups: [],
             checkpoints: checkpoints,
             decorations: decorations,
