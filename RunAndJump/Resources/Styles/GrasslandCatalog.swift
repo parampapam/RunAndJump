@@ -18,7 +18,17 @@ enum GrasslandCatalog {
         // по смыслу плитки разных стилей не путаются даже на глаз.
         atlases: ["Grassland"],
         terrain: TerrainNames(
-            groundTop: "grassland_ground_top_middle",
+            groundTopLeft: "grassland_ground_top_left",
+            groundTopMiddle: "grassland_ground_top_middle",
+            groundTopRight: "grassland_ground_top_right",
+            groundLeft: "grassland_ground_left",
+            groundRight: "grassland_ground_right",
+            groundInside: "grassland_ground_inside",
+            groundInsideBeforeTop: "grassland_ground_inside_before_top",
+            groundInsideAfterTop: "grassland_ground_inside_after_top",
+            groundBottomLeft: "grassland_ground_bottom_left",
+            groundBottomMiddle: "grassland_ground_bottom_middle",
+            groundBottomRight: "grassland_ground_bottom_right",
             platformLeft: "grassland_platform_left",
             platformMiddle: "grassland_platform_middle",
             platformRight: "grassland_platform_right",

@@ -34,8 +34,8 @@ struct LevelValidationTests {
 
     @Test("Пустое имя механической роли — находка")
     func emptyTerrainRoleIsReported() {
-        let broken = Fixtures.catalog(groundTop: "")
-        #expect(LevelValidation.issues(in: broken) == [.emptyTextureName(role: "terrain.groundTop")])
+        let broken = Fixtures.catalog(groundTopMiddle: "")
+        #expect(LevelValidation.issues(in: broken) == [.emptyTextureName(role: "terrain.topMiddle")])
     }
 
     @Test("Разное число кадров у плиток одной записи — находка")
@@ -174,7 +174,7 @@ private extension DecorationID {
 
 private enum Fixtures {
 
-    static func catalog(groundTop: String = "ground",
+    static func catalog(groundTopMiddle: String = "ground",
                         background: BackgroundNames = BackgroundNames(fill: "fill",
                                                                       hills: "hills",
                                                                       mountains: "mountains",
@@ -184,7 +184,10 @@ private enum Fixtures {
             id: LevelStyleID("fixture"),
             atlases: ["Fixture"],
             terrain: TerrainNames(
-                groundTop: groundTop,
+                groundTopLeft: "gtl", groundTopMiddle: groundTopMiddle, groundTopRight: "gtr",
+                groundLeft: "gl", groundRight: "gr", groundInside: "gi",
+                groundInsideBeforeTop: "gibt", groundInsideAfterTop: "giat",
+                groundBottomLeft: "gbl", groundBottomMiddle: "gbm", groundBottomRight: "gbr",
                 platformLeft: "pl", platformMiddle: "pm", platformRight: "pr",
                 ladderBottom: "lb", ladderMiddle: "lm",
                 ladderTop: "lt", ladderTop75: "lt75", ladderTop50: "lt50", ladderTop25: "lt25"

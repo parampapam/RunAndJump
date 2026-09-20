@@ -28,7 +28,7 @@ struct StyleAssetsTests {
         for catalog in StyleCatalogs.all {
             let textures = LevelTextures(catalog: catalog)
 
-            for (role, name) in terrainNames(of: catalog) {
+            for (role, name) in catalog.terrain.namedRoles {
                 #expect(textures.knowsTexture(named: name),
                         "\(catalog.id.rawValue).\(role): нет текстуры «\(name)»")
             }
@@ -100,22 +100,6 @@ struct StyleAssetsTests {
     }
 
     // MARK: - Вспомогательное
-
-    private func terrainNames(of catalog: StyleCatalog) -> [(String, String)] {
-        let terrain = catalog.terrain
-        return [
-            ("groundTop", terrain.groundTop),
-            ("platformLeft", terrain.platformLeft),
-            ("platformMiddle", terrain.platformMiddle),
-            ("platformRight", terrain.platformRight),
-            ("ladderBottom", terrain.ladderBottom),
-            ("ladderMiddle", terrain.ladderMiddle),
-            ("ladderTop", terrain.ladderTop),
-            ("ladderTop75", terrain.ladderTop75),
-            ("ladderTop50", terrain.ladderTop50),
-            ("ladderTop25", terrain.ladderTop25),
-        ]
-    }
 
     /// Пиксели одной колонки картинки — для сверки левого края с правым.
     private func column(_ x: Int, of image: CGImage) -> [UInt8] {

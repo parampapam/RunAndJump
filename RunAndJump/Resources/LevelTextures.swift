@@ -65,8 +65,8 @@ struct LevelTextures {
 
     // MARK: - Роли ландшафта
 
-    func groundTop() -> SKTexture {
-        texture(named: catalog.terrain.groundTop)
+    func terrain(_ part: TerrainTiling.Part) -> SKTexture {
+        texture(named: catalog.terrain.name(for: part))
     }
 
     func platform(_ part: PlatformTiling.Part) -> SKTexture {

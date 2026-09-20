@@ -90,32 +90,15 @@ enum LevelValidation {
 
     /// Все имена каталога с человекочитаемой ролью.
     ///
+    /// Сами списки ролей живут рядом с полями (`TerrainNames.namedRoles`,
+    /// `BackgroundNames.namedRoles`): раньше они были переписаны здесь и ещё
+    /// раз в `StyleAssetsTests`, и новая роль требовала правки в трёх местах.
+    ///
     /// Необязательные слои фона (`nil` — «такого слоя у стиля нет») сюда не
     /// попадают: отсутствие слоя это законный ответ, а вот **пустая строка**
     /// вместо имени — опечатка, и её надо поймать.
-    private static func namedRoles(of catalog: StyleCatalog) -> [(String, String)] {
-        let terrain = catalog.terrain
-        let background = catalog.background
-        let optionalLayers: [(String, String?)] = [
-            ("background.hills", background.hills),
-            ("background.mountains", background.mountains),
-            ("background.clouds", background.clouds),
-            ("background.interior", background.interior),
-        ]
-
-        return [
-            ("terrain.groundTop", terrain.groundTop),
-            ("terrain.platformLeft", terrain.platformLeft),
-            ("terrain.platformMiddle", terrain.platformMiddle),
-            ("terrain.platformRight", terrain.platformRight),
-            ("terrain.ladderBottom", terrain.ladderBottom),
-            ("terrain.ladderMiddle", terrain.ladderMiddle),
-            ("terrain.ladderTop", terrain.ladderTop),
-            ("terrain.ladderTop75", terrain.ladderTop75),
-            ("terrain.ladderTop50", terrain.ladderTop50),
-            ("terrain.ladderTop25", terrain.ladderTop25),
-            ("background.fill", background.fill),
-        ] + optionalLayers.compactMap { role, name in name.map { (role, $0) } }
+    private static func namedRoles(of catalog: StyleCatalog) -> [(role: String, name: String)] {
+        catalog.terrain.namedRoles + catalog.background.namedRoles
     }
 
     /// Сегменты фона, которых стиль уровня не умеет рисовать.

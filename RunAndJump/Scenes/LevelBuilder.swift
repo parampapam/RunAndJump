@@ -77,21 +77,20 @@ struct LevelBuilder {
                                     size: TileSize(width: descriptor.rect.size.width, height: top)))
     }
 
-    /// Плитки рельефа: по одной на занятую клетку, у которой открыт верх. Узлы
-    /// чисто визуальные — коллизия на телах кусков.
+    /// Плитки рельефа: по одной на каждую занятую клетку. Узлы чисто
+    /// визуальные — коллизия на телах кусков (`makeTerrain`).
     ///
-    /// Пока рисуется только поверхность и только одной плиткой: раскладка
-    /// (края, низ, стыки на уступах) появится вместе с рельефом, а сейчас
-    /// картинка обязана совпасть с прежней до пикселя.
+    /// Чем нарисована клетка, решает `TerrainTiling` по занятости соседей, а
+    /// каким изображением — каталог стиля. Билдер только ставит спрайт на
+    /// сетку и не знает ни про то, ни про другое.
     func makeTerrainTiles(of map: TerrainMap) -> [SKSpriteNode] {
-        let grass = textures.groundTop()
         let size = TileSize.one
         var tiles: [SKSpriteNode] = []
 
         for y in 0..<map.height {
-            for x in 0..<map.width
-            where map.isSolid(x: x, y: y) && !map.isSolid(x: x, y: y + 1) {
-                let tile = SKSpriteNode(texture: grass, size: Grid.size(size))
+            for x in 0..<map.width where map.isSolid(x: x, y: y) {
+                let part = TerrainTiling.part(x: x, y: y, in: map)
+                let tile = SKSpriteNode(texture: textures.terrain(part), size: Grid.size(size))
                 tile.position = Grid.center(origin: TileCoordinate(x: CGFloat(x), y: CGFloat(y)),
                                             size: size)
                 tile.zPosition = ZPosition.ground

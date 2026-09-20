@@ -53,8 +53,26 @@ struct StyleCatalog: Equatable, Sendable {
 /// Имена текстур ландшафта — те роли, без которых уровень не собрать.
 struct TerrainNames: Equatable, Sendable {
 
-    /// Верхняя плитка земли (травяное покрытие).
-    let groundTop: String
+    /// Плитки грунта — девятислайс (три ряда по три) плюс две плитки уступа.
+    ///
+    /// Роль каждой клетки считает `TerrainTiling` по занятости соседей, здесь
+    /// — только имена. Поля, а не словарь: массив грунта не нарисовать без
+    /// любой из этих плиток, и забыть одну не должен давать компилятор.
+    let groundTopLeft: String
+    let groundTopMiddle: String
+    let groundTopRight: String
+    let groundLeft: String
+    let groundRight: String
+    let groundInside: String
+    /// Толща перед началом поверхности справа: полоса покрытия заворачивается
+    /// в правый верхний угол. Без неё поверхность, упирающаяся в более высокий
+    /// массив, обрывается за полклетки до стены.
+    let groundInsideBeforeTop: String
+    /// Зеркальная ей: толща сразу после конца поверхности слева.
+    let groundInsideAfterTop: String
+    let groundBottomLeft: String
+    let groundBottomMiddle: String
+    let groundBottomRight: String
 
     let platformLeft: String
     let platformMiddle: String
@@ -69,6 +87,23 @@ struct TerrainNames: Equatable, Sendable {
     let ladderTop75: String
     let ladderTop50: String
     let ladderTop25: String
+
+    /// Имя текстуры клетки грунта.
+    func name(for part: TerrainTiling.Part) -> String {
+        switch part {
+        case .topLeft: return groundTopLeft
+        case .topMiddle: return groundTopMiddle
+        case .topRight: return groundTopRight
+        case .left: return groundLeft
+        case .right: return groundRight
+        case .inside: return groundInside
+        case .insideBeforeTop: return groundInsideBeforeTop
+        case .insideAfterTop: return groundInsideAfterTop
+        case .bottomLeft: return groundBottomLeft
+        case .bottomMiddle: return groundBottomMiddle
+        case .bottomRight: return groundBottomRight
+        }
+    }
 
     /// Имя текстуры колонки платформы.
     func name(for part: PlatformTiling.Part) -> String {
@@ -97,6 +132,25 @@ struct TerrainNames: Equatable, Sendable {
         case 0.75: return ladderTop75
         default: return ladderTop
         }
+    }
+
+    /// Все роли с их именами — для проверок, которые проходят по каталогу
+    /// целиком: пустое имя ловит `LevelValidation`, несуществующее в атласе —
+    /// `StyleAssetsTests`. Список живёт здесь, рядом с полями, чтобы новая роль
+    /// добавлялась в одном месте, а не в трёх.
+    var namedRoles: [(role: String, name: String)] {
+        TerrainTiling.Part.allCases.map { ("terrain.\($0)", name(for: $0)) }
+        + [
+            ("terrain.platformLeft", platformLeft),
+            ("terrain.platformMiddle", platformMiddle),
+            ("terrain.platformRight", platformRight),
+            ("terrain.ladderBottom", ladderBottom),
+            ("terrain.ladderMiddle", ladderMiddle),
+            ("terrain.ladderTop", ladderTop),
+            ("terrain.ladderTop75", ladderTop75),
+            ("terrain.ladderTop50", ladderTop50),
+            ("terrain.ladderTop25", ladderTop25),
+        ]
     }
 }
 
@@ -154,6 +208,17 @@ struct BackgroundNames: Equatable, Sendable {
         switch segment {
         case .clouds: return clouds
         }
+    }
+
+    /// Все заданные слои с их именами. Необязательные (`nil`) в список не
+    /// попадают: «такого слоя у стиля нет» — законный ответ, а не пропуск.
+    var namedRoles: [(role: String, name: String)] {
+        [("background.fill", fill)]
+        + [("background.hills", hills),
+           ("background.mountains", mountains),
+           ("background.clouds", clouds),
+           ("background.interior", interior)]
+            .compactMap { role, name in name.map { (role, $0) } }
     }
 }
 
