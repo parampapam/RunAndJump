@@ -43,7 +43,25 @@ enum Levels {
         levelWidthInTiles: levelWidth,
         levelHeightInTiles: levelHeight,
         playerStart: TileCoordinate(x: 1, y: 1),
-        terrain: flatGround,
+        // Рельеф вводного уровня. Три его затеи, слева направо:
+        //
+        // - **холм в две ступени** (x 9…17): подъём по тайлу за раз, спуск
+        //   свободным падением. Заодно он делает достижимой площадку на y = 5:
+        //   с земли до неё четыре тайла, с вершины холма — два.
+        // - **полка в одну клетку** (x 33): ступенька к площадке на y = 5,
+        //   с которой начинается верхний маршрут.
+        // - **парящий остров** (x 36…39): проход под ним по земле и награда
+        //   сверху. Его низ — потолок: прыгать под ним некуда.
+        //
+        // Карта ниже уровня: всё выше последней строки — пусто.
+        terrain: TerrainMap("""
+        ....................................####.....
+        ....................................####.....
+        .............................................
+        .............#####...............#...........
+        .........#########...........................
+        #############################################
+        """),
         // Вводный уровень: пологие холмы, горы лишь мелькают вдалеке.
         background: BackgroundDescriptor(
             fill: .solid,
@@ -83,9 +101,13 @@ enum Levels {
                                             size: TileSize(width: 2, height: 1))),
         ],
         enemies: [
-            .stationary(.plant, at: TileCoordinate(x: 10, y: 1)),
-            .patrolling(.crab, at: TileCoordinate(x: 15, y: 1),
-                        leftX: 14, rightX: 18, speed: 100),
+            // Растение — на первой ступени холма (поверхность y = 2).
+            .stationary(.plant, at: TileCoordinate(x: 10, y: 2)),
+            // Краб ходит по вершине холма (y = 3). Диапазон уже самой
+            // вершины (x 13…18): враг шириной 0.75 тайла, и с rightX = 16 он
+            // не свешивается с обрыва.
+            .patrolling(.crab, at: TileCoordinate(x: 15, y: 3),
+                        leftX: 13, rightX: 16, speed: 100),
             .patrolling(.imp, at: TileCoordinate(x: 28, y: 1),
                         leftX: 26, rightX: 30, speed: 120),
             // Оса висит над землёй: под ней можно пройти, но не перепрыгнуть.
@@ -93,10 +115,11 @@ enum Levels {
         ],
         pickups: [
             PickupDescriptor(origin: TileCoordinate(x: 7, y: 3.25), kind: .health),
-            PickupDescriptor(origin: TileCoordinate(x: 9, y: 1.25), kind: .coin(.bronze)),
+            PickupDescriptor(origin: TileCoordinate(x: 9, y: 2.25), kind: .coin(.bronze)),
             PickupDescriptor(origin: TileCoordinate(x: 20, y: 1.25), kind: .coin(.silver)),
             PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.25), kind: .coin(.gold)),
-            PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.25), kind: .health),
+            // Аптечка переехала на остров: верхний маршрут должен что-то давать.
+            PickupDescriptor(origin: TileCoordinate(x: 37, y: 6.25), kind: .health),
         ],
         // Точки восстановления: перед растением, за крабом и после беса —
         // каждая закрывает участок, на котором легко погибнуть.
@@ -109,9 +132,9 @@ enum Levels {
         decorations: [
             DecorationDescriptor(id: .rightArrow, origin: TileCoordinate(x: 3, y: 1)),
             DecorationDescriptor(id: .yellowFlower, origin: TileCoordinate(x: 7, y: 1)),
-            DecorationDescriptor(id: .darkTree, origin: TileCoordinate(x: 12, y: 1)),
-            DecorationDescriptor(id: .tallLightTree, origin: TileCoordinate(x: 13, y: 1)),
-            DecorationDescriptor(id: .bigDarkBush, origin: TileCoordinate(x: 14, y: 1)),
+            DecorationDescriptor(id: .darkTree, origin: TileCoordinate(x: 12, y: 2)),
+            DecorationDescriptor(id: .tallLightTree, origin: TileCoordinate(x: 13, y: 3)),
+            DecorationDescriptor(id: .bigDarkBush, origin: TileCoordinate(x: 14, y: 3)),
             DecorationDescriptor(id: .whiteFlower, origin: TileCoordinate(x: 15, y: 5)),
             DecorationDescriptor(id: .pinkFlower, origin: TileCoordinate(x: 21, y: 1)),
             DecorationDescriptor(id: .shortDarkGrass, origin: TileCoordinate(x: 22, y: 1)),
