@@ -67,10 +67,31 @@ struct TerrainMap: Equatable {
     /// шагнувший туда игрок проваливается на опору ниже (`HazardKind`).
     /// Прямоугольник, попавший на дробную границу, вырезает клетку целиком —
     /// озёра задаются целыми тайлами по сетке (см. `HazardDescriptor`).
+    ///
+    /// Это карта **физики**. Для выбора плиток нужна другая — `filling`.
     func carving(_ rects: [TileRect]) -> TerrainMap {
+        replacing(rects, with: .empty)
+    }
+
+    /// Карта с закрашенными прямоугольниками: клетки, которых они касаются,
+    /// становятся занятыми.
+    ///
+    /// Нужна ровно для одного: **жидкость — часть рельефа, когда выбирается
+    /// плитка**. Иначе грунт на берегу видит рядом пустоту и берёт торцевую
+    /// плитку, а у торцов края скруглены и прозрачны — между землёй и водой
+    /// открывается щель. Клетка озера сама при этом не рисуется: она вырезана
+    /// из карты физики, по которой и решается, где класть плитки.
+    ///
+    /// То же самое делают в редакторах уровней, добавляя воду в слой
+    /// коллизий, чтобы правила авто-раскладки выбирали плитки правильно.
+    func filling(_ rects: [TileRect]) -> TerrainMap {
+        replacing(rects, with: .solid)
+    }
+
+    private func replacing(_ rects: [TileRect], with cell: Cell) -> TerrainMap {
         guard !rects.isEmpty else { return self }
 
-        var carved = cells
+        var changed = cells
         for rect in rects {
             let minX = max(0, Int(rect.origin.x.rounded(.down)))
             let maxX = min(width, Int((rect.origin.x + rect.size.width).rounded(.up)))
@@ -80,11 +101,11 @@ struct TerrainMap: Equatable {
             guard minX < maxX, minY < maxY else { continue }
             for y in minY..<maxY {
                 for x in minX..<maxX {
-                    carved[y * width + x] = .empty
+                    changed[y * width + x] = cell
                 }
             }
         }
-        return TerrainMap(width: width, height: height, cells: carved)
+        return TerrainMap(width: width, height: height, cells: changed)
     }
 }
 

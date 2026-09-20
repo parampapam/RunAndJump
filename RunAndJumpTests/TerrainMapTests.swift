@@ -117,5 +117,29 @@ struct TerrainMapTests {
     func carvingNothingChangesNothing() {
         let map = TerrainMap.floor(width: 5, height: 3)
         #expect(map.carving([]) == map)
+        #expect(map.filling([]) == map)
+    }
+
+    // MARK: - Жидкость как часть формы
+
+    @Test("Озеро, вписанное в карту, занимает свои клетки")
+    func fillingMarksCoveredCellsSolid() {
+        let lake = TileRect(origin: TileCoordinate(x: 2, y: 0),
+                            size: TileSize(width: 2, height: 1))
+        let map = TerrainMap.floor(width: 5, height: 2).carving([lake]).filling([lake])
+
+        #expect(map == TerrainMap.floor(width: 5, height: 2))
+    }
+
+    @Test("Вписывание занимает и те клетки, где грунта не было")
+    func fillingAddsCellsThatWereEmpty() {
+        let map = TerrainMap("....\n....")
+            .filling([TileRect(origin: TileCoordinate(x: 1, y: 0),
+                               size: TileSize(width: 2, height: 2))])
+
+        #expect(map == TerrainMap("""
+        .##.
+        .##.
+        """))
     }
 }

@@ -83,13 +83,20 @@ struct LevelBuilder {
     /// Чем нарисована клетка, решает `TerrainTiling` по занятости соседей, а
     /// каким изображением — каталог стиля. Билдер только ставит спрайт на
     /// сетку и не знает ни про то, ни про другое.
-    func makeTerrainTiles(of map: TerrainMap) -> [SKSpriteNode] {
+    ///
+    /// - Parameters:
+    ///   - map: где лежит грунт — карта физики, с вырезанными под озёрами
+    ///     проёмами. По ней решается, каким клеткам достанется плитка.
+    ///   - shape: чем считать **соседей**. Здесь жидкость — часть рельефа,
+    ///     иначе грунт на берегу возьмёт торцевую плитку, а у торцов края
+    ///     скруглены и прозрачны: между землёй и водой открылась бы щель.
+    func makeTerrainTiles(of map: TerrainMap, shape: TerrainMap) -> [SKSpriteNode] {
         let size = TileSize.one
         var tiles: [SKSpriteNode] = []
 
         for y in 0..<map.height {
             for x in 0..<map.width where map.isSolid(x: x, y: y) {
-                let part = TerrainTiling.part(x: x, y: y, in: map)
+                let part = TerrainTiling.part(x: x, y: y, in: shape)
                 let tile = SKSpriteNode(texture: textures.terrain(part), size: Grid.size(size))
                 tile.position = Grid.center(origin: TileCoordinate(x: CGFloat(x), y: CGFloat(y)),
                                             size: size)

@@ -116,6 +116,45 @@ struct TerrainTilingTests {
         #expect(part(2, 0, in: map) == .topMiddle)
     }
 
+    // MARK: - Берег озера
+
+    @Test("Грунт на берегу озера рисуется серединой, а не торцом")
+    func groundNextToALakeIsFlush() {
+        // Озеро вырезано из грунта (физика) и вписано обратно в форму: выбирая
+        // плитку, берег обязан считать воду соседом. Иначе он возьмёт торцевую
+        // плитку — а у торцов края скруглены и прозрачны, и между землёй и
+        // водой откроется щель.
+        let lake = TileRect(origin: TileCoordinate(x: 2, y: 0),
+                            size: TileSize(width: 2, height: 1))
+        let terrain = TerrainMap.floor(width: 6, height: 2)
+        let solid = terrain.carving([lake])
+        let shape = terrain.filling([lake])
+
+        // Клетки берега в карте физики остались, а клетки озера — нет.
+        #expect(solid.isSolid(x: 1, y: 0))
+        #expect(!solid.isSolid(x: 2, y: 0))
+
+        // И всё же торцами они не становятся.
+        #expect(part(1, 0, in: shape) == .topMiddle)
+        #expect(part(4, 0, in: shape) == .topMiddle)
+
+        // Без вписывания озера было бы ровно то, на что жалуются глаза.
+        #expect(part(1, 0, in: solid) == .topRight)
+        #expect(part(4, 0, in: solid) == .topLeft)
+    }
+
+    @Test("Стенка глубокого озера рисуется толщей, а не боковой гранью")
+    func deepLakeShoreIsPlainThickness() {
+        // Озеро в два ряда: без вписывания его стенка стала бы открытым боком
+        // массива — со скруглением и прозрачным краем на всю глубину.
+        let lake = TileRect(origin: TileCoordinate(x: 2, y: 0),
+                            size: TileSize(width: 2, height: 2))
+        let terrain = TerrainMap.floor(width: 6, height: 3, thicknessInTiles: 3)
+
+        #expect(part(1, 1, in: terrain.carving([lake])) == .right)
+        #expect(part(1, 1, in: terrain.filling([lake])) == .inside)
+    }
+
     // MARK: - Границы уровня
 
     @Test("Массив у нижнего края уровня не получает низа")

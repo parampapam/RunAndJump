@@ -91,12 +91,18 @@ enum LevelValidation {
             issues.append(.unknownDecoration(decoration.id, at: decoration.origin))
         }
 
-        let terrain = level.terrain.carving(level.hazards.map(\.rect))
+        // Две карты, как и в сцене: озёра вырезаны из физики и вписаны в форму.
+        // Опора и патрули — вопрос физики, рисуемость колонки — вопрос формы:
+        // колонка, ставшая узкой только из-за соседнего озера, рисуется
+        // прекрасно, потому что вода ей соседом и остаётся.
+        let hazardRects = level.hazards.map(\.rect)
+        let terrain = level.terrain.carving(hazardRects)
+        let shape = level.terrain.filling(hazardRects)
 
         issues += backgroundWithoutTextures(level, catalog: catalog)
         issues += outsideLevel(level)
         issues += terrainFitsLevel(level)
-        issues += unrenderableColumns(in: terrain)
+        issues += unrenderableColumns(in: shape)
         issues += withoutFooting(level, terrain: terrain)
         issues += patrolsLeavingGround(level, terrain: terrain)
         return issues

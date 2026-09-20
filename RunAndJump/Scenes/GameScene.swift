@@ -186,18 +186,28 @@ final class GameScene: SKScene {
     /// Рельеф: тела по карте уровня, плитки поверх них, отдельные опоры на дне
     /// ям под озёрами.
     ///
-    /// Озёра вырезаются из карты здесь, а не в описании уровня: озеро должно
-    /// быть настоящей ямой, в которую игрок проваливается, и проём в грунте —
-    /// следствие озера, а не отдельная забота автора. Склейку клеток в тела
-    /// считает чистый `TerrainLayout`.
+    /// Озёра участвуют здесь дважды и **по-разному**, и это главное в этой
+    /// функции:
+    ///
+    /// - из карты физики они **вырезаны** (`carving`): озеро должно быть
+    ///   настоящей ямой, в которую игрок проваливается;
+    /// - в карту формы они, наоборот, **вписаны** (`filling`): выбирая плитку,
+    ///   грунт на берегу обязан считать воду соседом, иначе возьмёт торцевую
+    ///   плитку со скруглённым прозрачным краем и между землёй и водой
+    ///   откроется щель.
+    ///
+    /// Проём в грунте — следствие озера, а не отдельная забота автора уровня,
+    /// поэтому обе карты выводятся здесь, а не пишутся руками.
     private func setupTerrain() {
-        let map = configuration.terrain.carving(configuration.hazards.map(\.rect))
+        let hazardRects = configuration.hazards.map(\.rect)
+        let map = configuration.terrain.carving(hazardRects)
+        let shape = configuration.terrain.filling(hazardRects)
 
         for rect in TerrainLayout.bodies(of: map) {
             addChild(builder.makeTerrain(rect))
         }
         // Плитки — это и есть видимая земля; тела невидимы.
-        for tile in builder.makeTerrainTiles(of: map) {
+        for tile in builder.makeTerrainTiles(of: map, shape: shape) {
             addChild(tile)
         }
 
