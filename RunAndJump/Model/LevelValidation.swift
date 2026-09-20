@@ -31,8 +31,19 @@ enum LevelValidation {
         case emptyTextureName(role: String)
         /// Объект стоит за пределами уровня — его просто не будет видно.
         case objectOutsideLevel(role: String, at: TileCoordinate)
-        /// Флаг стоит там, где игроку не на чем стоять: он же место возрождения.
-        case checkpointWithoutFooting(index: Int)
+        /// Объект стоит там, где стоять нельзя: под ним пусто или, наоборот,
+        /// он сам замурован в грунте. На плоской земле промахнуться было
+        /// нельзя, с рельефом — легко: поверхность у каждой колонки своя.
+        case objectWithoutFooting(role: String, at: TileCoordinate)
+        /// Карта рельефа не сходится с размером уровня: у́же него (в конце
+        /// окажется невидимый обрыв) или выше него.
+        case terrainSizeMismatch(width: Int, height: Int)
+        /// Колонка грунта шириной в один тайл и выше одной клетки: у неё
+        /// открыты оба бока, а плитки «левый и правый край сразу» в наборе нет.
+        case terrainColumnTooNarrow(at: TileCoordinate)
+        /// Диапазон патруля выходит за край площадки. Патрулирующие враги не
+        /// динамические и не падают — такой враг просто поедет по воздуху.
+        case patrolLeavesGround(index: Int)
         /// Уровень выложил фон сегментом, картинки для которого у его стиля нет:
         /// на этом месте молча окажется заливка.
         case backgroundSegmentWithoutTexture(role: String)
@@ -80,9 +91,20 @@ enum LevelValidation {
             issues.append(.unknownDecoration(decoration.id, at: decoration.origin))
         }
 
+        // Две карты, как и в сцене: озёра вырезаны из физики и вписаны в форму.
+        // Опора и патрули — вопрос физики, рисуемость колонки — вопрос формы:
+        // колонка, ставшая узкой только из-за соседнего озера, рисуется
+        // прекрасно, потому что вода ей соседом и остаётся.
+        let hazardRects = level.hazards.map(\.rect)
+        let terrain = level.terrain.carving(hazardRects)
+        let shape = level.terrain.filling(hazardRects)
+
         issues += backgroundWithoutTextures(level, catalog: catalog)
         issues += outsideLevel(level)
-        issues += checkpointsWithoutFooting(level)
+        issues += terrainFitsLevel(level)
+        issues += unrenderableColumns(in: shape)
+        issues += withoutFooting(level, terrain: terrain)
+        issues += patrolsLeavingGround(level, terrain: terrain)
         return issues
     }
 
@@ -90,32 +112,15 @@ enum LevelValidation {
 
     /// Все имена каталога с человекочитаемой ролью.
     ///
+    /// Сами списки ролей живут рядом с полями (`TerrainNames.namedRoles`,
+    /// `BackgroundNames.namedRoles`): раньше они были переписаны здесь и ещё
+    /// раз в `StyleAssetsTests`, и новая роль требовала правки в трёх местах.
+    ///
     /// Необязательные слои фона (`nil` — «такого слоя у стиля нет») сюда не
     /// попадают: отсутствие слоя это законный ответ, а вот **пустая строка**
     /// вместо имени — опечатка, и её надо поймать.
-    private static func namedRoles(of catalog: StyleCatalog) -> [(String, String)] {
-        let terrain = catalog.terrain
-        let background = catalog.background
-        let optionalLayers: [(String, String?)] = [
-            ("background.hills", background.hills),
-            ("background.mountains", background.mountains),
-            ("background.clouds", background.clouds),
-            ("background.interior", background.interior),
-        ]
-
-        return [
-            ("terrain.groundTop", terrain.groundTop),
-            ("terrain.platformLeft", terrain.platformLeft),
-            ("terrain.platformMiddle", terrain.platformMiddle),
-            ("terrain.platformRight", terrain.platformRight),
-            ("terrain.ladderBottom", terrain.ladderBottom),
-            ("terrain.ladderMiddle", terrain.ladderMiddle),
-            ("terrain.ladderTop", terrain.ladderTop),
-            ("terrain.ladderTop75", terrain.ladderTop75),
-            ("terrain.ladderTop50", terrain.ladderTop50),
-            ("terrain.ladderTop25", terrain.ladderTop25),
-            ("background.fill", background.fill),
-        ] + optionalLayers.compactMap { role, name in name.map { (role, $0) } }
+    private static func namedRoles(of catalog: StyleCatalog) -> [(role: String, name: String)] {
+        catalog.terrain.namedRoles + catalog.background.namedRoles
     }
 
     /// Сегменты фона, которых стиль уровня не умеет рисовать.
@@ -166,28 +171,102 @@ enum LevelValidation {
         return issues
     }
 
-    /// Флаги, под которыми нет опоры.
+    /// Карта рельефа против размера уровня.
     ///
-    /// Координата флага — это и место появления игрока, поэтому ставить его
-    /// можно только туда, где игрок может стоять: на землю (её верх) или на
-    /// платформу. Земля под озером вырезана, так что флаг над озером опоры не
-    /// имеет — игрок возродился бы прямо в воде.
-    private static func checkpointsWithoutFooting(_ level: LevelConfiguration) -> [Issue] {
-        let groundTop = level.groundHeight / WorldMetrics.tileSize
-        let ground = GroundLayout.segments(levelWidthInTiles: level.levelWidthInTiles,
-                                           gaps: level.hazards.map(\.rect.xSpan))
+    /// Ширина обязана совпадать: карта у́же уровня оставила бы в конце обрыв,
+    /// которого не видно в описании. Высота — только не больше: карта вправе
+    /// описывать столько рядов, сколько нужно рельефу, всё выше неё пусто.
+    private static func terrainFitsLevel(_ level: LevelConfiguration) -> [Issue] {
+        let terrain = level.terrain
+        guard CGFloat(terrain.width) != level.levelWidthInTiles
+                || CGFloat(terrain.height) > level.levelHeightInTiles else { return [] }
+        return [.terrainSizeMismatch(width: terrain.width, height: terrain.height)]
+    }
 
-        return level.checkpoints.enumerated().compactMap { index, checkpoint in
-            let x = checkpoint.origin.x
-            let y = checkpoint.origin.y
-
-            let onGround = y == groundTop && ground.contains { $0.contains(x) }
-            let onPlatform = level.platforms.contains { platform in
-                y == platform.rect.origin.y + platform.rect.size.height
-                    && platform.rect.xSpan.contains(x)
+    /// Колонки, которых набор плиток не умеет рисовать.
+    ///
+    /// Это ровно тот случай, в котором `TerrainTiling` вынужден выбирать
+    /// наугад: у клетки заняты верх и низ и открыты оба бока, а плитки с двумя
+    /// краями сразу в наборе нет. Полка в одну клетку сюда не попадает — у неё
+    /// открыт верх, и она честно рисуется серединой.
+    private static func unrenderableColumns(in terrain: TerrainMap) -> [Issue] {
+        var issues: [Issue] = []
+        for y in 0..<terrain.height {
+            for x in 0..<terrain.width where terrain.isOccupied(x: x, y: y) {
+                // Соседей считаем так же, как раскладка: иначе колонка, узкая
+                // только на вид, попадала бы в находки.
+                let kind = terrain.cell(x: x, y: y)
+                guard terrain.isNeighbour(x: x, y: y + 1, of: kind),
+                      terrain.isNeighbour(x: x, y: y - 1, of: kind),
+                      !terrain.isNeighbour(x: x - 1, y: y, of: kind),
+                      !terrain.isNeighbour(x: x + 1, y: y, of: kind)
+                else { continue }
+                issues.append(.terrainColumnTooNarrow(at: TileCoordinate(x: CGFloat(x), y: CGFloat(y))))
             }
+        }
+        return issues
+    }
 
-            return onGround || onPlatform ? nil : .checkpointWithoutFooting(index: index)
+    /// Объекты, под которыми нет опоры.
+    ///
+    /// Проверяются те, что **ставят игрока**: старт уровня и флаги (флаг — это
+    /// и место возрождения). Промах здесь роняет игрока сквозь уровень или
+    /// оставляет его в воздухе, тогда как висящая в воздухе декорация — просто
+    /// некрасиво.
+    ///
+    /// Неподвижные враги не проверяются намеренно: растение стоит на земле, а
+    /// оса висит в воздухе, и различить их можно только новым свойством
+    /// `EnemyKind`. Заводить его ради проверки — не та цена.
+    private static func withoutFooting(_ level: LevelConfiguration, terrain: TerrainMap) -> [Issue] {
+        var issues: [Issue] = []
+
+        func check(_ role: String, _ origin: TileCoordinate) {
+            guard !hasFooting(at: origin, in: level, terrain: terrain) else { return }
+            issues.append(.objectWithoutFooting(role: role, at: origin))
+        }
+
+        check("playerStart", level.playerStart)
+        for (index, checkpoint) in level.checkpoints.enumerated() {
+            check("checkpoints[\(index)]", checkpoint.origin)
+        }
+        return issues
+    }
+
+    /// Патрули, выходящие за край площадки.
+    ///
+    /// Враг не динамический: сойдя с края, он не упадёт, а поедет по воздуху.
+    /// Проверяется вся полоса, которую заметает его тело, — от левого края
+    /// диапазона до правого плюс ширина врага.
+    private static func patrolsLeavingGround(_ level: LevelConfiguration,
+                                             terrain: TerrainMap) -> [Issue] {
+        level.enemies.enumerated().compactMap { index, enemy in
+            guard case .patrolling(let leftX, let rightX, _) = enemy.behavior else { return nil }
+
+            let row = Int(enemy.origin.y.rounded(.down))
+            let from = Int(leftX.rounded(.down))
+            let to = Int((rightX + ObjectSize.enemy.width).rounded(.up)) - 1
+            guard from <= to else { return nil }
+
+            let grounded = (from...to).allSatisfy { terrain.supportsStanding(x: $0, y: row) }
+            return grounded ? nil : .patrolLeavesGround(index: index)
+        }
+    }
+
+    /// Можно ли стоять в этой точке: на рельефе (`TerrainMap.supportsStanding`)
+    /// или на верху площадки.
+    ///
+    /// Подвижные платформы опорой не считаются: они уезжают, и объект,
+    /// поставленный «на» такую платформу, окажется в воздухе через секунду.
+    private static func hasFooting(at origin: TileCoordinate,
+                                   in level: LevelConfiguration,
+                                   terrain: TerrainMap) -> Bool {
+        let standing = terrain.supportsStanding(x: Int(origin.x.rounded(.down)),
+                                                y: Int(origin.y.rounded(.down)))
+        if standing { return true }
+
+        return level.platforms.contains { platform in
+            origin.y == platform.rect.origin.y + platform.rect.size.height
+                && platform.rect.xSpan.contains(origin.x)
         }
     }
 }

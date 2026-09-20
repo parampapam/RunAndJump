@@ -118,7 +118,7 @@ final class GameScene: SKScene {
 
         setupCamera()
         setupBackground()
-        setupGround()
+        setupTerrain()
         setupBoundaries()
         setupPlayer()
         setupInputController()
@@ -183,26 +183,40 @@ final class GameScene: SKScene {
         updateBackground()
     }
 
-    /// Земля — не сплошная полоса, а куски между проёмами под озёрами: озеро
-    /// должно быть настоящей ямой, в которую игрок проваливается. Границы
-    /// кусков считает чистый `GroundLayout`, дно ям кладём отдельными опорами.
-    private func setupGround() {
-        let segments = GroundLayout.segments(
-            levelWidthInTiles: configuration.levelWidthInTiles,
-            gaps: configuration.hazards.map { $0.rect.xSpan }
-        )
+    /// Рельеф: тела по карте уровня, плитки поверх них, отдельные опоры на дне
+    /// ям под озёрами.
+    ///
+    /// Озёра участвуют здесь дважды и **по-разному**, и это главное в этой
+    /// функции:
+    ///
+    /// - из карты физики они **вырезаны** (`carving`): озеро должно быть
+    ///   настоящей ямой, в которую игрок проваливается;
+    /// - в карту формы они, наоборот, **вписаны** (`filling`): выбирая плитку,
+    ///   грунт на берегу обязан считать воду соседом, иначе возьмёт торцевую
+    ///   плитку со скруглённым прозрачным краем и между землёй и водой
+    ///   откроется щель.
+    ///
+    /// Проём в грунте — следствие озера, а не отдельная забота автора уровня,
+    /// поэтому обе карты выводятся здесь, а не пишутся руками.
+    private func setupTerrain() {
+        let hazardRects = configuration.hazards.map(\.rect)
+        let map = configuration.terrain.carving(hazardRects)
+        let shape = configuration.terrain.filling(hazardRects)
 
-        for segment in segments {
-            addChild(builder.makeGround(span: segment, height: configuration.groundHeight))
-            // Покрываем кусок травой — она же и есть видимая земля.
-            for tile in builder.makeGroundCover(span: segment) {
-                addChild(tile)
-            }
+        for rect in TerrainLayout.bodies(of: map) {
+            addChild(builder.makeTerrain(rect))
+        }
+        // Проходимый грунт держит только сверху и только открытой поверхностью.
+        for surface in TerrainLayout.surfaces(of: map) {
+            addChild(builder.makeTerrainSurface(surface))
+        }
+        // Плитки — это и есть видимая земля; тела невидимы.
+        for tile in builder.makeTerrainTiles(of: map, shape: shape) {
+            addChild(tile)
         }
 
         for hazardDescriptor in configuration.hazards {
-            addChild(builder.makeHazardFloor(from: hazardDescriptor,
-                                                  groundHeight: configuration.groundHeight))
+            addChild(builder.makeHazardFloor(from: hazardDescriptor))
         }
     }
 

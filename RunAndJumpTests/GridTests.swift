@@ -59,8 +59,8 @@ struct GridTests {
 
     @Test("Нижний-левый угол объекта на земле (y=1) лежит на верхе земли")
     func objectOnGroundSitsOnGroundTop() {
-        // Земля высотой 1 тайл → её верх на y = 1 тайл = tile пунктов.
+        // Пол высотой 1 тайл → его верх на y = 1 тайл = tileSize пунктов.
         let originY = Grid.point(TileCoordinate(x: 0, y: 1)).y
-        #expect(originY == Levels.groundHeight)
+        #expect(originY == WorldMetrics.tileSize)
     }
 }

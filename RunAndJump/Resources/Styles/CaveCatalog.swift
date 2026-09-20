@@ -28,7 +28,17 @@ enum CaveCatalog {
         id: .cave,
         atlases: ["Cave"],
         terrain: TerrainNames(
-            groundTop: "cave_ground_top_middle",
+            groundTopLeft: "cave_ground_top_left",
+            groundTopMiddle: "cave_ground_top_middle",
+            groundTopRight: "cave_ground_top_right",
+            groundLeft: "cave_ground_left",
+            groundRight: "cave_ground_right",
+            groundInside: "cave_ground_inside",
+            groundInsideBeforeTop: "cave_ground_inside_before_top",
+            groundInsideAfterTop: "cave_ground_inside_after_top",
+            groundBottomLeft: "cave_ground_bottom_left",
+            groundBottomMiddle: "cave_ground_bottom_middle",
+            groundBottomRight: "cave_ground_bottom_right",
             // Каменная плита со скруглёнными торцами. Арт занимает **верхнюю
             // половину** квадратного кадра — того же требования, что у луга и
             // замка, и по той же причине: `PlatformSkin` рисует спрайт в целый

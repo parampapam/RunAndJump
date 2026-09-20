@@ -28,7 +28,17 @@ enum CastleCatalog {
         id: .castle,
         atlases: ["Castle"],
         terrain: TerrainNames(
-            groundTop: "castle_ground_top_middle",
+            groundTopLeft: "castle_ground_top_left",
+            groundTopMiddle: "castle_ground_top_middle",
+            groundTopRight: "castle_ground_top_right",
+            groundLeft: "castle_ground_left",
+            groundRight: "castle_ground_right",
+            groundInside: "castle_ground_inside",
+            groundInsideBeforeTop: "castle_ground_inside_before_top",
+            groundInsideAfterTop: "castle_ground_inside_after_top",
+            groundBottomLeft: "castle_ground_bottom_left",
+            groundBottomMiddle: "castle_ground_bottom_middle",
+            groundBottomRight: "castle_ground_bottom_right",
             // Как у луга и пещеры: арт лежит в **верхней половине**
             // квадратного кадра, потому что `PlatformSkin` рисует спрайт в
             // целый тайл и вешает его от верха площадки вниз. Планка замка

@@ -8,9 +8,14 @@
 import CoreGraphics
 
 /// Уровни заданы в **тайлах**, привязка — к нижнему-левому углу объекта.
-/// Земля занимает нижний ряд (высота 1 тайл), поэтому её верх — на y = 1:
-/// объекты «на земле» ставятся с y = 1. Платформы задаются прямоугольником
-/// (угол + размер), их «толщина» 0.25 тайла, а y угла = высота_верха − 0.25.
+///
+/// Форма земли — картинка (`TerrainMap`), и объект ставится на **местную**
+/// поверхность: у плоского пола её верх на y = 1, на первой ступени холма —
+/// y = 2, на второй — y = 3. Поверхность колонки = верхняя занятая клетка
+/// плюс единица; промах ловит `LevelValidation.objectWithoutFooting`.
+///
+/// Платформы задаются прямоугольником (угол + размер), их «толщина» 0.25
+/// тайла, а y угла = высота_верха − 0.25.
 enum Levels {
 
     static let sceneSize = CGSize(width: 1334, height: 750)
@@ -25,8 +30,16 @@ enum Levels {
     /// интерьеру — и пещере, и замку, — а стиль у уровня меняется правкой
     /// одного поля.
     static let interiorCeiling: CGFloat = 11
-    /// Земля — ровно один тайл высотой, чтобы её верх лёг на линию сетки (y = 1).
-    static let groundHeight: CGFloat = WorldMetrics.tileSize
+    /// Пол — ровно один тайл высотой, чтобы его верх лёг на линию сетки (y = 1).
+    ///
+    /// Общий на уровни без рельефа. Уровень с рельефом описывает свою карту сам
+    /// (`TerrainMap("...")`), и тогда общая константа ему не нужна.
+    ///
+    /// Высота карты — один ряд, а не высота уровня: карта описывает столько
+    /// рядов, сколько нужно рельефу, всё выше неё пусто. Константа на высоту
+    /// уровня не годилась бы ещё и потому, что уровни разной высоты —
+    /// интерьерный ниже наземных (`interiorCeiling`).
+    static let flatGround = TerrainMap.floor(width: Int(levelWidth), height: 1)
 
     static let all: [LevelConfiguration] = [level1, level2, level3]
 
@@ -39,7 +52,30 @@ enum Levels {
         levelWidthInTiles: levelWidth,
         levelHeightInTiles: levelHeight,
         playerStart: TileCoordinate(x: 1, y: 1),
-        groundHeight: groundHeight,
+        // Рельеф вводного уровня. Три его затеи, слева направо:
+        //
+        // - **холм в две ступени** (x 9…17): подъём по тайлу за раз, спуск
+        //   свободным падением. Заодно он делает достижимой площадку на y = 5:
+        //   с земли до неё четыре тайла, с вершины холма — два.
+        // - **полка в одну клетку** (x 33): ступенька к площадке на y = 5,
+        //   с которой начинается верхний маршрут.
+        // - **парящий остров** (x 36…39): проход под ним по земле и награда
+        //   сверху. Его низ — потолок: прыгать под ним некуда.
+        // - **проходимый холм** (x 28…31, знак `+`): держит только сверху.
+        //   Мимо него идут прямо сквозь — по земле там бегает бес, перед ним
+        //   стоят куст с деревом и флаг, — а сверху по нему бегают и уходят
+        //   на площадку y = 5. Ничего из стоящего внутри холма двигать не
+        //   пришлось: он рисуется позади всего переднего плана.
+        //
+        // Карта ниже уровня: всё выше последней строки — пусто.
+        terrain: TerrainMap("""
+        ....................................####.....
+        ....................................####.....
+        .............................................
+        .............#####..........++++.#...........
+        .........#########..........++++.............
+        #############################################
+        """),
         // Вводный уровень: пологие холмы, горы лишь мелькают вдалеке.
         background: BackgroundDescriptor(
             fill: .solid,
@@ -79,9 +115,13 @@ enum Levels {
                                             size: TileSize(width: 2, height: 1))),
         ],
         enemies: [
-            .stationary(.plant, at: TileCoordinate(x: 10, y: 1)),
-            .patrolling(.crab, at: TileCoordinate(x: 15, y: 1),
-                        leftX: 14, rightX: 18, speed: 100),
+            // Растение — на первой ступени холма (поверхность y = 2).
+            .stationary(.plant, at: TileCoordinate(x: 10, y: 2)),
+            // Краб ходит по вершине холма (y = 3). Диапазон уже самой
+            // вершины (x 13…18): враг шириной 0.75 тайла, и с rightX = 16 он
+            // не свешивается с обрыва.
+            .patrolling(.crab, at: TileCoordinate(x: 15, y: 3),
+                        leftX: 13, rightX: 16, speed: 100),
             .patrolling(.imp, at: TileCoordinate(x: 28, y: 1),
                         leftX: 26, rightX: 30, speed: 120),
             // Оса висит над землёй: под ней можно пройти, но не перепрыгнуть.
@@ -89,10 +129,11 @@ enum Levels {
         ],
         pickups: [
             PickupDescriptor(origin: TileCoordinate(x: 7, y: 3.25), kind: .health),
-            PickupDescriptor(origin: TileCoordinate(x: 9, y: 1.25), kind: .coin(.bronze)),
+            PickupDescriptor(origin: TileCoordinate(x: 9, y: 2.25), kind: .coin(.bronze)),
             PickupDescriptor(origin: TileCoordinate(x: 20, y: 1.25), kind: .coin(.silver)),
             PickupDescriptor(origin: TileCoordinate(x: 30, y: 1.25), kind: .coin(.gold)),
-            PickupDescriptor(origin: TileCoordinate(x: 40, y: 1.25), kind: .health),
+            // Аптечка переехала на остров: верхний маршрут должен что-то давать.
+            PickupDescriptor(origin: TileCoordinate(x: 37, y: 6.25), kind: .health),
         ],
         // Точки восстановления: перед растением, за крабом и после беса —
         // каждая закрывает участок, на котором легко погибнуть.
@@ -101,13 +142,14 @@ enum Levels {
             CheckpointDescriptor(origin: TileCoordinate(x: 19, y: 1)),
             CheckpointDescriptor(origin: TileCoordinate(x: 31, y: 1)),
         ],
-        // Цветы стоят на земле (нижний край на y = 1), разбросаны по уровню.
+        // Разбросаны по уровню, каждая — на своей поверхности: у пола это
+        // y = 1, на ступенях холма — y = 2 и y = 3.
         decorations: [
             DecorationDescriptor(id: .rightArrow, origin: TileCoordinate(x: 3, y: 1)),
             DecorationDescriptor(id: .yellowFlower, origin: TileCoordinate(x: 7, y: 1)),
-            DecorationDescriptor(id: .darkTree, origin: TileCoordinate(x: 12, y: 1)),
-            DecorationDescriptor(id: .tallLightTree, origin: TileCoordinate(x: 13, y: 1)),
-            DecorationDescriptor(id: .bigDarkBush, origin: TileCoordinate(x: 14, y: 1)),
+            DecorationDescriptor(id: .darkTree, origin: TileCoordinate(x: 12, y: 2)),
+            DecorationDescriptor(id: .tallLightTree, origin: TileCoordinate(x: 13, y: 3)),
+            DecorationDescriptor(id: .bigDarkBush, origin: TileCoordinate(x: 14, y: 3)),
             DecorationDescriptor(id: .whiteFlower, origin: TileCoordinate(x: 15, y: 5)),
             DecorationDescriptor(id: .pinkFlower, origin: TileCoordinate(x: 21, y: 1)),
             DecorationDescriptor(id: .shortDarkGrass, origin: TileCoordinate(x: 22, y: 1)),
@@ -129,7 +171,7 @@ enum Levels {
         levelWidthInTiles: levelWidth,
         levelHeightInTiles: levelHeight,
         playerStart: TileCoordinate(x: 1, y: 1),
-        groundHeight: groundHeight,
+        terrain: flatGround,
         // Горный уровень: гряда выше и плотнее, разрывы реже.
         background: BackgroundDescriptor(
             fill: .solid,
@@ -223,7 +265,7 @@ enum Levels {
         // тайлов не попадают в кадр никогда.
         levelHeightInTiles: interiorCeiling,
         playerStart: TileCoordinate(x: 1, y: 1),
-        groundHeight: groundHeight,
+        terrain: flatGround,
         // В помещении неба нет: линия горизонта поднята до потолка, поэтому
         // нижняя полоса кроет экран целиком при любом положении камеры, а
         // верхняя пустует — пустой **список сегментов**, а не пустой сегмент.
