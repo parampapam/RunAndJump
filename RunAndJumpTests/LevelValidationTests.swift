@@ -217,7 +217,7 @@ private enum Fixtures {
             levelWidthInTiles: 20,
             levelHeightInTiles: 10,
             playerStart: TileCoordinate(x: 1, y: 1),
-            groundHeight: WorldMetrics.tileSize,
+            terrain: TerrainMap.floor(width: 20, height: 10),
             background: background,
             platforms: platforms,
             movingPlatforms: [],

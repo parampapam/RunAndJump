@@ -25,8 +25,12 @@ enum Levels {
     /// интерьеру — и пещере, и замку, — а стиль у уровня меняется правкой
     /// одного поля.
     static let interiorCeiling: CGFloat = 11
-    /// Земля — ровно один тайл высотой, чтобы её верх лёг на линию сетки (y = 1).
-    static let groundHeight: CGFloat = WorldMetrics.tileSize
+    /// Пол — ровно один тайл высотой, чтобы его верх лёг на линию сетки (y = 1):
+    /// объекты «на земле» ставятся с y = 1.
+    ///
+    /// Общий на три уровня, пока рельефа нет. Уровень с рельефом описывает свою
+    /// карту сам (`TerrainMap("...")`), и тогда общая константа ему не нужна.
+    static let flatGround = TerrainMap.floor(width: Int(levelWidth), height: Int(levelHeight))
 
     static let all: [LevelConfiguration] = [level1, level2, level3]
 
@@ -39,7 +43,7 @@ enum Levels {
         levelWidthInTiles: levelWidth,
         levelHeightInTiles: levelHeight,
         playerStart: TileCoordinate(x: 1, y: 1),
-        groundHeight: groundHeight,
+        terrain: flatGround,
         // Вводный уровень: пологие холмы, горы лишь мелькают вдалеке.
         background: BackgroundDescriptor(
             fill: .solid,
@@ -129,7 +133,7 @@ enum Levels {
         levelWidthInTiles: levelWidth,
         levelHeightInTiles: levelHeight,
         playerStart: TileCoordinate(x: 1, y: 1),
-        groundHeight: groundHeight,
+        terrain: flatGround,
         // Горный уровень: гряда выше и плотнее, разрывы реже.
         background: BackgroundDescriptor(
             fill: .solid,
@@ -223,7 +227,7 @@ enum Levels {
         // тайлов не попадают в кадр никогда.
         levelHeightInTiles: interiorCeiling,
         playerStart: TileCoordinate(x: 1, y: 1),
-        groundHeight: groundHeight,
+        terrain: flatGround,
         // В помещении неба нет: линия горизонта поднята до потолка, поэтому
         // нижняя полоса кроет экран целиком при любом положении камеры, а
         // верхняя пустует — пустой **список сегментов**, а не пустой сегмент.

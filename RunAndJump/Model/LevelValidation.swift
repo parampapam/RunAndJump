@@ -173,15 +173,19 @@ enum LevelValidation {
     /// платформу. Земля под озером вырезана, так что флаг над озером опоры не
     /// имеет — игрок возродился бы прямо в воде.
     private static func checkpointsWithoutFooting(_ level: LevelConfiguration) -> [Issue] {
-        let groundTop = level.groundHeight / WorldMetrics.tileSize
-        let ground = GroundLayout.segments(levelWidthInTiles: level.levelWidthInTiles,
-                                           gaps: level.hazards.map(\.rect.xSpan))
+        let terrain = level.terrain.carving(level.hazards.map(\.rect))
 
         return level.checkpoints.enumerated().compactMap { index, checkpoint in
             let x = checkpoint.origin.x
             let y = checkpoint.origin.y
 
-            let onGround = y == groundTop && ground.contains { $0.contains(x) }
+            // Клетка под ногами. Нижний край уровня опорой не считается: правило
+            // «ниже низа земля сплошная» существует ради раскладки плиток, и
+            // распространять его на проверку опоры значило бы разрешить флаг,
+            // стоящий на самом краю уровня.
+            let column = Int(x.rounded(.down))
+            let rowBelow = Int(y.rounded(.down)) - 1
+            let onGround = rowBelow >= 0 && terrain.isSolid(x: column, y: rowBelow)
             let onPlatform = level.platforms.contains { platform in
                 y == platform.rect.origin.y + platform.rect.size.height
                     && platform.rect.xSpan.contains(x)

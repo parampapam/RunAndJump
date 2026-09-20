@@ -118,7 +118,7 @@ final class GameScene: SKScene {
 
         setupCamera()
         setupBackground()
-        setupGround()
+        setupTerrain()
         setupBoundaries()
         setupPlayer()
         setupInputController()
@@ -183,26 +183,26 @@ final class GameScene: SKScene {
         updateBackground()
     }
 
-    /// Земля — не сплошная полоса, а куски между проёмами под озёрами: озеро
-    /// должно быть настоящей ямой, в которую игрок проваливается. Границы
-    /// кусков считает чистый `GroundLayout`, дно ям кладём отдельными опорами.
-    private func setupGround() {
-        let segments = GroundLayout.segments(
-            levelWidthInTiles: configuration.levelWidthInTiles,
-            gaps: configuration.hazards.map { $0.rect.xSpan }
-        )
+    /// Рельеф: тела по карте уровня, плитки поверх них, отдельные опоры на дне
+    /// ям под озёрами.
+    ///
+    /// Озёра вырезаются из карты здесь, а не в описании уровня: озеро должно
+    /// быть настоящей ямой, в которую игрок проваливается, и проём в грунте —
+    /// следствие озера, а не отдельная забота автора. Склейку клеток в тела
+    /// считает чистый `TerrainLayout`.
+    private func setupTerrain() {
+        let map = configuration.terrain.carving(configuration.hazards.map(\.rect))
 
-        for segment in segments {
-            addChild(builder.makeGround(span: segment, height: configuration.groundHeight))
-            // Покрываем кусок травой — она же и есть видимая земля.
-            for tile in builder.makeGroundCover(span: segment) {
-                addChild(tile)
-            }
+        for rect in TerrainLayout.bodies(of: map) {
+            addChild(builder.makeTerrain(rect))
+        }
+        // Плитки — это и есть видимая земля; тела невидимы.
+        for tile in builder.makeTerrainTiles(of: map) {
+            addChild(tile)
         }
 
         for hazardDescriptor in configuration.hazards {
-            addChild(builder.makeHazardFloor(from: hazardDescriptor,
-                                                  groundHeight: configuration.groundHeight))
+            addChild(builder.makeHazardFloor(from: hazardDescriptor))
         }
     }
 

@@ -18,7 +18,10 @@ struct LevelConfiguration: Equatable {
     let levelWidthInTiles: CGFloat
     let levelHeightInTiles: CGFloat
     let playerStart: TileCoordinate   // нижний-левый угол игрока
-    let groundHeight: CGFloat
+    /// Форма земли: сетка занятых клеток. Из неё выводятся и физические тела
+    /// (`TerrainLayout`), и раскладка плиток — где поверхность, а где стена,
+    /// уровень не размечает.
+    let terrain: TerrainMap
     let background: BackgroundDescriptor
     let platforms: [PlatformDescriptor]
     let movingPlatforms: [MovingPlatformDescriptor]
@@ -88,7 +91,7 @@ struct EnemyDescriptor: Equatable {
 /// (нижний-левый угол + размер, в тайлах).
 ///
 /// Прямоугольник — это сразу три вещи: видимая жидкость, зона урона и **проём
-/// в земле**. Земля под озером вырезается (`GroundLayout`), а на дне ямы
+/// в земле**. Земля под озером вырезается (`TerrainMap.carving`), а на дне ямы
 /// кладётся опора ниже поверхности на `HazardKind.depthInTiles`: игрок
 /// проваливается в озеро и выбирается прыжком.
 ///

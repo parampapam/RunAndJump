@@ -37,16 +37,21 @@ struct LevelBuilder {
                    textures: textures)
     }
 
-    /// Кусок земли: невидимый узел с телом-опорой. Вид земле дают плитки травы
-    /// (`makeGroundCover`), узел несёт только физику. Кусков несколько, потому
-    /// что под озёрами в земле проёмы — их границы считает `GroundLayout`.
-    func makeGround(span: ClosedRange<CGFloat>, height: CGFloat) -> SKSpriteNode {
-        let width = Grid.size(TileSize(width: span.upperBound - span.lowerBound, height: 0)).width
-        let ground = SKSpriteNode(color: .clear, size: CGSize(width: width, height: height))
-        ground.position = CGPoint(x: Grid.point(TileCoordinate(x: span.lowerBound, y: 0)).x + width / 2,
-                                  y: height / 2)
+    /// Кусок рельефа: невидимый узел с телом-опорой. Вид земле дают плитки
+    /// (`makeTerrainTiles`), узел несёт только физику. Кусков несколько: их
+    /// границы склеивает `TerrainLayout`, и склейка не косметическая — на швах
+    /// между соседними телами бегущий игрок спотыкается.
+    func makeTerrain(_ rect: TileRect) -> SKSpriteNode {
+        let size = Grid.size(rect.size)
+        let terrain = SKSpriteNode(color: .clear, size: size)
+        terrain.position = Grid.center(of: rect)
 
-        let body = SKPhysicsBody(rectangleOf: ground.size)
+        // Вырожденный кусок (например, озеро вровень с поверхностью — яма
+        // нулевой глубины) остаётся без тела: SKPhysicsBody нулевого размера
+        // ведёт себя непредсказуемо.
+        guard size.width > 0, size.height > 0 else { return terrain }
+
+        let body = SKPhysicsBody(rectangleOf: size)
         body.isDynamic = false
         // Без упругости: SpriteKit берёт max(restitution) двух тел, и дефолтные
         // 0.2 у опоры подбрасывали бы стоящего игрока (микро-баунс).
@@ -54,34 +59,44 @@ struct LevelBuilder {
         body.categoryBitMask = PhysicsCategory.ground
         // Земля сама ни с кем не «ищет» контактов — её роль пассивная.
         body.contactTestBitMask = PhysicsCategory.none
-        ground.physicsBody = body
-        return ground
+        terrain.physicsBody = body
+        return terrain
     }
 
     /// Дно ямы под озером — опора на `HazardKind.depthInTiles` ниже поверхности
-    /// земли. Без неё шагнувший в озеро игрок провалился бы за нижний край
-    /// уровня: в земле там проём.
-    func makeHazardFloor(from descriptor: HazardDescriptor,
-                                groundHeight: CGFloat) -> SKSpriteNode {
-        let depth = Grid.size(TileSize(width: 0, height: HazardKind.depthInTiles)).height
-        return makeGround(span: descriptor.rect.xSpan, height: max(0, groundHeight - depth))
+    /// жидкости. Без неё шагнувший в озеро игрок провалился бы за нижний край
+    /// уровня: грунт там вырезан.
+    ///
+    /// Глубина отсчитывается от **верха озера**, а не от какой-либо общей
+    /// высоты земли: озеро стоит вровень с окрестной поверхностью, а она у
+    /// каждого озера своя.
+    func makeHazardFloor(from descriptor: HazardDescriptor) -> SKSpriteNode {
+        let surface = descriptor.rect.origin.y + descriptor.rect.size.height
+        let top = max(0, surface - HazardKind.depthInTiles)
+        return makeTerrain(TileRect(origin: TileCoordinate(x: descriptor.rect.origin.x, y: 0),
+                                    size: TileSize(width: descriptor.rect.size.width, height: top)))
     }
 
-    /// Травяное покрытие: ряд тайлов вдоль куска земли. Узлы чисто визуальные —
-    /// коллизия на теле куска. Если кусок кончается посреди тайла, последняя
-    /// плитка обрезается по ширине, чтобы трава не нависала над ямой.
-    func makeGroundCover(span: ClosedRange<CGFloat>) -> [SKSpriteNode] {
+    /// Плитки рельефа: по одной на занятую клетку, у которой открыт верх. Узлы
+    /// чисто визуальные — коллизия на телах кусков.
+    ///
+    /// Пока рисуется только поверхность и только одной плиткой: раскладка
+    /// (края, низ, стыки на уступах) появится вместе с рельефом, а сейчас
+    /// картинка обязана совпасть с прежней до пикселя.
+    func makeTerrainTiles(of map: TerrainMap) -> [SKSpriteNode] {
         let grass = textures.groundTop()
+        let size = TileSize.one
         var tiles: [SKSpriteNode] = []
-        var x = span.lowerBound
 
-        while x < span.upperBound - .ulpOfOne {
-            let size = TileSize(width: min(1, span.upperBound - x), height: 1)
-            let tile = SKSpriteNode(texture: grass, size: Grid.size(size))
-            tile.position = Grid.center(origin: TileCoordinate(x: x, y: 0), size: size)
-            tile.zPosition = ZPosition.ground
-            tiles.append(tile)
-            x += size.width
+        for y in 0..<map.height {
+            for x in 0..<map.width
+            where map.isSolid(x: x, y: y) && !map.isSolid(x: x, y: y + 1) {
+                let tile = SKSpriteNode(texture: grass, size: Grid.size(size))
+                tile.position = Grid.center(origin: TileCoordinate(x: CGFloat(x), y: CGFloat(y)),
+                                            size: size)
+                tile.zPosition = ZPosition.ground
+                tiles.append(tile)
+            }
         }
         return tiles
     }
