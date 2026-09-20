@@ -33,8 +33,10 @@ enum TerrainTiling {
     /// Роль клетки. Клетка предполагается занятой: у пустой роли нет.
     ///
     /// Вид грунта роли не меняет: проходимый холм выкладывается тем же
-    /// девятислайсом, что и сплошной, — они различаются физикой, а не
-    /// картинкой.
+    /// девятислайсом, что и сплошной. А вот **кого клетка считает соседом** —
+    /// меняет: проходимый грунт лежит позади переднего плана, поэтому земля
+    /// под ним остаётся поверхностью, а сам он в неё продолжается
+    /// (`TerrainMap.isNeighbour`).
     ///
     /// Порядок ветвления — часть правила, а не деталь реализации: у угловой
     /// клетки подходит сразу несколько условий. Верх важнее низа, низ важнее
@@ -44,10 +46,13 @@ enum TerrainTiling {
     /// и у него одновременно открыты верх и низ. Низ пола уходит за нижний край
     /// уровня и никому не виден, а верх — то, по чему ходят.
     static func part(x: Int, y: Int, in map: TerrainMap) -> Part {
-        let up = map.isOccupied(x: x, y: y + 1)
-        let down = map.isOccupied(x: x, y: y - 1)
-        let left = map.isOccupied(x: x - 1, y: y)
-        let right = map.isOccupied(x: x + 1, y: y)
+        let kind = map.cell(x: x, y: y)
+        func occupied(_ x: Int, _ y: Int) -> Bool { map.isNeighbour(x: x, y: y, of: kind) }
+
+        let up = occupied(x, y + 1)
+        let down = occupied(x, y - 1)
+        let left = occupied(x - 1, y)
+        let right = occupied(x + 1, y)
 
         if !up {
             if !left, right { return .topLeft }
@@ -73,8 +78,8 @@ enum TerrainTiling {
         // Толща. Осталось отличить глухую от уступа: если сосед по горизонтали
         // ничем не накрыт, значит рядом кончается поверхность, и полоса
         // покрытия должна завернуться в угол этой клетки.
-        if !map.isOccupied(x: x + 1, y: y + 1) { return .insideBeforeTop }
-        if !map.isOccupied(x: x - 1, y: y + 1) { return .insideAfterTop }
+        if !occupied(x + 1, y + 1) { return .insideBeforeTop }
+        if !occupied(x - 1, y + 1) { return .insideAfterTop }
         return .inside
     }
 }

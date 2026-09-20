@@ -116,6 +116,63 @@ struct TerrainTilingTests {
         #expect(part(2, 0, in: map) == .topMiddle)
     }
 
+    // MARK: - Проходимый грунт
+
+    @Test("Земля под проходимым холмом остаётся поверхностью")
+    func groundUnderPassableStaysASurface() {
+        // Главное свойство проходимого холма: по земле перед ним идут, значит
+        // она обязана выглядеть землёй, а не толщей. Холм над ней ничего не
+        // закрывает — он позади.
+        let map = TerrainMap("""
+        .++.
+        ####
+        """)
+
+        #expect(part(1, 0, in: map) == .topMiddle)
+        #expect(part(2, 0, in: map) == .topMiddle)
+        // И торцы у земли там, где кончается она сама, а не холм.
+        #expect(part(0, 0, in: map) == .topLeft)
+        #expect(part(3, 0, in: map) == .topRight)
+    }
+
+    @Test("Проходимый холм продолжается в землю, а не обрывается низом")
+    func passableSeesTheGroundBelow() {
+        // Холм стоит на земле, а не висит над ней: скруглённый низ открыл бы
+        // щель между ним и полосой покрытия.
+        let map = TerrainMap("""
+        .++.
+        .++.
+        ####
+        """)
+
+        #expect(part(1, 1, in: map) == .left)
+        #expect(part(2, 1, in: map) == .right)
+    }
+
+    @Test("Проходимый холм без земли под собой низ получает")
+    func floatingPassableHasAnUnderside() {
+        let map = TerrainMap("""
+        .++.
+        .++.
+        ....
+        """)
+
+        #expect(part(1, 1, in: map) == .bottomLeft)
+        #expect(part(2, 1, in: map) == .bottomRight)
+    }
+
+    @Test("Сплошной массив рядом с проходимым холмом сохраняет свой торец")
+    func solidNextToPassableKeepsItsEdge() {
+        // Холм позади, поэтому правый край сплошного массива остаётся краем,
+        // а не продолжается в холм.
+        let map = TerrainMap("""
+        ##+.
+        ####
+        """)
+
+        #expect(part(1, 1, in: map) == .topRight)
+    }
+
     // MARK: - Берег озера
 
     @Test("Грунт на берегу озера рисуется серединой, а не торцом")

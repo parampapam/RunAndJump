@@ -193,8 +193,13 @@ enum LevelValidation {
         var issues: [Issue] = []
         for y in 0..<terrain.height {
             for x in 0..<terrain.width where terrain.isOccupied(x: x, y: y) {
-                guard terrain.isOccupied(x: x, y: y + 1), terrain.isOccupied(x: x, y: y - 1),
-                      !terrain.isOccupied(x: x - 1, y: y), !terrain.isOccupied(x: x + 1, y: y)
+                // Соседей считаем так же, как раскладка: иначе колонка, узкая
+                // только на вид, попадала бы в находки.
+                let kind = terrain.cell(x: x, y: y)
+                guard terrain.isNeighbour(x: x, y: y + 1, of: kind),
+                      terrain.isNeighbour(x: x, y: y - 1, of: kind),
+                      !terrain.isNeighbour(x: x - 1, y: y, of: kind),
+                      !terrain.isNeighbour(x: x + 1, y: y, of: kind)
                 else { continue }
                 issues.append(.terrainColumnTooNarrow(at: TileCoordinate(x: CGFloat(x), y: CGFloat(y))))
             }
