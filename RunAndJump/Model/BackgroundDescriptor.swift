@@ -70,7 +70,7 @@ enum BackgroundFill: Equatable {
 /// Соседство любое: у `hills` и `mountains` небо нарисовано ровно тем же
 /// цветом, что и заливка, поэтому прямоугольник сегмента невидим, а стык с
 /// любым соседом не читается.
-enum HorizonSegment: Equatable {
+enum HorizonSegment: CaseIterable, Equatable {
     case hills
     case mountains
     /// Сплошная стена интерьера — пещеры, замка, подземелья.
@@ -104,7 +104,7 @@ enum HorizonSegment: Equatable {
 /// темнее заливки, поэтому пустой сегмент рядом с облачным дал бы вертикальную
 /// границу цвета через весь верх экрана. Уровень без облаков задаёт пустой
 /// список сегментов, а не чередует их с пустотой.
-enum SkySegment: Equatable {
+enum SkySegment: CaseIterable, Equatable {
     case clouds
 }
 

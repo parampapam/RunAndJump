@@ -190,6 +190,7 @@ extension TerrainMap {
     /// Разбор строгий: неровные строки и незнакомые символы роняют сборку на
     /// месте. Карты лежат в коде рядом с остальным описанием уровня, поэтому
     /// это опечатка автора, а не ситуация, в которой может оказаться игрок.
+    /// Файлам уровней нужен разбор, который бросает ошибку, — это `init(rows:)`.
     init(_ picture: String) {
         var rows = picture
             .split(separator: "\n", omittingEmptySubsequences: false)
@@ -197,25 +198,59 @@ extension TerrainMap {
         while let first = rows.first, first.isEmpty { rows.removeFirst() }
         while let last = rows.last, last.isEmpty { rows.removeLast() }
 
-        guard let first = rows.first else {
-            preconditionFailure("Карта рельефа пуста")
+        do {
+            try self.init(rows: rows)
+        } catch {
+            preconditionFailure("Карта рельефа: \(error)")
         }
+    }
+
+    /// Карта из готовых строк — тот же алфавит и тот же порядок (сверху вниз),
+    /// но ошибка **бросается**, а не роняет сборку.
+    ///
+    /// Нужен файлам уровней: битый файл — дефект данных, и сообщение о нём
+    /// должно указать строку и столбец, а не обрушить игру без объяснения.
+    /// Строки берутся как есть: пробелы в них — ошибка, а не отступ.
+    init(rows: [String]) throws(ParseError) {
+        guard let first = rows.first else { throw .empty }
         let width = first.count
-        precondition(rows.allSatisfy { $0.count == width },
-                     "Строки карты рельефа разной длины")
+        guard width > 0 else { throw .empty }
+
+        var cells: [Cell] = []
+        cells.reserveCapacity(width * rows.count)
 
         // Строки перечислены сверху вниз, а клетки хранятся снизу вверх.
-        let cells = rows.reversed().flatMap { row in
-            row.map { character -> Cell in
-                switch character {
-                case "#": return .solid
-                case "+": return .passable
-                case ".": return .empty
-                default: preconditionFailure("Неизвестный символ карты рельефа: \(character)")
+        for (row, line) in rows.enumerated().reversed() {
+            guard line.count == width else {
+                throw .raggedRow(row: row, expected: width, actual: line.count)
+            }
+            for (column, character) in line.enumerated() {
+                guard let cell = Cell(symbol: character) else {
+                    throw .unknownSymbol(character, row: row, column: column)
                 }
+                cells.append(cell)
             }
         }
         self.init(width: width, height: rows.count, cells: cells)
+    }
+
+    /// Что не так с картинкой рельефа. Номера строк — **как в картинке**:
+    /// сверху вниз, с нуля, — чтобы автор нашёл место, не пересчитывая.
+    enum ParseError: Error, Equatable, CustomStringConvertible {
+        case empty
+        case raggedRow(row: Int, expected: Int, actual: Int)
+        case unknownSymbol(Character, row: Int, column: Int)
+
+        var description: String {
+            switch self {
+            case .empty:
+                return "карта пуста"
+            case let .raggedRow(row, expected, actual):
+                return "строка \(row) длиной \(actual), а первая — \(expected)"
+            case let .unknownSymbol(symbol, row, column):
+                return "незнакомый символ «\(symbol)» в строке \(row), столбце \(column)"
+            }
+        }
     }
 
     /// Сплошной пол заданной толщины вдоль всего низа уровня — то, чем была
@@ -227,5 +262,20 @@ extension TerrainMap {
             index < width * solid ? Cell.solid : .empty
         }
         return TerrainMap(width: width, height: height, cells: cells)
+    }
+}
+
+// MARK: - Алфавит картинки
+
+private extension TerrainMap.Cell {
+
+    /// Символ картинки → клетка. Алфавит один на код и на файлы уровней.
+    init?(symbol: Character) {
+        switch symbol {
+        case "#": self = .solid
+        case "+": self = .passable
+        case ".": self = .empty
+        default: return nil
+        }
     }
 }
