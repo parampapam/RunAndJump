@@ -45,7 +45,17 @@ final class Player: SKSpriteNode {
         // Стартуем с кадра покоя, чтобы спрайт был виден до первого update.
         texture = animationFrames[.idle]?.first
 
-        let body = SKPhysicsBody(rectangleOf: size)
+        // Тело уже спрайта (см. ObjectSize.playerHitbox): на краю падаем, когда
+        // центр уже над пустотой, а не когда вышел весь спрайт.
+        let hitbox = Grid.size(ObjectSize.playerHitbox)
+        // Ноги тела совпадают с ногами спрайта: центр сдвинут вниз на запас высоты.
+        let body = SKPhysicsBody(
+            rectangleOf: hitbox,
+            center: CGPoint(x: 0, y: -(size.height - hitbox.height) / 2)
+        )
+        // Масса задаёт высоту прыжка (импульс / масса), а от площади она зависит:
+        // узкое тело стало бы легче и прыгало выше. Оставляем массу тела в тайл.
+        body.mass = SKPhysicsBody(rectangleOf: size).mass
         body.isDynamic = true
         body.allowsRotation = false
         // Чуть-чуть трения, чтобы при остановке не было скольжения.
