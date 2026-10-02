@@ -45,7 +45,9 @@ final class Player: SKSpriteNode {
         // Стартуем с кадра покоя, чтобы спрайт был виден до первого update.
         texture = animationFrames[.idle]?.first
 
-        let body = SKPhysicsBody(rectangleOf: size)
+        // Тело уже спрайта (см. ObjectSize.playerHitbox): на краю падаем, когда
+        // центр уже над пустотой, а не когда вышел весь спрайт.
+        let body = SKPhysicsBody(rectangleOf: Grid.size(ObjectSize.playerHitbox))
         body.isDynamic = true
         body.allowsRotation = false
         // Чуть-чуть трения, чтобы при остановке не было скольжения.

@@ -14,6 +14,14 @@ struct GridTests {
 
     private let tile = WorldMetrics.tileSize  // 60
 
+    @Test("Хитбокс игрока уже тайла: иначе он перешагивает проём в один тайл и висит над краем")
+    func playerHitboxIsNarrowerThanTile() {
+        #expect(ObjectSize.playerHitbox.width < 1)
+        #expect(ObjectSize.playerHitbox.width > 0)
+        #expect(ObjectSize.playerHitbox.height == ObjectSize.player.height)
+        #expect(Grid.size(ObjectSize.playerHitbox).width < tile)
+    }
+
     @Test("Целая тайловая координата переводится в пункты умножением на размер тайла")
     func pointFromWholeTiles() {
         let p = Grid.point(TileCoordinate(x: 3, y: 2))
